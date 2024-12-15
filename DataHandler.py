@@ -2,6 +2,7 @@ import os
 import re
 import datetime
 import pandas as pd
+from price import Price
 
 class FileType:
     def __init__(self, asset='xxx', year=None, month=None, day=None, data_type=None, norm=None, param=None, window=None):
@@ -76,16 +77,7 @@ class DataHandler:
         if not os.path.exists(fullpath):
             raise FileNotFoundError(f"No price file found for {asset} on {date_str}")
         df = pd.read_csv(fullpath)
-        # Ensure DT is datetime type
-        if 'DT' in df.columns:
-            df['DT'] = pd.to_datetime(df['DT'])
-        else:
-            raise ValueError(f"CSV {filename} does not have 'DT' column.")
-
-        if 'price' not in df.columns:
-            raise ValueError(f"CSV {filename} does not have 'price' column.")
-
-        return df
+        return Price(df)
 
     def index_to_date(self, asset, index):
         # returns (year, month, day)
@@ -174,3 +166,6 @@ class DataHandler:
             raise FileNotFoundError("No such tmp data file.")
         # Return as DataFrame
         return pd.read_csv(filepath)
+
+
+
