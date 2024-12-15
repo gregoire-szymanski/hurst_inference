@@ -70,16 +70,6 @@ for d in all_dates:
 full_pattern = volatility_pattern(all_volatilities)
 full_pattern_2kn = volatility_pattern(all_volatilities_2kn)
 
-# Plot the full pattern
-# plt.figure(figsize=(10,6))
-# plt.plot(full_pattern.get_values(), 'k-', color='red', linewidth=2, label='Full Pattern')
-# plt.plot(full_pattern_2kn.get_values(), 'k-', color='blue', linewidth=2, label='Full Pattern')
-# plt.ylabel("Normalized Volatility")
-# plt.legend()
-# plt.tight_layout()
-# plt.show()
-
-
 QV1 = []
 QV2 = []
 
