@@ -22,16 +22,21 @@ for date in trading_halt:
 asset = 'spy'
 subsampling = 1
 window = 300
-truncation_method = 'STD3'
+truncation_method = 'BIVAR5'
 window_pattern = 20
 vol_DT = None
-N_examples = 2
+N_examples = 5
 delta = 1.0 / (252.0 * 23400) * subsampling
 
+
 # Construct the volatility estimator
-ve = VolatilityEstimator(delta=delta, 
+ve = VolatilityEstimator(delta=1.0 / (252.0 * 23400) * subsampling, 
                          window=window, 
                          price_truncation=truncation_method)
+
+ve_no_trunc = VolatilityEstimator(delta=1.0 / (252.0 * 23400) * subsampling, 
+                         window=window, 
+                         price_truncation="INFINITE")
 
 # Choose randomly N_examples dates in DH for the example
 # Extract all dates from the price filenames in DH
@@ -45,7 +50,7 @@ example_dates = random.sample(all_dates, N_examples)
 
 # For each chosen date, get price and compute volatility
 # Also plot price and volatility together, highlighting truncation points
-for d in example_dates:
+for i, d in enumerate(example_dates, start=1):
     y, m, day = map(int, d.split('-'))
     # Get price data as a DataFrame
     price = DH.get_price(asset, y, m, day)
@@ -74,8 +79,21 @@ for d in example_dates:
     # Identify truncation points
     truncated_points = np.abs(increments) > truncationValue
 
+    truncated_points = np.abs(increments) > truncationValue
+    num_truncated = truncated_points.sum()
+    percentage_truncated = (num_truncated / len(increments)) * 100
+
+    # Print out the requested details
+    print(f"Example number {i}")
+    print("Truncation Value:", truncationValue)
+    print("Dollar Truncation Value:", truncationValue * np.mean(price_array))
+    print("Number of truncated points:", num_truncated, 
+          f"({percentage_truncated:.2f}% of increments)")
+    print()
+
     # Compute volatility using VolatilityEstimator
     vol = ve.compute(price_array)  
+    vol_no_trunc = ve_no_trunc.compute(price_array)
     vol_DT = price.get_DT()[:len(price_array) - window]
 
     # Plot price and volatility
@@ -88,6 +106,7 @@ for d in example_dates:
     ax2 = ax1.twinx()
     ax2.set_ylabel('Volatility', color='tab:red')
     ax2.plot(vol_DT, vol.get_values(), color='tab:red', label='Volatility')
+    ax2.plot(vol_DT, vol_no_trunc.get_values(), color='tab:orange', label='Volatility (no truncation)')
     ax2.tick_params(axis='y', labelcolor='tab:red')
 
     # Highlight points where price truncation happened:
@@ -103,51 +122,3 @@ for d in example_dates:
     plt.tight_layout()
     plt.show()
 
-
-# all_vols now contains the computed volatilities for each chosen date
-# Compute a "full_pattern" from all_vols. 
-# Note: volatility_pattern expects Volatility objects with the same DT.
-# If these are different days, they may have different lengths and DT arrays.
-# For simplicity, let's assume they have the same length or that 
-# we handle only those with matching lengths.
-
-
-all_vols = []
-for d in all_dates:
-    y, m, day = map(int, d.split('-'))
-    # Get price data as a DataFrame
-    price = DH.get_price(asset, y, m, day)
-    price.subsample(subsampling)
-    price_array = price.get_price()  # numpy array of prices
-
-    # Compute volatility using VolatilityEstimator
-    vol = ve.compute(price_array)  
-    all_vols.append(vol)
-
-full_pattern = volatility_pattern(all_vols)
-
-# Compute smaller patterns with window_pattern days at a time (rolling)
-# Here we assume "days" correspond to indices in the Volatility arrays.
-# We'll create patterns of length window_pattern and slide over the full pattern.
-
-
-small_patterns = []
-for start in range(0, len(all_vols) - window_pattern + 1, window_pattern):
-    slice_vols = all_vols[start:start+window_pattern]
-    small_patterns.append(volatility_pattern(slice_vols))
-
-# Plot the full pattern
-plt.figure(figsize=(10,6))
-
-# Add in very light lines for all smaller_patterns
-for sp in small_patterns:
-    plt.plot(vol_DT, sp.get_values(), color='red', alpha=0.3)
-
-plt.plot(vol_DT, full_pattern.get_values(), 'k-', color='black', linewidth=2, label='Full Pattern')
-
-plt.title("Full Pattern with Smaller Patterns Overlaid")
-plt.xlabel("Index")
-plt.ylabel("Normalized Volatility")
-plt.legend()
-plt.tight_layout()
-plt.show()

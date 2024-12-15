@@ -36,7 +36,7 @@ class Volatility:
 
 
 class VolatilityEstimator:
-    def __init__(self, delta, window, subsampling, price_truncation="INFINITE"):
+    def __init__(self, delta, window, price_truncation="INFINITE"):
         # Ensure that the truncation method provided is one of the allowed types
         if price_truncation not in ["INFINITE", "STD3", "BIVAR3", "STD5", "BIVAR5"]:
             raise ValueError("Invalid truncation method. Choose one of: 'INFINITE', 'STD3', 'BIVAR3', 'STD5', 'BIVAR5'")
@@ -44,11 +44,9 @@ class VolatilityEstimator:
         # Store the parameters as instance variables
         self.delta = delta
         self.window = window
-        self.subsampling = subsampling
         self.price_truncation = price_truncation
         
     def compute(self, price):
-        price = price[::self.subsampling]
         price = np.log(price)
         priceinc = price[1:] - price[:-1]
 
@@ -58,11 +56,11 @@ class VolatilityEstimator:
         elif self.price_truncation == 'STD5':
             truncationValue = 5 * np.std(priceinc)
         elif self.price_truncation == 'BIVAR3':
-            bav = bipower_average_V(price, self.window, self.delta * self.subsampling)
-            truncationValue = 3 * np.sqrt(bav * self.delta * self.subsampling)
+            bav = bipower_average_V(price, self.window, self.delta)
+            truncationValue = 3 * np.sqrt(bav * self.delta)
         elif self.price_truncation == 'BIVAR5':
-            bav = bipower_average_V(price, self.window, self.delta * self.subsampling)
-            truncationValue = 5 * np.sqrt(bav * self.delta * self.subsampling)
+            bav = bipower_average_V(price, self.window, self.delta)
+            truncationValue = 5 * np.sqrt(bav * self.delta)
 
         priceinc[np.abs(priceinc) > truncationValue] = 0
 
@@ -70,10 +68,10 @@ class VolatilityEstimator:
         rv = np.concatenate([[0], np.cumsum(priceinc**2)])
 
         # Average volatility (not necessarily needed for the returned Volatility)
-        avgVol = rv[-1] / (self.delta * self.subsampling * (len(price) - 1))
+        avgVol = rv[-1] / (self.delta * (len(price) - 1))
         
         # Windowed volatility estimate
-        volatilities = (rv[self.window:] - rv[:-self.window]) / (self.delta * self.subsampling * self.window)
+        volatilities = (rv[self.window:] - rv[:-self.window]) / (self.delta * self.window)
 
         return Volatility(volatilities)
 

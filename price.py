@@ -10,7 +10,7 @@ class Price:
         if df['DT'].isnull().any():
             raise ValueError("Some DT values could not be converted to datetime.")
 
-        if 'price' not in df.columns:
+        if 'Price' not in df.columns:
             raise ValueError("DataFrame must have a 'price' column.")
 
         self.df = df.sort_values('DT').reset_index(drop=True)  # Ensure sorted by DT
@@ -44,7 +44,14 @@ class Price:
         Returns:
             Numpy array of the prices.
         """
-        return self.df['price'].values
+        return self.df['Price'].values
+    
+    def get_DT(self):
+        """
+        Returns:
+            Numpy array of the datetimes.
+        """
+        return self.df['DT'].values
 
     def get_increments(self):
         """

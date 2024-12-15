@@ -37,6 +37,9 @@ class FileType:
 
 class DataHandler:
     def __init__(self, prices_folder, tmp_folder):
+        prices_folder = os.path.expanduser(prices_folder)
+        tmp_folder = os.path.expanduser(tmp_folder)
+
         # Check that prices_folder exist
         if not os.path.isdir(prices_folder):
             raise FileNotFoundError(f"Prices folder '{prices_folder}' does not exist.")
