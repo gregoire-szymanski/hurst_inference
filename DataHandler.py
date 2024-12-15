@@ -56,6 +56,10 @@ class DataHandler:
                 raise ValueError(f"Price file '{f}' does not match the pattern 'xxx_YYYY-MM-DD.csv'")
         
         self.tmp_files_created = []
+    
+    def remove_date(self, full_date): # Format of full_date: YYYY-MM-DD
+        # Rebuild self.price_files list, excluding any file that contains the given full_date
+        self.price_files = [f for f in self.price_files if full_date not in f]
 
     def __del__(self):
         # destructor of the class where all tmp files created are removed
