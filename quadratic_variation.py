@@ -13,7 +13,7 @@ class QuadraticCovariationsEstimator:
         mean_volatilities = np.mean(volatilities)
         volatilities = volatilities / pattern / mean_volatilities
 
-        volatilities_increments = volatilities[self.window:] - volatilities[-self.window]
+        volatilities_increments = volatilities[self.window:] - volatilities[:-self.window]
 
         if self.vol_truncation == 'STD3':
             truncationValue = 3 * np.std(volatilities_increments)

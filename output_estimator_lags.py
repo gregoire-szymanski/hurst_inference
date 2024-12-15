@@ -7,7 +7,7 @@ from dates import FOMC_announcement, trading_halt
 from price import Price
 from volatility import VolatilityEstimator, volatility_pattern, bipower_average_V, Volatility
 from quadratic_variation import QuadraticCovariationsEstimator
-from estimator_H import ratio_estimator
+from estimator_H import estimation_01_2
 
 
 # Initialize the data handler
@@ -23,9 +23,9 @@ for date in trading_halt:
     DH.remove_date(date)
 
 asset = 'spy'
-subsampling = 1
-window = 300
-price_truncation_method = 'STD3'
+subsampling = 5
+window = 60
+price_truncation_method = 'BIVAR3'
 vol_truncation_method = 'STD3'
 delta = 1.0 / (252.0 * 23400) * subsampling
 
@@ -34,16 +34,8 @@ ve = VolatilityEstimator(delta=delta,
                          window=window, 
                          price_truncation=price_truncation_method)
 
-ve2 = VolatilityEstimator(delta=delta, 
-                         window=2*window, 
-                         price_truncation=price_truncation_method)
-
 qve = QuadraticCovariationsEstimator(window=window, 
-                                     N_lags=2, 
-                                     vol_truncation=vol_truncation_method)
-
-qve2 = QuadraticCovariationsEstimator(window=2*window, 
-                                     N_lags=2, 
+                                     N_lags=10, 
                                      vol_truncation=vol_truncation_method)
 
 all_price_files = [f for f in DH.price_files if f.startswith(asset+'_')]
@@ -51,7 +43,6 @@ all_dates = [f.split('_')[1].replace('.csv','') for f in all_price_files]
 
 
 all_volatilities = []
-all_volatilities_2kn = []
 for d in all_dates:
     y, m, day = map(int, d.split('-'))
     # Get price data as a DataFrame
@@ -63,37 +54,23 @@ for d in all_dates:
     vol = ve.compute(price_array)  
     all_volatilities.append(vol)
 
-    # Compute volatility using VolatilityEstimator
-    vol2 = ve2.compute(price_array)  
-    all_volatilities_2kn.append(vol2)
 
 full_pattern = volatility_pattern(all_volatilities)
-full_pattern_2kn = volatility_pattern(all_volatilities_2kn)
-
-# Plot the full pattern
-# plt.figure(figsize=(10,6))
-# plt.plot(full_pattern.get_values(), 'k-', color='red', linewidth=2, label='Full Pattern')
-# plt.plot(full_pattern_2kn.get_values(), 'k-', color='blue', linewidth=2, label='Full Pattern')
-# plt.ylabel("Normalized Volatility")
-# plt.legend()
-# plt.tight_layout()
-# plt.show()
 
 
-QV1 = []
+
+
+QV01 = []
 QV2 = []
 
 for vol in all_volatilities:
     tmp = qve.compute(volatilities=vol.get_values(), pattern=full_pattern.get_values())
-    QV1.append(tmp[0] + 2 * tmp[1])
+    QV01.append(tmp[0] + 2 * tmp[1])
+    QV2.append(tmp[2])
 
-for vol in all_volatilities_2kn:
-    tmp = qve2.compute(volatilities=vol.get_values(), pattern=full_pattern_2kn.get_values())
-    QV2.append(tmp[0] + 2 * tmp[1])
-
-QV1 = np.mean(QV1)
+QV01 = np.mean(QV01)
 QV2 = np.mean(QV2)
 
-print(f"{QV1:.4f}\t{QV2:.4f}\t{ratio_estimator(QV1, QV2):.2f}")
+print(f"{QV01:.4f}\t{QV2:.4f}\t{estimation_01_2(QV01, QV2):.2f}")
 
 

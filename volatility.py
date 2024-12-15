@@ -88,6 +88,8 @@ def volatility_pattern(vols):
 
     # Extract values from each
     all_values = [v.get_values() for v in vols]
+    all_values = [v / np.mean(v) for v in all_values]
+
     # Compute average across all vols
     avg_values = np.mean(all_values, axis=0)
     # Normalize so that average is 1

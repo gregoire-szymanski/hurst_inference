@@ -67,5 +67,8 @@ def ratio_2_01(H):
 def inverse_ratio_2_01(target):
     return dichotomic_search(ratio_2_01, target, 1e-5, 1, is_increasing=True, epsilon=1e-5)
 
+def estimation_01_2(QV01, QV2):
+    return inverse_ratio_2_01(QV2 / QV01)
+
 def ratio_estimator(QV, QV_2kn):
     return np.log(QV_2kn / QV) / (np.log(2) * 2)
