@@ -1,5 +1,7 @@
 import numpy as np
 
+##### Preliminary functions
+
 def Phi_Hl(l, H):
     """
     Compute the value of Phi^H_ell based on the given formula.
@@ -61,6 +63,13 @@ def dichotomic_search(f, target, low, high, is_increasing=True, epsilon=1e-5):
     return None  # Target value not found within the interval
 
 
+##### Ratio with different windows
+
+def ratio_estimator(QV, QV_2kn):
+    return np.log(QV_2kn / QV) / (np.log(2) * 2)
+
+##### Ratio with different lags
+
 def ratio_2_01(H):
     return Phi_Hl(2, H) / (Phi_Hl(0, H) + 2 * Phi_Hl(1, H))
 
@@ -70,5 +79,60 @@ def inverse_ratio_2_01(target):
 def estimation_01_2(QV01, QV2):
     return inverse_ratio_2_01(QV2 / QV01)
 
-def ratio_estimator(QV, QV_2kn):
-    return np.log(QV_2kn / QV) / (np.log(2) * 2)
+
+##### GMM estimator
+
+# GMM method tries to minimize 
+# F(H,R) = (V-P)^T W (V-P)
+# F(H,R) = V^T W V - P^T W V - V^T W P + P^T W P
+
+def F_estimation_GMM(W, V, Psi_func, H, normalisation = 1):
+    # Extract the scalar H from the provided list or array
+    H = H[0]
+    
+    # Ensure V is a column matrix
+    # If V is already 2D with shape (n,1), this will do nothing.
+    # If V is 1D (shape (n,)), it will reshape into (n,1).
+    V = np.atleast_2d(V).reshape(-1, 1)
+    
+    # Compute Psi as a column vector
+    Psi = Psi_func(H)
+    Psi = np.atleast_2d(Psi).reshape(-1, 1)
+    
+    # Compute terms:
+    # term0 = Vᵀ W V
+    # term1 = (Psiᵀ W V) + (Vᵀ W Psi)
+    # term2 = Psiᵀ W Psi
+    
+    term0 = V.T @ W @ V
+    term1 = (Psi.T @ W @ V) + (V.T @ W @ Psi)
+    term2 = Psi.T @ W @ Psi
+    
+    # Since these are all (1x1) results, extract the scalar values
+    term0 = term0[0, 0]
+    term1 = term1[0, 0]
+    term2 = term2[0, 0]
+    
+    R = term1 / term2 / 2
+    
+    # Return the scalar result:
+    return normalisation * (term0 - R * term1 + term2 * R * R)
+
+
+def estimation_GMM(W, V, Psi_func, H_min=0.001, H_max=0.499, mesh=0.001):
+    # Create a grid of H values
+    H_values = np.arange(H_min, H_max + mesh, mesh)
+    
+    # Evaluate F_estimation_GMM for each H in the grid
+    F_values = [F_estimation_GMM(W, V, Psi_func, [H]) for H in H_values]
+    
+    # Find the index of the minimum value
+    min_index = np.argmin(F_values)
+    
+    # Return the H that gives the smallest F-estimation
+    return H_values[min_index]
+
+
+
+
+
