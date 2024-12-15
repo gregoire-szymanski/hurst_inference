@@ -15,6 +15,8 @@ class Price:
 
         self.df = df.sort_values('DT').reset_index(drop=True)  # Ensure sorted by DT
 
+        self.delta = 1.0 / (252.0 * 23400.0)
+
     def trading_halt(self, duration=300):
         """
         Check for trading halts. A trading halt is identified if the gap between 
@@ -34,11 +36,8 @@ class Price:
         resamples the data at 'sub' second intervals, taking the last 
         observed price in each interval.
         """
-        self.df = (self.df.set_index('DT')
-                         .resample(f'{sub}S')
-                         .last()
-                         .dropna()
-                         .reset_index())
+        self.df = self.df[::sub]
+        self.delta = sub * self.delta
 
     def get_price(self):
         """
