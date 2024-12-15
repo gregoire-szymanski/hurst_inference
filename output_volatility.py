@@ -22,7 +22,7 @@ for date in trading_halt:
 asset = 'spy'
 subsampling = 1
 window = 300
-truncation_method = 'BIVAR5'
+truncation_method = 'STD3'
 window_pattern = 20
 vol_DT = None
 N_examples = 5
@@ -47,6 +47,8 @@ if len(all_dates) < N_examples:
     raise ValueError("Not enough dates to choose from.")
 
 example_dates = random.sample(all_dates, N_examples)
+
+example_dates = [all_dates[5]]
 
 # For each chosen date, get price and compute volatility
 # Also plot price and volatility together, highlighting truncation points

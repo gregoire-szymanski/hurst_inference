@@ -10,8 +10,8 @@ class QuadraticCovariationsEstimator:
             raise ValueError("Invalid truncation method. Choose one of: 'INFINITE', 'STD3', 'BIVAR3', 'STD5', 'BIVAR5'")
         
     def compute(self, volatilities, pattern):
-        volatilities = np.mean(volatilities)
-        volatilities = volatilities / pattern
+        mean_volatilities = np.mean(volatilities)
+        volatilities = volatilities / pattern / mean_volatilities
 
         volatilities_increments = volatilities[self.window:] - volatilities[-self.window]
 
@@ -26,7 +26,7 @@ class QuadraticCovariationsEstimator:
 
         covariations = np.zeros(self.N_lags)
 
-        for lag in range(self.N_cov):
+        for lag in range(self.N_lags):
             if lag == 0:
                 covariations[lag] = np.mean(volatilities_increments**2) 
             else:

@@ -52,6 +52,7 @@ class DataHandler:
 
         # Make list of all files in prices_folder
         self.price_files = os.listdir(prices_folder)
+        self.price_files.sort()
 
         # Check that all price files follow pattern xxx_YYYY-MM-DD.csv
         pattern = re.compile(r'^[A-Za-z0-9]{3}_\d{4}-\d{2}-\d{2}\.csv$')
