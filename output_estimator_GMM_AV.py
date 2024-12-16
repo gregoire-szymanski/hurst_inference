@@ -74,41 +74,41 @@ if __name__ == "__main__":
         DH.remove_date(date)
 
     # # Define parameters
-    # asset = 'spy'
-    # subsampling = 1
-    # price_truncation_method = 'BIVAR3'
-    # vol_truncation_method = 'STD3'
-    # delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
-    # Ln = 300
-    # Kn = 300
-    # W_fun = lambda Lmax, L: 1 
+    asset = 'spy'
+    subsampling = 1
+    price_truncation_method = 'BIVAR3'
+    vol_truncation_method = 'STD3'
+    delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
+    Ln = 1800
+    Kn = 900
+    W_fun = W_fun = lambda Lmax, L: kernel_k(L/Lmax)
 
-    # params = [
-    #     {'window': 150, 'N_lags': 20},
-    #     {'window': 300, 'N_lags': 5},
-    #     {'window': 600, 'N_lags': 5},
-    #     {'window': 1200, 'N_lags': 2},
-    # ]
+    params = [
+        {'window': 150, 'N_lags': 12},
+        {'window': 300, 'N_lags': 6},
+        {'window': 450, 'N_lags': 4},
+        {'window': 600, 'N_lags': 3},
+    ]
 
 
 
 
     # Define parameters
-    asset = 'spy'
-    subsampling = 5
-    price_truncation_method = 'BIVAR3'
-    vol_truncation_method = 'STD3'
-    delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
-    Ln = 600
-    Kn = 300
-    W_fun = lambda Lmax, L: kernel_k(L/Lmax) 
+    # asset = 'spy'
+    # subsampling = 5
+    # price_truncation_method = 'BIVAR3'
+    # vol_truncation_method = 'STD3'
+    # delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
+    # Ln = 600
+    # Kn = 300
+    # W_fun = lambda Lmax, L: kernel_k(L/Lmax) 
 
-    params = [
-        {'window': 60, 'N_lags': 8},
-        {'window': 90, 'N_lags': 5},
-        {'window': 120, 'N_lags': 3},
-        {'window': 180, 'N_lags': 2},
-    ]
+    # params = [
+    #     {'window': 60, 'N_lags': 8},
+    #     {'window': 90, 'N_lags': 5},
+    #     {'window': 120, 'N_lags': 3},
+    #     {'window': 180, 'N_lags': 2},
+    # ]
 
 
     # Initialize the asymptotic variance estimator
