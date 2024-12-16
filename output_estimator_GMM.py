@@ -28,15 +28,22 @@ price_truncation_method = 'BIVAR3'
 vol_truncation_method = 'STD3'
 delta = 1.0 / (252.0 * 23400) * subsampling
 
-
 params = [
     {
+        'window':150,
+        'N_lags':20
+    },
+    {
         'window':300,
-        'N_lags':5
+        'N_lags':10
     },
     {
         'window':600,
-        'N_lags':4
+        'N_lags':5
+    },
+    {
+        'window':1200,
+        'N_lags':2
     }
 ]
 
@@ -92,16 +99,52 @@ for param in params:
     QV = QV / len(all_volatilities)
     all_QV.extend(QV.tolist())
 
+    def local_Psi(H):
+        p = []
+        factor = window**(2*H)
+        p.append(factor * (Phi_Hl(0,H) + Phi_Hl(1,H)))
+        for i in range(2, N_lags + 1):
+            p.append(factor * Phi_Hl(i,H) )
+        return np.array(p)
+    
+    H = estimation_GMM(np.identity(len(QV)),
+                       QV,
+                       local_Psi,
+                       0.001,
+                       0.499,
+                       0.001)
+    
+    print(QV)
+    print(f"{window}\t{H}")
+    print()
+
+
 all_QV = np.array(all_QV)
 
-print(all_QV)
+H = estimation_GMM(np.identity(len(all_QV)),
+                   all_QV,
+                   Psi,
+                   0.001,
+                   0.499,
+                   0.001)
+
+print(f"all\t{H}")
 
 
-H = estimation_GMM(len(all_QV),
-               QV,
-               Psi,
-                0.01,
-                0.49,
-                0.1)
+H_values, F_values, min_index = estimation_GMM(np.identity(len(all_QV)),
+                                               all_QV,
+                                               Psi,
+                                               0.001,
+                                               0.499,
+                                               0.001,
+                                               True)
 
-print(H)
+# Plot the full pattern
+plt.figure(figsize=(10,6))
+plt.plot(H_values, F_values, 'k-', color='black', linewidth=1, label='function F')
+plt.title("function F")
+plt.xlabel("$H$")
+plt.ylabel("Loss")
+plt.legend()
+plt.tight_layout()
+plt.show()
