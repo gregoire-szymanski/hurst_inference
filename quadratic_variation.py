@@ -26,6 +26,7 @@ class QuadraticCovariationsEstimator:
 
         return volatilities_increments
 
+
     def conclude(self, volatilities_increments):
         covariations = np.zeros(self.N_lags)
 
@@ -36,7 +37,19 @@ class QuadraticCovariationsEstimator:
                 covariations[lag] = np.mean(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)])
         
         return covariations
-    
+
+
+    def covariations(self, volatilities_increments):
+        covariations = []
+
+        for lag in range(self.N_lags):
+            if lag == 0:
+                covariations.append(np.mean(volatilities_increments**2))
+            else:
+                covariations.append(np.mean(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)]))
+        
+        return covariations
+
     def compute(self, volatilities, pattern):
         return self.conclude(self.precompute(volatilities, pattern))
 
