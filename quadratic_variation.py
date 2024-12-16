@@ -46,9 +46,9 @@ class QuadraticCovariationsEstimator:
 
         for lag in range(self.N_lags):
             if lag == 0:
-                covariations.append(np.mean(volatilities_increments**2))
+                covariations.append(volatilities_increments**2)
             else:
-                covariations.append(np.mean(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)]))
+                covariations.append(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)])
         
         if first_lag_correction:
             covariations[0] = covariations[0][:len(covariations[1])]
@@ -180,7 +180,7 @@ class AsymptoticVarianceEstimator:
         """
         result = 0.0
         for L in range(-self.Ln, self.Ln + 1):
-            w = self.W_fun(L, self.Ln)
+            w = self.W_fun(self.Ln,L)
             term = self.compute_term(psi, psi_prime, kn, kn_prime, L)
             result += w * term
         return result
