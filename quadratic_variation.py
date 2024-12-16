@@ -39,7 +39,9 @@ class QuadraticCovariationsEstimator:
         return covariations
 
 
-    def covariations(self, volatilities_increments):
+    def DRV(self, volatilities, pattern, first_lag_correction=True):
+        volatilities_increments = self.precompute(volatilities, pattern)
+
         covariations = []
 
         for lag in range(self.N_lags):
@@ -48,7 +50,12 @@ class QuadraticCovariationsEstimator:
             else:
                 covariations.append(np.mean(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)]))
         
-        return covariations
+        if first_lag_correction:
+            covariations[0] = covariations[0][:len(covariations[1])]
+            covariations[1] = covariations[0] + 2 * covariations[1]
+            return covariations[1:]
+        else:
+            return covariations
 
     def compute(self, volatilities, pattern):
         return self.conclude(self.precompute(volatilities, pattern))

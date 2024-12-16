@@ -76,6 +76,52 @@ class VolatilityEstimator:
         return Volatility(volatilities)
 
 
+
+
+class VolatilityPattern:
+    def __init__(self):
+        self.current_pattern = None
+        self.N_elements = 0
+
+    def accumulate(self, vol):
+        if isinstance(vol, list):
+            # vol is a list of Volatility objects
+            all_values = [v.get_values() for v in vol]
+            # Normalize each by its mean
+            all_values = [arr / np.mean(arr) for arr in all_values]
+            # Sum across all given volatilities
+            sum_values = np.sum(all_values, axis=0)
+
+            # Add current pattern if it exists
+            if self.current_pattern is not None:
+                sum_values += self.current_pattern.get_values()
+
+            # Update current pattern
+            self.current_pattern = Volatility(sum_values)
+            self.N_elements += len(vol)
+        else:
+            # vol is a single Volatility object
+            vol_values = vol.get_values()
+
+            # If we have a current pattern, add it
+            if self.current_pattern is not None:
+                sum_values = vol_values + self.current_pattern.get_values()
+            else:
+                sum_values = vol_values
+
+            self.current_pattern = Volatility(sum_values)
+            self.N_elements += 1
+
+    def get_pattern(self):
+        if self.current_pattern is None or self.N_elements == 0:
+            # No pattern accumulated yet
+            return None
+        # Return the averaged pattern
+        return Volatility(self.current_pattern.get_values() / self.N_elements)
+            
+
+
+
 def volatility_pattern(vols):
     """
     vols: a list of Volatility objects with the same DT.
