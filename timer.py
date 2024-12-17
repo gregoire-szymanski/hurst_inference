@@ -33,8 +33,8 @@ class Timer:
         
         # Calculate progress
         if i is not None:
-            processed_percentage = (i + 1) / self.ndates
-            estimated_total_time = total_elapsed_time / processed_percentage
+            processed_percentage = i / self.ndates
+            estimated_total_time = total_elapsed_time / processed_percentage if processed_percentage > 0 else 0
             remaining_time = estimated_total_time - total_elapsed_time
             estimated_finish = time.strftime('%Y-%m-%d %H:%M:%S', 
                                              time.localtime(self.start_time + estimated_total_time))

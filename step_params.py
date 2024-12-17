@@ -45,9 +45,10 @@ def create_folders(base_folder, subfolders):
         os.makedirs(os.path.join(base_folder, folder), exist_ok=True)
 
 # Main folders
-create_folders(tmp_folder, ['vol', 'pattern', 'qv', 'av', "result"])
+create_folders(tmp_folder, ['vol', 'pattern', "volinc", 'qv', 'av', "result"])
 create_folders(tmp_folder, [f"vol/{param['window']}" for param in params_volatility])
 create_folders(tmp_folder, [f"pattern/{param['window']}" for param in params_volatility])
+create_folders(tmp_folder, [f"volinc/{param['window']}" for param in params_volatility])
 
 # Create date handler
 DH = DataHandler(prices_folder="~/Documents/data/SPY/price/1s/daily_csv/", 
@@ -76,9 +77,14 @@ def FileTypeVolatility(asset, year, month, day, window):
     subfolder = f"vol/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-def FileTypePattern(asset, year, month, day, window, N_lags):
+def FileTypePattern(asset, window):
     # asset, year, month, day = parse_price_file(priceFile)
     subfolder = f"pattern/{window}"
+    return FileType(subfolder=subfolder, asset=asset)
+
+def FileTypeVolatilityIncrements(asset, year, month, day, window):
+    # asset, year, month, day = parse_price_file(priceFile)
+    subfolder = f"volinc/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
 def FileTypeQV(asset, year, month, day, window, N_lags):

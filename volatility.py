@@ -100,8 +100,11 @@ class VolatilityPattern:
             self.current_pattern = Volatility(sum_values)
             self.N_elements += len(vol)
         else:
-            # vol is a single Volatility object
-            vol_values = vol.get_values()
+            if isinstance(vol, Volatility):
+                # vol is a single Volatility object
+                vol_values = vol.get_values()
+            else:
+                vol_values = vol
 
             # If we have a current pattern, add it
             if self.current_pattern is not None:

@@ -18,7 +18,10 @@ class FileType:
             self.subfolder += '/'
 
     def to_string(self):
-        return self.subfolder + self.asset + "_" + f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
+        if self.day is None:
+            return self.subfolder + self.asset
+        else:
+            return self.subfolder + self.asset + "_" + f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
 
 
 class DataHandler:
