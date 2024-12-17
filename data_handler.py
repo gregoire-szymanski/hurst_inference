@@ -79,12 +79,14 @@ class DataHandler:
             if not f["save"] and os.path.exists(f["path"]):
                 os.remove(f["path"])
 
-    def get_price(self, asset, year, month, day):
+    def get_price(self, asset, year=None, month=None, day=None):
         # read csv associated with this date
         # The filename should be something like xxx_YYYY-MM-DD.csv
         
-        date_str = f"{year:04d}-{month:02d}-{day:02d}"
-        filename = f"{asset}_{date_str}.csv"
+        filename = asset
+        if day is not None:
+            date_str = f"{year:04d}-{month:02d}-{day:02d}"
+            filename = f"{asset}_{date_str}.csv"
         fullpath = os.path.join(self.prices_folder, filename)
         
         if not os.path.exists(fullpath):
@@ -94,7 +96,7 @@ class DataHandler:
 
     def save_data(self, filetype_obj, data, save=True):
         # Use filetype_obj.to_string() for filename
-        
+
         filepath = os.path.join(self.tmp_folder, filetype_obj.to_string())
         if isinstance(data, pd.DataFrame):
             data.to_csv(filepath + ".csv", index=False)
