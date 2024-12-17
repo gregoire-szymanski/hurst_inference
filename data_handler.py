@@ -7,30 +7,18 @@ import csv
 import numpy as np
 
 class FileType:
-    def __init__(self, asset='xxx', year=None, month=None, day=None, data_type=None, norm=None, param=None, window=None):
+    def __init__(self, subfolder='', asset='xxx', year=None, month=None, day=None):
+        self.subfolder = subfolder
         self.asset = asset
         self.year = year
         self.month = month
         self.day = day
-        # data_type must be one of 'vol', 'norm_vol', 'qv'
-        if data_type not in ['vol', 'norm_vol', 'qv']:
-            raise ValueError("data_type must be one of 'vol', 'norm_vol', 'qv'")
-        self.data_type = data_type
-        self.norm = norm
-        self.param = param
-        self.window = window
+        
+        if len(self.subfolder) and self.subfolder[-1] != '/':
+            self.subfolder += '/'
 
     def to_string(self):
-        parts = [self.data_type,
-                 self.asset,
-                 f"{self.year:04d}-{self.month:02d}-{self.day:02d}"]
-        if self.norm is not None:
-            parts.append(str(self.norm))
-        if self.param is not None:
-            parts.append(f"param{self.param}")
-        if self.window is not None:
-            parts.append(f"window{self.window}")
-        return "_".join(parts)
+        return self.subfolder + self.asset + "_" + f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
 
 
 class DataHandler:
