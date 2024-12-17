@@ -2,6 +2,11 @@ import numpy as np
 import os
 from datetime import datetime
 from data_handler import DataHandler, FileType
+from dates import *
+
+
+print("Initialisation...")
+
 
 # Identification
 identificator = "test_1s"
@@ -26,6 +31,8 @@ params_volatility = [
 Ln = 1800
 Kn = 900
 W_fun_id = 'parzen'
+
+
 
 #### DO NOT TOUCH BELOW
 
@@ -54,32 +61,43 @@ else:
     raise ValueError("Unknown W_fun_id")
 
 # Function to extract date and asset from file name
-def parse_price_file(priceFile):
-    """
-    Extract asset, year, month, and day from price file in the format 'xxx_YYYY-MM-DD.csv'.
-    """
-    basename = os.path.basename(priceFile)
-    asset, date_str = basename.split('_')
-    date = datetime.strptime(date_str.replace('.csv', ''), "%Y-%m-%d")
-    return asset, date.year, date.month, date.day
+# def parse_price_file(priceFile):
+#     """
+#     Extract asset, year, month, and day from price file in the format 'xxx_YYYY-MM-DD.csv'.
+#     """
+#     basename = os.path.basename(priceFile)
+#     asset, date_str = basename.split('_')
+#     date = datetime.strptime(date_str.replace('.csv', ''), "%Y-%m-%d")
+#     return asset, date.year, date.month, date.day
 
 # FileType generators
-def FileTypeVolatility(priceFile, window, N_lags):
-    asset, year, month, day = parse_price_file(priceFile)
+def FileTypeVolatility(asset, year, month, day, window):
+    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = f"vol/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-def FileTypePattern(priceFile, window, N_lags):
-    asset, year, month, day = parse_price_file(priceFile)
+def FileTypePattern(asset, year, month, day, window, N_lags):
+    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = f"pattern/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-def FileTypeQV(priceFile, window, N_lags):
-    asset, year, month, day = parse_price_file(priceFile)
+def FileTypeQV(asset, year, month, day, window, N_lags):
+    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = "qv/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-def FileTypeAV(priceFile, window, N_lags):
-    asset, year, month, day = parse_price_file(priceFile)
+def FileTypeAV(asset, year, month, day, window, N_lags):
+    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = "av/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
+
+# Remove all FOMC announcement dates from the data
+for date in FOMC_announcement:
+    DH.remove_date(date)
+
+# Remove all trading halt dates from the data
+for date in trading_halt:
+    DH.remove_date(date)
+
+dates = DH.dates(asset)
+dates = [(date.year, date.month, date.day) for D in dates for date in [datetime.strptime(D, "%Y-%m-%d")]]
