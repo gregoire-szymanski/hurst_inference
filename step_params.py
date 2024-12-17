@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from estimator_H import *
 from datetime import datetime
 from data_handler import DataHandler, FileType
 from dates import *
@@ -15,7 +16,7 @@ identificator = "test_1s"
 asset = 'spy'
 subsampling = 1
 delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
-days_estimation = 252
+days_estimation = 60
 
 # Volatility and quadratic variation estimation parameters
 price_truncation_method = 'BIVAR3'
@@ -32,7 +33,11 @@ Ln = 1800
 Kn = 900
 W_fun_id = 'parzen'
 
-
+# Optimisation parameters
+H_min = 0
+H_max = 0.5
+H_step = 1000
+H_mesh = (H_max - H_min) / H_step
 
 #### DO NOT TOUCH BELOW
 
@@ -107,3 +112,41 @@ for date in trading_halt:
 
 dates = DH.dates(asset)
 dates = [(date.year, date.month, date.day) for D in dates for date in [datetime.strptime(D, "%Y-%m-%d")]]
+
+
+
+def Psi(H):
+    """
+    Precompute the Psi(H) function for the given parameter configurations.
+    Psi(H) uses the pre-defined parameters (window sizes and number of lags)
+    to generate a set of values that depend on H.
+
+    Parameters
+    ----------
+    H : float
+        The Hurst exponent value to use for computations.
+    params : list of dict
+        A list of parameter configurations. Each dict contains:
+        - 'window': int
+        - 'N_lags': int
+
+    Returns
+    -------
+    np.array
+        A NumPy array of computed Psi values.
+    """
+    p = []
+    for param in params_volatility:
+        window = param['window']
+        N_lags = param['N_lags']
+
+        # factor = window^(2H)
+        factor = window**(2 * H)
+        
+        # Compute the first two terms outside the loop
+        p.append(factor * (Phi_Hl(0, H) + Phi_Hl(1, H)))
+
+        # Compute remaining terms for i in [2, N_lags]
+        for i in range(2, N_lags + 1):
+            p.append(factor * Phi_Hl(i, H))
+    return np.array(p)

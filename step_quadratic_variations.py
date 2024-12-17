@@ -7,7 +7,7 @@ from quadratic_variation import *
 for (i,param) in enumerate(params_volatility):
     param["pattern"] = DH.get_data(FileTypePattern(asset, param["window"]))
     param["qve"] = QuadraticCovariationsEstimator(param["window"], 
-                                                  param["N_lags"], 
+                                                  param["N_lags"] + 1, 
                                                   vol_truncation_method)
 
 
