@@ -1,5 +1,23 @@
 import numpy as np
 
+def computeVolatilityIncrements(window, vol_truncation, volatilities, pattern):
+    mean_volatilities = np.mean(volatilities)
+    volatilities = volatilities / pattern / mean_volatilities
+
+    volatilities_increments = volatilities[window:] - volatilities[:-window]
+
+    if vol_truncation == 'STD3':
+        truncationValue = 3 * np.std(volatilities_increments)
+    elif vol_truncation == 'STD5':
+        truncationValue = 5 * np.std(volatilities_increments)
+    elif type(vol_truncation) == float:
+        truncationValue = vol_truncation
+    
+    volatilities_increments[np.abs(volatilities_increments) > truncationValue] = 0
+    
+    return volatilities_increments
+
+
 class QuadraticCovariationsEstimator:
     def __init__(self, window, N_lags = 10, vol_truncation="INFINITE"):
         self.vol_truncation = vol_truncation
@@ -27,7 +45,7 @@ class QuadraticCovariationsEstimator:
         return volatilities_increments
 
 
-    def conclude(self, volatilities_increments):
+    def conclude(self, volatilities_increments, first_lag_correction=True):
         covariations = np.zeros(self.N_lags)
 
         for lag in range(self.N_lags):
@@ -36,12 +54,14 @@ class QuadraticCovariationsEstimator:
             else:
                 covariations[lag] = np.mean(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)])
         
-        return covariations
+        if first_lag_correction:
+            covariations[1] = covariations[0] + 2 * covariations[1]
+            return covariations[1:]
+        else:
+            return covariations
 
 
-    def DRV(self, volatilities, pattern, first_lag_correction=True):
-        volatilities_increments = self.precompute(volatilities, pattern)
-
+    def DRV(self, volatilities_increments, first_lag_correction=True):
         covariations = []
 
         for lag in range(self.N_lags):
@@ -51,7 +71,6 @@ class QuadraticCovariationsEstimator:
                 covariations.append(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)])
         
         if first_lag_correction:
-            covariations[0] = covariations[0][:len(covariations[1])]
             covariations[1] = covariations[0] + 2 * covariations[1]
             return covariations[1:]
         else:
@@ -62,8 +81,6 @@ class QuadraticCovariationsEstimator:
 
     
 
-
-import numpy as np
 
 class AsymptoticVarianceEstimator:
     def __init__(self, W_fun, Ln, Kn):

@@ -95,6 +95,9 @@ class DataHandler:
         elif isinstance(data, np.ndarray):
             np.save(filepath + ".npy", data)
             self.tmp_files_created.append({"save": save, "path": filepath + ".npy"})
+        elif isinstance(data, list):
+            np.save(filepath + ".npy", np.array(data))
+            self.tmp_files_created.append({"save": save, "path": filepath + ".npy"})
         else:
             raise TypeError("Data must be a pandas DataFrame or a numpy array")
 

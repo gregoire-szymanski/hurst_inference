@@ -87,7 +87,7 @@ def FileTypeVolatilityIncrements(asset, year, month, day, window):
     subfolder = f"volinc/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-def FileTypeQV(asset, year, month, day, window, N_lags):
+def FileTypeQV(asset, year, month, day):
     # asset, year, month, day = parse_price_file(priceFile)
     subfolder = "qv/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
