@@ -51,8 +51,9 @@ for i, param in enumerate(params_volatility):
     ax.set_ylabel("Volatility")
     ax.legend()
 
+print(f"Volatility patterns computed in {timer.total_time():.2f}s.")
+
 # Display all plots
 plt.tight_layout()
 plt.show()
 
-print(f"Volatility patterns computed in {timer.total_time():.2f}s.")
