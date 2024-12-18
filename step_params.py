@@ -97,7 +97,7 @@ def FileTypeQV(asset, year, month, day):
     subfolder = "qv/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-def FileTypeAV(asset, year, month, day, window, N_lags):
+def FileTypeAV(asset, year, month, day):
     # asset, year, month, day = parse_price_file(priceFile)
     subfolder = "av/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
@@ -150,3 +150,23 @@ def Psi(H):
         for i in range(2, N_lags + 1):
             p.append(factor * Phi_Hl(i, H))
     return np.array(p)
+
+
+# Params array
+
+window_array = []
+lags_array = []
+label_array = []
+
+for param in params_volatility:
+    window = param['window']
+    N_lags = param['N_lags']
+    
+    # Extend window_array with repeated window entries
+    window_array.extend([window for _ in range(N_lags)])
+    lags_array.append("Lag_0 + 2 * Lag_1")
+    lags_array.extend([f"Lag_{i}" for i in range(2,N_lags+1)])
+    label_array.append(f"W{window}; L0 + 2 L1")
+    label_array.extend([f"W{window}; L{i}" for i in range(2,N_lags+1)])
+
+
