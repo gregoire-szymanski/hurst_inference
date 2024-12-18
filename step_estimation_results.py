@@ -77,28 +77,6 @@ if activateAV:
 
         estimates_H_si.append(H_si)
 
-
-for  QV_window in QV_rolling:
-    H_id = estimation_GMM(np.identity(len(QV_window)),
-                          QV_window,
-                          Psi,
-                          0.001,
-                          0.499,
-                          0.001)
-    estimates_H_id.append(H_id)
-
-if activateAV:
-    for (sigma_window, QV_window) in zip(sigma_rolling, QV_rolling):
-        H_si = estimation_GMM(sigma_window,
-                            QV_window,
-                            Psi,
-                            0.001,
-                            0.499,
-                            0.001)
-
-
-        estimates_H_si.append(H_si)
-
 # Convert estimates_H to numpy array for analysis
 estimates_H_id = np.array(estimates_H_id)
 estimates_H_si = np.array(estimates_H_si)
@@ -130,7 +108,8 @@ if activateAV:
 
 # Display the summary stats as pandas DataFrames
 df_summary_id = pd.DataFrame(summary_stats_id, index=["H Estimates (ID)"])
-df_summary_si = pd.DataFrame(summary_stats_si, index=["H Estimates (SI)"])
+if activateAV:
+    df_summary_si = pd.DataFrame(summary_stats_si, index=["H Estimates (SI)"])
 
 print("Summary Statistics (ID):\n", df_summary_id)
 if activateAV:
