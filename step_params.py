@@ -16,7 +16,7 @@ identificator = "test_1s"
 asset = 'spy'
 subsampling = 1
 delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
-days_estimation = 60
+days_estimation = 252
 
 # Volatility and quadratic variation estimation parameters
 price_truncation_method = 'BIVAR3'
