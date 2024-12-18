@@ -35,5 +35,5 @@ for price_file in DH.price_files:
             if len(trading_halt) == 2:
                 plt.plot(price)
 
-print(f"trading_halt = {trading_halt}")
+print(f"trading_halt = {[x[4:-4] for x in trading_halt]}")
 plt.show()

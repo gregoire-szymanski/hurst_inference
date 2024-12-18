@@ -55,7 +55,7 @@ class QuadraticCovariationsEstimator:
                 covariations[lag] = np.mean(volatilities_increments[(lag * self.window):] * volatilities_increments[: - (lag * self.window)])
         
         if first_lag_correction:
-            covariations[0] = covariations[0][:len(covariations[1])]
+            covariations[0] = covariations[0]
             covariations[1] = covariations[0] + 2 * covariations[1]
             return covariations[1:]
         else:

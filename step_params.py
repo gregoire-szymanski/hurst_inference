@@ -10,11 +10,11 @@ print("Initialisation...")
 
 
 # Identification
-identificator = "test_1s"
+identificator = "test_5s"
 
 # Global parameters
 asset = 'spy'
-subsampling = 1
+subsampling = 5
 delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
 days_estimation = 252
 
@@ -22,15 +22,16 @@ days_estimation = 252
 price_truncation_method = 'BIVAR3'
 vol_truncation_method = 'STD3'
 params_volatility = [
-    {'window': 150, 'N_lags': 12},
-    {'window': 300, 'N_lags': 6},
-    {'window': 450, 'N_lags': 4},
-    {'window': 600, 'N_lags': 3},
+    {'window': 60, 'N_lags': 6},
+    {'window': 90, 'N_lags': 4},
+    {'window': 120, 'N_lags': 3},
+    {'window': 150, 'N_lags': 3},
+    {'window': 180, 'N_lags': 2},
 ]
 
 # Asymptotic variance estimation
-Ln = 1800
-Kn = 900
+Ln = 360
+Kn = 270
 W_fun_id = 'parzen'
 
 # Optimisation parameters
@@ -38,6 +39,8 @@ H_min = 0
 H_max = 0.5
 H_step = 1000
 H_mesh = (H_max - H_min) / H_step
+
+
 
 #### DO NOT TOUCH BELOW
 
