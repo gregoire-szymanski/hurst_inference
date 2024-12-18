@@ -18,9 +18,9 @@ ave = AsymptoticVarianceEstimator(W_fun, Ln, Kn)
 print("Computing asymptotic_variance...")
 timer = Timer(len(dates), type="window")
 timer.start()
-for (i,(year, month, day)) in enumerate(dates[:20]):
-    if i % 50 == 49 and i > 0:  timer.step(i)
-    timer.step(i)   
+for (i,(year, month, day)) in enumerate(dates):
+    if i % 20 == 19 and i > 0:  timer.step(i)
+    #timer.step(i)   
 
     sigma = np.zeros((len(window_array), len(window_array)))
 
