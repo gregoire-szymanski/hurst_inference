@@ -4,6 +4,99 @@ import pandas as pd
 from step_params import * 
 from volatility import * 
 
+
+# Initialise subparametrisation
+
+# for (i,x) in enumerate(label_array):
+#     print(i, x)  
+# exit()
+
+
+
+# Using only lags zero and one
+
+subparam = [
+    False for x in label_array
+]
+subparam[0] = True
+subparam[12] = True
+subparam[18] = True
+subparam[22] = True
+
+
+# Using only one window
+
+subparam = [
+    False for x in label_array
+]
+s,e = 12, 18
+subparam[s:e] = [True for i in range(s, e)]
+
+# Using only non zero lags
+
+subparam = [
+    True for x in label_array
+]
+subparam[0] = False
+subparam[12] = False
+subparam[18] = False
+subparam[22] = False
+
+
+
+
+
+for p,l in zip(subparam, label_array):
+    if p:
+        print(f"Using {l}")
+
+
+
+# subparametrisation functions
+
+def filter_array(Y, subparam):
+    """
+    Filters the elements of array Y based on the boolean values in subparam.
+
+    Parameters:
+        Y (np.ndarray): The input array of size N.
+        subparam (list or np.ndarray): A boolean list or array of size N with exactly m True values.
+
+    Returns:
+        np.ndarray: A new array of size m containing Y[i] where subparam[i] is True.
+    """
+    if len(Y) != len(subparam):
+        raise ValueError("Y and subparam must have the same length.")
+
+    # Use NumPy's boolean indexing
+    return Y[np.array(subparam)]
+
+def filter_matrix(M, subparam):
+    """
+    Filters the rows and columns of a matrix M based on the boolean values in subparam.
+
+    Parameters:
+        M (np.ndarray): The input matrix of size (N, N).
+        subparam (list or np.ndarray): A boolean list or array of size N with exactly m True values.
+
+    Returns:
+        np.ndarray: A new matrix of size (m, m) containing M[i, j] where subparam[i] and subparam[j] are True.
+    """
+    if M.shape[0] != M.shape[1]:
+        raise ValueError("M must be a square matrix.")
+    if M.shape[0] != len(subparam):
+        raise ValueError("The size of subparam must match the dimensions of M.")
+
+    # Use NumPy's boolean indexing to filter rows and columns
+    mask = np.array(subparam)
+    return M[mask][:, mask]
+
+def compose_filter_array(fun, subparam):
+    return lambda x: filter_array(fun(x), subparam)
+
+
+
+
 # Initialize variables
 QV = []
 AV = []
@@ -12,8 +105,16 @@ for (year, month, day) in dates:
     QV.append(DH.get_data(FileTypeQV(asset, year, month, day))) 
     AV.append(DH.get_data(FileTypeAV(asset, year, month, day))) 
 
+
+# Subparametrisation 
+QV = [filter_array(qv, subparam) for qv in QV]
+AV = [filter_matrix(av, subparam) for av in AV]
+Psi = compose_filter_array(Psi, subparam)
+
+
 QV = np.array(QV)
 AV = np.array(AV)
+
 
 
 
