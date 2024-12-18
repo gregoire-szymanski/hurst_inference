@@ -94,7 +94,7 @@ class VolatilityPattern:
 
             # Add current pattern if it exists
             if self.current_pattern is not None:
-                sum_values += self.current_pattern.get_values()
+                sum_values += self.current_pattern.get_values() 
 
             # Update current pattern
             self.current_pattern = Volatility(sum_values)
@@ -105,10 +105,11 @@ class VolatilityPattern:
                 vol_values = vol.get_values()
             else:
                 vol_values = vol
+            vol_values = vol_values / np.mean(vol_values)
 
             # If we have a current pattern, add it
             if self.current_pattern is not None:
-                sum_values = vol_values + self.current_pattern.get_values()
+                sum_values = vol_values + self.current_pattern.get_values() 
             else:
                 sum_values = vol_values
 
