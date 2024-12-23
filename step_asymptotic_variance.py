@@ -15,7 +15,7 @@ ave = AsymptoticVarianceEstimator(W_fun, Ln, Kn)
 
 
 
-print("Computing asymptotic_variance...")
+print("Computing asymptotic variance...")
 timer = Timer(len(dates), type="window")
 timer.start()
 for (i,(year, month, day)) in enumerate(dates):
@@ -60,7 +60,7 @@ for (i,(year, month, day)) in enumerate(dates):
                  sigma)
 
     
-print(f"Quadratic variations computed in {timer.total_time():.2f}s.")
+print(f"Asymptotic variances computed in {timer.total_time():.2f}s.")
 
 
 

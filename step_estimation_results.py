@@ -5,7 +5,7 @@ from step_params import *
 from volatility import * 
 
 # Activate AV
-activateAV = False
+activateAV = True
 
 # Initialize variables
 QV = []
@@ -16,7 +16,6 @@ QV = np.array(QV)
 if activateAV:
     AV = []
     for (year, month, day) in dates: 
-        QV.append(DH.get_data(FileTypeQV(asset, year, month, day))) 
         AV.append(DH.get_data(FileTypeAV(asset, year, month, day))) 
     AV = np.array(AV)
 
