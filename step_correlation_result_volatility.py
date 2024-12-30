@@ -14,7 +14,17 @@ for (year, month, day) in dates:
         np.mean(DH.get_data(FileTypeVolatility(asset, year, month, day, param['window'])))
         for param in params_volatility
     ])) 
-vols = np.array(vols)
+vols = np.array(np.sqrt(vols))
+
+# plt.figure(figsize=(12, 8))
+# plt.plot(vols, label="vols", color='blue', linestyle='-')
+# plt.xlabel("Date")
+# plt.legend()
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.show()
+
+# exit()
 
 QV = []
 for (year, month, day) in dates: 

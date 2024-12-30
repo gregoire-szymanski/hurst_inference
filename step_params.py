@@ -29,6 +29,8 @@ params_volatility = [
     {'window': 180, 'N_lags': 2},
 ]
 
+
+
 # Asymptotic variance estimation
 Ln = 360
 Kn = 270

@@ -7,40 +7,34 @@ from volatility import *
 
 # Initialise subparametrisation
 
-# for (i,x) in enumerate(label_array):
-#     print(i, x)  
-# exit()
-
-
 
 # Using only lags zero and one
 
 subparam = [
     False for x in label_array
 ]
+
 subparam[0] = True
-subparam[12] = True
-subparam[18] = True
-subparam[22] = True
+subparam[6] = True
 
 
-# Using only one window
+# # Using only one window
 
-subparam = [
-    False for x in label_array
-]
-s,e = 12, 18
-subparam[s:e] = [True for i in range(s, e)]
+# subparam = [
+#     False for x in label_array
+# ]
+# s,e = 12, 18
+# subparam[s:e] = [True for i in range(s, e)]
 
-# Using only non zero lags
+# # Using only non zero lags
 
-subparam = [
-    True for x in label_array
-]
-subparam[0] = False
-subparam[12] = False
-subparam[18] = False
-subparam[22] = False
+# subparam = [
+#     True for x in label_array
+# ]
+# subparam[0] = False
+# subparam[12] = False
+# subparam[18] = False
+# subparam[22] = False
 
 
 

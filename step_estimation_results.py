@@ -67,11 +67,11 @@ for  QV_window in QV_rolling:
 if activateAV:
     for (sigma_window, QV_window) in zip(sigma_rolling, QV_rolling):
         H_si = estimation_GMM(sigma_window,
-                            QV_window,
-                            Psi,
-                            0.001,
-                            0.499,
-                            0.001)
+                              QV_window,
+                              Psi,
+                              0.001,
+                              0.499,
+                              0.001)
 
 
         estimates_H_si.append(H_si)
