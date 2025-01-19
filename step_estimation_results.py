@@ -5,7 +5,7 @@ from step_params import *
 from volatility import * 
 
 # Activate AV
-activateAV = True
+activateAV = False
 
 # Initialize variables
 QV = []
@@ -25,6 +25,9 @@ if activateAV:
 QV_total = QV.sum(axis=0)
 QV_rolling = np.array([QV[i:i + days_estimation].sum(axis=0)
                         for i in range(len(QV) - days_estimation)]) / days_estimation
+
+for lab, qv in zip(label_array, QV_total):
+    print(f"{lab}\t{qv:.3}")
 
 if activateAV:
     AV_total = AV.sum(axis=0)

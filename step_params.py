@@ -10,7 +10,7 @@ print("Initialisation...")
 
 
 # Identification
-identificator = "test_5s"
+identificator = "opt_5s_60w_90w_120w_150w"
 
 # Global parameters
 asset = 'spy'
@@ -21,19 +21,22 @@ days_estimation = 252
 # Volatility and quadratic variation estimation parameters
 price_truncation_method = 'BIVAR3'
 vol_truncation_method = 'STD3'
+
 params_volatility = [
     {'window': 60, 'N_lags': 6},
     {'window': 90, 'N_lags': 4},
-    {'window': 120, 'N_lags': 3},
-    {'window': 150, 'N_lags': 3},
-    {'window': 180, 'N_lags': 2},
+    {'window': 120, 'N_lags': 2},
+]
+params_volatility = [
+    {'window': 60, 'N_lags': 12},
+    {'window': 90, 'N_lags': 9},
+    {'window': 120, 'N_lags': 6},
+    {'window': 150, 'N_lags': 4},
 ]
 
-
-
 # Asymptotic variance estimation
-Ln = 360
-Kn = 270
+Ln = 180
+Kn = 720
 W_fun_id = 'parzen'
 
 # Optimisation parameters
@@ -41,8 +44,6 @@ H_min = 0
 H_max = 0.5
 H_step = 1000
 H_mesh = (H_max - H_min) / H_step
-
-
 
 #### DO NOT TOUCH BELOW
 
@@ -71,15 +72,6 @@ if W_fun_id == 'parzen':
 else:
     raise ValueError("Unknown W_fun_id")
 
-# Function to extract date and asset from file name
-# def parse_price_file(priceFile):
-#     """
-#     Extract asset, year, month, and day from price file in the format 'xxx_YYYY-MM-DD.csv'.
-#     """
-#     basename = os.path.basename(priceFile)
-#     asset, date_str = basename.split('_')
-#     date = datetime.strptime(date_str.replace('.csv', ''), "%Y-%m-%d")
-#     return asset, date.year, date.month, date.day
 
 # FileType generators
 def FileTypeVolatility(asset, year, month, day, window):
