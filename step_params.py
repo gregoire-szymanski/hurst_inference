@@ -10,13 +10,12 @@ print("Initialisation...")
 
 
 # Identification
-identificator = "opt_5s_60w_90w_120w_150w"
+identificator = "opt_5s_120w_150w_240w_300w"
 
 # Global parameters
 asset = 'spy'
 subsampling = 5
 delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
-days_estimation = 252
 
 # Volatility and quadratic variation estimation parameters
 price_truncation_method = 'BIVAR3'
@@ -28,10 +27,10 @@ params_volatility = [
     {'window': 120, 'N_lags': 2},
 ]
 params_volatility = [
-    {'window': 60, 'N_lags': 12},
-    {'window': 90, 'N_lags': 9},
     {'window': 120, 'N_lags': 6},
     {'window': 150, 'N_lags': 4},
+    {'window': 240, 'N_lags': 3},
+    {'window': 300, 'N_lags': 2},
 ]
 
 # Asymptotic variance estimation

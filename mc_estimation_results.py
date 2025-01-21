@@ -75,17 +75,14 @@ for param in params_volatility:
 total_n_lags = sum([param['N_lags'] for param in params_volatility])
 
 # Folder paths and Hurst values
-folder = "/Users/gregoire.szymanski/Documents/mc_results"
+folder = "/Users/gregoire.szymanski/Documents/mc_raw_results"
 list_sub_folders = os.listdir(folder)
 list_H_values = [0.1, 0.2, 0.3, 0.4, 0.5]
 
 for H in list_H_values:
     QV_list = []
 
-    for sub in list_sub_folders:
-        list_lines_QV = []
-        list_lines_AV = []
-        
+    for sub in list_sub_folders:        
         sub_path = os.path.join(folder, sub)
         filename = f"results{int(H * 10):02d}.txt"
         file_path = os.path.join(sub_path, filename)
@@ -94,19 +91,16 @@ for H in list_H_values:
             with open(file_path, 'r') as file:
                 lines = file.readlines()
 
-            # Parse lines into float arrays
-            data = np.array([float(value) for line in lines for value in line.split(",")])
-
-            # Split into QV and AV components
-            QV = data[:total_n_lags]
+            # Parse data
+            data = [np.array([float(value) for value in line.split(",")]) for line in lines]
+            QV = [line[:total_n_lags] for line in data]
             # AV = data[total_n_lags:total_n_lags + total_n_lags**2].reshape((total_n_lags, total_n_lags))
 
-            list_lines_QV.append(QV)
-            # list_lines_AV.append(AV)
-
-            # Compute mean QV and AV
-            QV_total = np.sum(list_lines_QV, axis=0) if list_lines_QV else None
+            # Aggregate data
+            QV_total = np.sum(QV, axis=0) if QV else None
             # AV_total = np.sum(list_lines_AV, axis=0) if list_lines_AV else None
+
+            # list_lines_AV.append(AV)
 
             # GMM Estimation on the entire dataset (QV_total)
             H_total_id = estimation_GMM(np.identity(len(QV_total)),

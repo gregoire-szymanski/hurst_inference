@@ -6,6 +6,7 @@ from volatility import *
 
 # Activate AV
 activateAV = False
+days_estimation = 252*2
 
 # Initialize variables
 QV = []
