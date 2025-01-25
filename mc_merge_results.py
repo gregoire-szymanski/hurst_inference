@@ -9,17 +9,19 @@ identificator = '5s'
 # Get the list of subfolders in the input folder
 list_subfolders = [
     subfolder for subfolder in os.listdir(input_folder)
-    if os.path.isdir(os.path.join(input_folder, subfolder)) and subfolder.startswith("output_") and subfolder[7:].isdigit()
+    if os.path.isdir(os.path.join(input_folder, subfolder)) and subfolder.startswith("simulation_")
 ]
 
 list_H = [0.1, 0.2, 0.3, 0.4, 0.5]
 
 for H in list_H:
+    print(H)
     filename = f"results{int(H * 10):02d}_{identificator}.txt"
     output_file_path = os.path.join(output_folder, filename)
 
     # Open the output file for writing
     with open(output_file_path, 'w') as output_file:
+        
         for subfolder in list_subfolders:
             input_file_path = os.path.join(input_folder, subfolder, filename)
 

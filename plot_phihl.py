@@ -17,21 +17,29 @@ def Phi_Hl(l, H):
 
 # Parameters
 H_values = [0.01, .05, .1, .2, .3, .4, 0.45, .49]
-l_values = np.arange(0, 11)  # Range of l values
+l_values = np.arange(2, 11)  # Range of l values
+l_values = np.linspace(2,10,81)  # Range of l values
 
-# # Plotting
-# plt.figure(figsize=(10, 6))
+# Plotting
+plt.figure(figsize=(10, 6))
 
-# for H in H_values:
-#     Phi_values = np.array([Phi_Hl(l, H) for l in l_values])
-#     plt.plot(l_values, Phi_values / Phi_values[0], label=f"H = {H}")
+for H in H_values:
+    zero = Phi_Hl(0, H) + 2 * Phi_Hl(1, H)
+    Phi_values = np.array([Phi_Hl(l, H) / zero for l in l_values])
+    plt.plot(l_values, Phi_values, label=f"H = {H}")
 
-# plt.title("Phi^H_ell for Different Values of H")
-# plt.xlabel("l")
-# plt.ylabel("Phi^H_ell")
-# plt.legend()
-# plt.grid(True)
-# plt.show()
+plt.title("Phi^H_ell for Different Values of H")
+plt.xlabel("l")
+plt.ylabel("Phi^H_ell")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+
+
+
+exit()
 
 
 H_values = np.linspace(0.001, 0.999, 1000)

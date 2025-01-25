@@ -12,6 +12,20 @@ params_volatility = [
     {'window': 150, 'N_lags': 4},
 ]
 
+subparam_params_volatility = [
+    {'window': 120, 'N_lags': 6},
+    {'window': 150, 'N_lags': 4},
+]
+
+subparam_mask = []
+for param in params_volatility:
+    if param in subparam_params_volatility:
+        subparam_mask.extend([True] * param['N_lags'])
+    else:
+        subparam_mask.extend([False] * param['N_lags'])
+    
+print(subparam_mask)
+
 # Optimisation parameters
 H_min = 0
 H_max = 0.5
@@ -54,7 +68,6 @@ def Psi(H):
             p.append(factor * Phi_Hl(i, H))
     return np.array(p)
 
-
 # Params array
 
 window_array = []
@@ -76,6 +89,7 @@ total_n_lags = sum([param['N_lags'] for param in params_volatility])
 
 # Folder paths and Hurst values
 folder = "/Users/gregoire.szymanski/Documents/mc_raw_results"
+identificator = '5s'
 list_sub_folders = os.listdir(folder)
 list_H_values = [0.1, 0.2, 0.3, 0.4, 0.5]
 
@@ -84,7 +98,7 @@ for H in list_H_values:
 
     for sub in list_sub_folders:        
         sub_path = os.path.join(folder, sub)
-        filename = f"results{int(H * 10):02d}.txt"
+        filename = f"results{int(H * 10):02d}_{identificator}.txt"
         file_path = os.path.join(sub_path, filename)
         
         if os.path.exists(file_path):

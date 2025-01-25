@@ -121,7 +121,7 @@ def F_estimation_GMM(W, V, Psi_func, H, normalisation = 1):
 
 def estimation_GMM(W, V, Psi_func, H_min=0.001, H_max=0.499, mesh=0.001, debug=False):
     # Create a grid of H values
-    H_values = np.arange(H_min, H_max + mesh, mesh)
+    H_values = np.arange(H_min, H_max, mesh)
     
     # Evaluate F_estimation_GMM for each H in the grid
     F_values = [F_estimation_GMM(W, V, Psi_func, [H]) for H in H_values]

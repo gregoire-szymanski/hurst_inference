@@ -43,17 +43,17 @@ if activateAV:
 H_total_id = estimation_GMM(np.identity(len(QV_total)),
                             QV_total,
                             Psi,
-                            0.001,
-                            0.499,
-                            0.00001)
+                            H_min,
+                            H_max,
+                            H_mesh)
 
 if activateAV:
     H_total_si = estimation_GMM(sigma_total,
                                 QV_total,
                                 Psi,
-                                0.001,
-                                0.499,
-                                0.00001)
+                                H_min,
+                                H_max,
+                                H_mesh)
 
 # GMM Estimation for each rolling window
 estimates_H_id = []
@@ -63,9 +63,9 @@ for  QV_window in QV_rolling:
     H_id = estimation_GMM(np.identity(len(QV_window)),
                           QV_window,
                           Psi,
-                          0.001,
-                          0.499,
-                          0.001)
+                          H_min,
+                          H_max,
+                          H_mesh)
     estimates_H_id.append(H_id)
 
 if activateAV:
@@ -73,9 +73,9 @@ if activateAV:
         H_si = estimation_GMM(sigma_window,
                               QV_window,
                               Psi,
-                              0.001,
-                              0.499,
-                              0.001)
+                              H_min,
+                              H_max,
+                              H_mesh)
 
 
         estimates_H_si.append(H_si)

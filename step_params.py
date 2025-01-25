@@ -10,7 +10,7 @@ print("Initialisation...")
 
 
 # Identification
-identificator = "opt_5s_120w_150w_240w_300w"
+identificator = "opt_5s_120w_150w"
 
 # Global parameters
 asset = 'spy'
@@ -22,15 +22,8 @@ price_truncation_method = 'BIVAR3'
 vol_truncation_method = 'STD3'
 
 params_volatility = [
-    {'window': 60, 'N_lags': 6},
-    {'window': 90, 'N_lags': 4},
-    {'window': 120, 'N_lags': 2},
-]
-params_volatility = [
     {'window': 120, 'N_lags': 6},
-    {'window': 150, 'N_lags': 4},
-    {'window': 240, 'N_lags': 3},
-    {'window': 300, 'N_lags': 2},
+    {'window': 150, 'N_lags': 4}
 ]
 
 # Asymptotic variance estimation
@@ -39,10 +32,9 @@ Kn = 720
 W_fun_id = 'parzen'
 
 # Optimisation parameters
-H_min = 0
-H_max = 0.5
-H_step = 1000
-H_mesh = (H_max - H_min) / H_step
+H_mesh = 0.0001
+H_min = H_mesh
+H_max = 0.5 + H_mesh
 
 #### DO NOT TOUCH BELOW
 

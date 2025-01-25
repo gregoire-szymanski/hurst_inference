@@ -6,15 +6,29 @@ import os
 
 
 params_volatility = [
+    {'window': 60, 'N_lags': 12},
+    {'window': 90, 'N_lags': 9},
     {'window': 120, 'N_lags': 6},
     {'window': 150, 'N_lags': 4},
 ]
 
+subparam_params_volatility = [
+    {'window': 90, 'N_lags': 9},
+]
+
+subparam_mask = []
+for param in params_volatility:
+    if param in subparam_params_volatility:
+        subparam_mask.extend([True] * param['N_lags'])
+    else:
+        subparam_mask.extend([False] * param['N_lags'])
+    
+identificator = '5s'
+
 # Optimisation parameters
-H_min = 0
-H_max = 0.5
-H_step = 1000
-H_mesh = (H_max - H_min) / H_step
+H_mesh = 0.0001
+H_min = H_mesh
+H_max = 0.5 + H_mesh
 
 def Psi(H):
     """
@@ -37,7 +51,7 @@ def Psi(H):
         A NumPy array of computed Psi values.
     """
     p = []
-    for param in params_volatility:
+    for param in subparam_params_volatility:
         window = param['window']
         N_lags = param['N_lags']
 
@@ -78,12 +92,13 @@ for H in list_H_values:
             lines = file.readlines()
 
         data = [np.array([float(value) for value in line.split(",")]) for line in lines]
-        QV = [line[21:21+total_n_lags] for line in data]
+        QV = [line[:total_n_lags] for line in data]
         QV_total = np.sum(QV, axis=0) if QV else None
+        QV_total = QV_total[subparam_mask]
         H_total_id = estimation_GMM(np.identity(len(QV_total)),
                                     QV_total,
                                     Psi,
-                                    0.001,
-                                    0.499,
-                                    0.00001)
+                                    H_min,
+                                    H_max,
+                                    H_mesh)
         print(f"{H:.2}\t{H_total_id:.4}")
