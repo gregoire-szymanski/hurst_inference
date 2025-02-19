@@ -17,6 +17,33 @@ def Phi_Hl(l, H):
     return numerator / denominator
 
 
+def dPhi_Hl_dH(l, H):
+    """
+    Compute the derivative of Phi^H_ell with respect to H.
+
+    :param l: The parameter ell in the formula
+    :param H: The parameter H (Hurst exponent) in the formula
+    :return: The computed derivative d/dH (Phi^H_ell)
+    """
+    def power_term_derivative(x, H):
+        return (2 * x ** (2 * H + 2) * np.log(np.abs(x)))
+    
+    numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
+                 6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
+                 np.abs(l - 2) ** (2 * H + 2))
+
+    numerator_derivative = (
+        power_term_derivative(np.abs(l + 2), H) - 4 * power_term_derivative(np.abs(l + 1), H) +
+        6 * power_term_derivative(np.abs(l), H) - 4 * power_term_derivative(np.abs(l - 1), H) +
+        power_term_derivative(np.abs(l - 2), H)
+    )
+    
+    denominator = 2 * (2 * H + 1) * (2 * H + 2)
+    denominator_derivative = 4 * (4 * H + 3)
+    
+    return (numerator_derivative * denominator - denominator_derivative * numerator) / (denominator * denominator)
+
+
 def dichotomic_search(f, target, low, high, is_increasing=True, epsilon=1e-5):
     """
     Perform a dichotomic (binary) search for a target value within a specified interval [low, high]
