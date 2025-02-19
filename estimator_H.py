@@ -2,13 +2,16 @@ import numpy as np
 
 ##### Preliminary functions
 
-def Phi_Hl(l, H):
+def Phi_Hl(l: int, H: float) -> float:
     """
-    Compute the value of Phi^H_ell based on the given formula.
+    Compute the value of \(\Phi^H_\ell\) using a finite difference formula.
 
-    :param l: The parameter ell in the formula
-    :param H: The parameter H (Hurst exponent) in the formula
-    :return: The computed value of Phi^H_ell
+    This function evaluates a discrete approximation based on powers of absolute values,
+    commonly used in fractional Brownian motion and related models.
+
+    :param l: Index \(\ell\) in the formula (integer).
+    :param H: Hurst exponent \(H\), controlling the memory effect (float).
+    :return: Computed value of \(\Phi^H_\ell\).
     """
     numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
                  6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
@@ -19,14 +22,15 @@ def Phi_Hl(l, H):
 
 
 
-
-def dPhi_Hl_dH(l, H):
+def dPhi_Hl_dH(l: int, H: float) -> float:
     """
-    Compute the derivative of Phi^H_ell with respect to H.
+    Compute the derivative of \(\Phi^H_\ell\) with respect to \(H\).
 
-    :param l: The parameter ell in the formula
-    :param H: The parameter H (Hurst exponent) in the formula
-    :return: The computed derivative d/dH (Phi^H_ell)
+    Uses the chain rule to differentiate power terms in the finite difference formula.
+
+    :param l: Index \(\ell\) in the formula (integer).
+    :param H: Hurst exponent \(H\) (float).
+    :return: The computed derivative \(\frac{d}{dH} \Phi^H_\ell\).
     """
     def power_term_derivative(x, H):
         return (2 * x ** (2 * H + 2) * np.log(np.abs(x)))
@@ -47,18 +51,19 @@ def dPhi_Hl_dH(l, H):
     return (numerator_derivative * denominator - denominator_derivative * numerator) / (denominator * denominator)
 
 
-def dichotomic_search(f, target, low, high, is_increasing=True, epsilon=1e-5):
+def dichotomic_search(f, target: float, low: float, high: float, is_increasing: bool = True, epsilon: float = 1e-5) -> float:
     """
-    Perform a dichotomic (binary) search for a target value within a specified interval [low, high]
-    of a monotonic function 'f'.
+    Perform a dichotomic (binary) search to find an approximate solution \(x\) such that \(f(x) \approx \text{target}\).
 
+    The function `f` is assumed to be monotonic (either increasing or decreasing, default being increasing).
+    
     :param f: Monotonic function to search over.
     :param target: Target value to search for.
     :param low: Lower bound of the search interval.
     :param high: Upper bound of the search interval.
-    :param is_increasing: True if the function is increasing, False if decreasing.
-    :param epsilon: Tolerance for the convergence of the search.
-    :return: The point where the function value is closest to the target, or None if not found.
+    :param is_increasing: If True, `f` is increasing; otherwise, it is decreasing.
+    :param epsilon: Tolerance for stopping the search.
+    :return: Approximate solution \(x\) where \(f(x) \approx \text{target}\).
     """
 
     if is_increasing:
@@ -95,58 +100,63 @@ def dichotomic_search(f, target, low, high, is_increasing=True, epsilon=1e-5):
 
 ##### GMM estimator
 
-# GMM method tries to minimize 
-# F(H,R) = (V-P)^T W (V-P)
-# F(H,R) = V^T W V - P^T W V - V^T W P + P^T W P
+def F_estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H: list, normalisation: float = 1) -> float:
+    """
+    Compute the GMM objective function \(F(H, R)\) for given parameters.
+    
+    This function minimizes:
+    
+    \[ F(H, R) = (V - P)^T W (V - P) \]
+    
+    where \(P\) is computed based on \(H\).
 
-# F_estimation_GMM is the function to be estimated
-def F_estimation_GMM(W, V, Psi_func, H, normalisation = 1):
-    # Extract the scalar H from the provided list or array
+    :param W: Weight matrix (numpy array).
+    :param V: Observation vector (numpy array).
+    :param Psi_func: Function \(\Psi(H)\) providing model predictions.
+    :param H: Scalar Hurst exponent wrapped in a list.
+    :param normalisation: Normalization factor for the function value.
+    :return: Evaluated objective function value.
+    """
+
     H = H[0]
-    
-    # Ensure V is a column matrix
-    # If V is already 2D with shape (n,1), this will do nothing.
-    # If V is 1D (shape (n,)), it will reshape into (n,1).
     V = np.atleast_2d(V).reshape(-1, 1)
-    
-    # Compute Psi as a column vector
-    Psi = Psi_func(H)
-    Psi = np.atleast_2d(Psi).reshape(-1, 1)
-    
-    # Compute terms:
-    # term0 = Vᵀ W V
-    # term1 = (Psiᵀ W V) + (Vᵀ W Psi)
-    # term2 = Psiᵀ W Psi
-    
+    Psi = np.atleast_2d(Psi_func(H)).reshape(-1, 1)
+        
     term0 = V.T @ W @ V
     term1 = (Psi.T @ W @ V) + (V.T @ W @ Psi)
     term2 = Psi.T @ W @ Psi
     
-    # Since these are all (1x1) results, extract the scalar values
     term0 = term0[0, 0]
     term1 = term1[0, 0]
     term2 = term2[0, 0]
     
     R = term1 / term2 / 2
     
-    # Return the scalar result:
     return normalisation * (term0 - R * term1 + term2 * R * R)
 
 
-# estimation_GMM is the function to proceed to the estimation procedure
-def estimation_GMM(W, V, Psi_func, H_min=0.001, H_max=0.499, mesh=0.001, debug=False):
-    # Create a grid of H values
+def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001, H_max: float = 0.499, mesh: float = 0.001, debug: bool = False):
+    """
+    Perform Generalized Method of Moments (GMM) estimation for the Hurst exponent.
+    
+    This method finds \(H\) that minimizes the GMM objective function over a predefined grid.
+    
+    :param W: Weight matrix (numpy array).
+    :param V: Observation vector (numpy array).
+    :param Psi_func: Function returning model predictions \(\Psi(H)\).
+    :param H_min: Minimum value for H search grid.
+    :param H_max: Maximum value for H search grid.
+    :param mesh: Step size for grid search.
+    :param debug: If True, return intermediate results.
+    :return: Estimated Hurst exponent.
+    """
     H_values = np.arange(H_min, H_max, mesh)
-    
-    # Evaluate F_estimation_GMM for each H in the grid
     F_values = [F_estimation_GMM(W, V, Psi_func, [H]) for H in H_values]
-    
-    # Find the index of the minimum value
     min_index = np.argmin(F_values)
     
     if debug:
         return H_values, F_values, min_index
-    # Return the H that gives the smallest F-estimation
+
     return H_values[min_index]
 
 
