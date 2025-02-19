@@ -1,6 +1,7 @@
 from step_params import *
 from volatility import *
 from timer import *
+import matplotlib.pyplot as plt
 
 
 print("Computing volatility patterns...")
@@ -16,6 +17,8 @@ for (i,param) in enumerate(params_volatility):
     
     DH.save_data(FileTypePattern(asset, param["window"]), 
                  pattern.get_pattern().get_values())
+    
+    plt.show()
 
 print(f"Volatility patterns computed in {timer.total_time():.2f}s.")
 
