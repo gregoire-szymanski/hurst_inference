@@ -17,6 +17,9 @@ def Phi_Hl(l, H):
     return numerator / denominator
 
 
+
+
+
 def dPhi_Hl_dH(l, H):
     """
     Compute the derivative of Phi^H_ell with respect to H.
