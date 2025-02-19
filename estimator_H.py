@@ -93,29 +93,13 @@ def dichotomic_search(f, target, low, high, is_increasing=True, epsilon=1e-5):
     return None  # Target value not found within the interval
 
 
-##### Ratio with different windows
-
-def ratio_estimator(QV, QV_2kn):
-    return np.log(QV_2kn / QV) / (np.log(2) * 2)
-
-##### Ratio with different lags
-
-def ratio_2_01(H):
-    return Phi_Hl(2, H) / (Phi_Hl(0, H) + 2 * Phi_Hl(1, H))
-
-def inverse_ratio_2_01(target):
-    return dichotomic_search(ratio_2_01, target, 1e-5, 1, is_increasing=True, epsilon=1e-5)
-
-def estimation_01_2(QV01, QV2):
-    return inverse_ratio_2_01(QV2 / QV01)
-
-
 ##### GMM estimator
 
 # GMM method tries to minimize 
 # F(H,R) = (V-P)^T W (V-P)
 # F(H,R) = V^T W V - P^T W V - V^T W P + P^T W P
 
+# F_estimation_GMM is the function to be estimated
 def F_estimation_GMM(W, V, Psi_func, H, normalisation = 1):
     # Extract the scalar H from the provided list or array
     H = H[0]
@@ -149,6 +133,7 @@ def F_estimation_GMM(W, V, Psi_func, H, normalisation = 1):
     return normalisation * (term0 - R * term1 + term2 * R * R)
 
 
+# estimation_GMM is the function to proceed to the estimation procedure
 def estimation_GMM(W, V, Psi_func, H_min=0.001, H_max=0.499, mesh=0.001, debug=False):
     # Create a grid of H values
     H_values = np.arange(H_min, H_max, mesh)
