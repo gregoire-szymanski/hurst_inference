@@ -8,7 +8,6 @@ from dates import *
 
 print("Initialisation...")
 
-
 # Identification
 identificator = "opt_5s_120w_150w"
 
@@ -36,6 +35,14 @@ H_mesh = 0.0001
 H_min = H_mesh
 H_max = 0.5 + H_mesh
 
+
+
+
+
+
+
+
+
 #### DO NOT TOUCH BELOW
 
 # Create folder structure
@@ -56,6 +63,9 @@ create_folders(tmp_folder, [f"volinc/{param['window']}" for param in params_vola
 DH = DataHandler(prices_folder="~/Documents/data/SPY/price/1s/daily_csv/", 
                  tmp_folder=tmp_folder)
 
+
+
+
 # Kernel for W_fun
 if W_fun_id == 'parzen':
     kernel_k = lambda x: 1 - 6 * x**2 + 6 * x**3 if x <= 0.5 else 2 * (1 - x)**3
@@ -66,43 +76,45 @@ else:
 
 # FileType generators
 def FileTypeVolatility(asset, year, month, day, window):
-    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = f"vol/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
 def FileTypePattern(asset, window):
-    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = f"pattern/{window}"
     return FileType(subfolder=subfolder, asset=asset)
 
 def FileTypeVolatilityIncrements(asset, year, month, day, window):
-    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = f"volinc/{window}"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
 def FileTypeQV(asset, year, month, day):
-    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = "qv/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
 def FileTypeAV(asset, year, month, day):
-    # asset, year, month, day = parse_price_file(priceFile)
     subfolder = "av/"
     return FileType(subfolder=subfolder, asset=asset, year=year, month=month, day=day)
 
-# Remove all FOMC announcement dates from the data
+
+# Remove FOMC and trading halts
 for date in FOMC_announcement:
     DH.remove_date(date)
 
-# Remove all trading halt dates from the data
 for date in trading_halt:
     DH.remove_date(date)
 
 dates = DH.dates(asset)
 dates = [(date.year, date.month, date.day) for D in dates for date in [datetime.strptime(D, "%Y-%m-%d")]]
 
+years = [year for (year, month, day) in dates ]
+years = np.unique(years)
 
 
+
+
+
+
+# Create estimation functions
 def Psi(H):
     """
     Precompute the Psi(H) function for the given parameter configurations.
@@ -158,3 +170,17 @@ for param in params_volatility:
     label_array.extend([f"W{window}; L{i}" for i in range(2,N_lags+1)])
 
 
+# Data Loader
+def load_QV():
+    QV = []
+    for (year, month, day) in dates: 
+        QV.append(DH.get_data(FileTypeQV(asset, year, month, day))) 
+    QV = np.array(QV)
+    return QV
+
+def load_AV():
+    AV = []
+    for (year, month, day) in dates: 
+        AV.append(DH.get_data(FileTypeAV(asset, year, month, day))) 
+    AV = np.array(AV)
+    return AV

@@ -7,28 +7,21 @@ from volatility import *
 # Activate AV
 activateAV = False
 days_estimation = 252*2
+results_per_year = False
 
-# Initialize variables
-QV = []
-for (year, month, day) in dates: 
-    QV.append(DH.get_data(FileTypeQV(asset, year, month, day))) 
-QV = np.array(QV)
 
+# Load data
+# Load quadratic variations
+QV = load_QV()
+
+# Load asymptotic variance
 if activateAV:
-    AV = []
-    for (year, month, day) in dates: 
-        AV.append(DH.get_data(FileTypeAV(asset, year, month, day))) 
-    AV = np.array(AV)
-
-
+    AV = load_AV()
 
 # Rolling window estimation
 QV_total = QV.sum(axis=0)
 QV_rolling = np.array([QV[i:i + days_estimation].sum(axis=0)
                         for i in range(len(QV) - days_estimation)]) / days_estimation
-
-for lab, qv in zip(label_array, QV_total):
-    print(f"{lab}\t{qv:.3}")
 
 if activateAV:
     AV_total = AV.sum(axis=0)

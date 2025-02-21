@@ -4,14 +4,14 @@ import pandas as pd
 from step_params import * 
 from volatility import * 
 
+
+
+
 # Activate AV
 activateAV = False
 N_rolling = 4
 
 # Initialize variables
-years = [year for (year, month, day) in dates ]
-years = np.unique(years)
-print(years)
 QV_year = {year:[] for year in years}
 
 for (year, month, day) in dates: 

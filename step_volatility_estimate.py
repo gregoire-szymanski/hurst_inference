@@ -17,6 +17,7 @@ for param in params_volatility:
 print("Computing intraday volatilities...")
 timer = Timer(len(dates))
 timer.start()
+
 for (i,(year, month, day)) in enumerate(dates):
     if i % 50 == 49 and i > 0:  timer.step(i)
 
@@ -28,6 +29,7 @@ for (i,(year, month, day)) in enumerate(dates):
         vol = param["ve"].compute(price_array)
         filetype = FileTypeVolatility(asset, year, month, day, param["window"])
         DH.save_data(filetype, vol.get_values())
+
 print(f"Intraday volatilities computed in {timer.total_time():.2f}s.")
 
 
