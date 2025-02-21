@@ -9,6 +9,9 @@ from preparations import *
 
 # Activate AV
 days_estimation = 252*2
+H_mesh = 0.001
+H_min = H_mesh
+H_max = 0.5 + H_mesh
 
 
 # Load data
@@ -75,7 +78,7 @@ plt.plot(first_days, estimates_H, color='blue', linestyle='-')
 plt.xlabel("$t$")
 plt.ylabel("$H$")
 # plt.title("H Estimates Over Time")
-plt.legend()
+# plt.legend()
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()

@@ -23,11 +23,6 @@ if identificator ==  "opt_5s_120w_150w":
     Kn = 720
     W_fun_id = 'parzen'
 
-    # Optimisation parameters
-    H_mesh = 0.0001
-    H_min = H_mesh
-    H_max = 0.5 + H_mesh
-
 else:
     raise ValueError("Unknown identificator")
 

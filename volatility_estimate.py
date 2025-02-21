@@ -1,5 +1,6 @@
 from lib.volatility import *
 from lib.timer import *
+from lib.price import Price
 
 from parameters import *
 from preparations import *
@@ -23,7 +24,7 @@ timer.start()
 for (i,(year, month, day)) in enumerate(dates):
     if i % 50 == 49 and i > 0:  timer.step(i)
 
-    price = DH.get_price(asset, year, month, day)
+    price = Price(DH.get_price(asset, year, month, day))
     price.subsample(subsampling)
     price_array = price.get_price() 
 

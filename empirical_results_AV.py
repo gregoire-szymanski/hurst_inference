@@ -9,6 +9,9 @@ from preparations import *
 
 # Activate AV
 days_estimation = 252*2
+H_mesh = 0.01
+H_min = H_mesh
+H_max = 0.5 + H_mesh
 
 
 # Load data

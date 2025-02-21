@@ -5,8 +5,8 @@ import sys
 scripts = [
     "parameters.py",
     "preparations.py",
+    "volatility_estimate.py",
     "volatility_patterns.py",
-    "volatility_increments.py",
     "quadratic_variations.py",
 ]
 

@@ -2,7 +2,6 @@ import os
 import re
 import datetime
 import pandas as pd
-from price import Price
 import csv
 import numpy as np
 
@@ -83,7 +82,7 @@ class DataHandler:
         if not os.path.exists(fullpath):
             raise FileNotFoundError(f"No price file found for {asset} on {date_str}")
         
-        return Price(pd.read_csv(fullpath))
+        return pd.read_csv(fullpath)
 
     def save_data(self, filetype_obj, data, save=True):
         # Use filetype_obj.to_string() for filename
