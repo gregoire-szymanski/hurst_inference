@@ -3,11 +3,11 @@ import sys
 
 # List of scripts to run in order
 scripts = [
-    "step_params.py",
-    "step_volatility_estimate.py",
-    "step_volatility_patterns.py",
-    "step_volatility_increments.py",
-    "step_quadratic_variations.py",
+    "parameters.py",
+    "preparations.py",
+    "volatility_patterns.py",
+    "volatility_increments.py",
+    "quadratic_variations.py",
 ]
 
 def run_scripts(scripts):
