@@ -1,8 +1,8 @@
 from lib.volatility import *
 from lib.timer import *
 
-from emp.parameters import *
-from emp.preparations import *
+from parameters import *
+from preparations import *
 
 
 for param in params_volatility:

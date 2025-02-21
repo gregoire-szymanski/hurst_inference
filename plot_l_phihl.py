@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from estimator_H import Phi_Hl
+
+from lib.estimator_H import Phi_Hl
 
 # Parameters
 H_values = [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.45, 0.49]
@@ -27,8 +28,6 @@ plt.ylabel(r"$\Phi^H_\ell$", fontsize=12)
 # Styling
 plt.legend(fontsize=10)
 plt.grid(True, linestyle="--", alpha=0.6)
-# plt.xlim([min(l_values), max(l_values)])
-# plt.ylim([0, max(max(Phi_values) for H in H_values)])  # Ensure proper y-axis range
 
 # Show plot
 plt.show()

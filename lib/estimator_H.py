@@ -4,14 +4,14 @@ import numpy as np
 
 def Phi_Hl(l: int, H: float) -> float:
     """
-    Compute the value of \(\Phi^H_\ell\) using a finite difference formula.
+    Compute the value of $\\Phi^H_\\ell$ using a finite difference formula.
 
     This function evaluates a discrete approximation based on powers of absolute values,
     commonly used in fractional Brownian motion and related models.
 
-    :param l: Index \(\ell\) in the formula (integer).
-    :param H: Hurst exponent \(H\), controlling the memory effect (float).
-    :return: Computed value of \(\Phi^H_\ell\).
+    :param l: Index $\\ell$ in the formula (integer).
+    :param H: Hurst exponent $H$, controlling the memory effect (float).
+    :return: Computed value of $\\Phi^H_\\ell$.
     """
     numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
                  6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
@@ -24,13 +24,13 @@ def Phi_Hl(l: int, H: float) -> float:
 
 def dPhi_Hl_dH(l: int, H: float) -> float:
     """
-    Compute the derivative of \(\Phi^H_\ell\) with respect to \(H\).
+    Compute the derivative of $\\Phi^H_\\ell$ with respect to $H$.
 
     Uses the chain rule to differentiate power terms in the finite difference formula.
 
-    :param l: Index \(\ell\) in the formula (integer).
-    :param H: Hurst exponent \(H\) (float).
-    :return: The computed derivative \(\frac{d}{dH} \Phi^H_\ell\).
+    :param l: Index $\\ell$ in the formula (integer).
+    :param H: Hurst exponent $H$ (float).
+    :return: The computed derivative $\\frac{d}{dH} \\Phi^H_\\ell$.
     """
     def power_term_derivative(x, H):
         return (2 * x ** (2 * H + 2) * np.log(np.abs(x)))
@@ -53,7 +53,7 @@ def dPhi_Hl_dH(l: int, H: float) -> float:
 
 def dichotomic_search(f, target: float, low: float, high: float, is_increasing: bool = True, epsilon: float = 1e-5) -> float:
     """
-    Perform a dichotomic (binary) search to find an approximate solution \(x\) such that \(f(x) \approx \text{target}\).
+    Perform a dichotomic (binary) search to find an approximate solution $x$ such that $f(x) \\approx \\text{target}$.
 
     The function `f` is assumed to be monotonic (either increasing or decreasing, default being increasing).
     
@@ -63,7 +63,7 @@ def dichotomic_search(f, target: float, low: float, high: float, is_increasing: 
     :param high: Upper bound of the search interval.
     :param is_increasing: If True, `f` is increasing; otherwise, it is decreasing.
     :param epsilon: Tolerance for stopping the search.
-    :return: Approximate solution \(x\) where \(f(x) \approx \text{target}\).
+    :return: Approximate solution $x$ where $f(x) \\approx \\text{target}$.
     """
 
     if is_increasing:
@@ -102,17 +102,17 @@ def dichotomic_search(f, target: float, low: float, high: float, is_increasing: 
 
 def F_estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H: list, normalisation: float = 1) -> float:
     """
-    Compute the GMM objective function \(F(H, R)\) for given parameters.
+    Compute the GMM objective function $F(H, R)$ for given parameters.
     
     This function minimizes:
     
-    \[ F(H, R) = (V - P)^T W (V - P) \]
+    $$ F(H, R) = (V - P)^T W (V - P) $$
     
-    where \(P\) is computed based on \(H\).
+    where $P$ is computed based on $H$.
 
     :param W: Weight matrix (numpy array).
     :param V: Observation vector (numpy array).
-    :param Psi_func: Function \(\Psi(H)\) providing model predictions.
+    :param Psi_func: Function $\\Psi(H)$ providing model predictions.
     :param H: Scalar Hurst exponent wrapped in a list.
     :param normalisation: Normalization factor for the function value.
     :return: Evaluated objective function value.
@@ -139,11 +139,11 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
     """
     Perform Generalized Method of Moments (GMM) estimation for the Hurst exponent.
     
-    This method finds \(H\) that minimizes the GMM objective function over a predefined grid.
+    This method finds $H$ that minimizes the GMM objective function over a predefined grid.
     
     :param W: Weight matrix (numpy array).
     :param V: Observation vector (numpy array).
-    :param Psi_func: Function returning model predictions \(\Psi(H)\).
+    :param Psi_func: Function returning model predictions $\\Psi(H)$.
     :param H_min: Minimum value for H search grid.
     :param H_max: Maximum value for H search grid.
     :param mesh: Step size for grid search.

@@ -1,5 +1,5 @@
-from emp.parameters import *
-from emp.preparations import *
+from parameters import *
+from preparations import *
 
 from lib.volatility import *
 from lib.timer import *

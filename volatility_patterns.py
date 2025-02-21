@@ -1,8 +1,8 @@
 from lib.timer import *
 from lib.volatility import *
 
-from emp.parameters import *
-from emp.preparations import *
+from parameters import *
+from preparations import *
 
 
 print("Computing volatility patterns...")

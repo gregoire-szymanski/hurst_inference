@@ -1,11 +1,14 @@
-from step_params import *
-from volatility import *
-from timer import *
-import matplotlib.pyplot as plt
-
-# Ensure required modules for handling dates and data retrieval are imported
 from datetime import datetime
 from collections import defaultdict
+import matplotlib.pyplot as plt
+
+from lib.volatility import *
+from lib.timer import *
+
+from parameters import *
+from preparations import *
+
+
 
 print("Computing volatility patterns...")
 timer = Timer(len(params_volatility), type="window")
