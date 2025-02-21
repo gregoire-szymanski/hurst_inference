@@ -1,49 +1,44 @@
-import numpy as np
 import os
-from estimator_H import *
 from datetime import datetime
-from data_handler import DataHandler, FileType
-from dates import *
+
+import numpy as np
+
+from lib.estimator_H import *
+from lib.data_handler import DataHandler, FileType
+from lib.dates import *
+
+from parameters import *
 
 
-print("Initialisation...")
+if identificator ==  "opt_5s_120w_150w":
+    # Global parameters
+    asset = 'spy'
+    subsampling = 5
+    delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
 
-# Identification
-identificator = "opt_5s_120w_150w"
+    # Volatility and quadratic variation estimation parameters
+    price_truncation_method = 'BIVAR3'
+    vol_truncation_method = 'STD3'
 
-# Global parameters
-asset = 'spy'
-subsampling = 5
-delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
+    params_volatility = [
+        {'window': 120, 'N_lags': 6},
+        {'window': 150, 'N_lags': 4}
+    ]
 
-# Volatility and quadratic variation estimation parameters
-price_truncation_method = 'BIVAR3'
-vol_truncation_method = 'STD3'
+    # Asymptotic variance estimation
+    Ln = 180
+    Kn = 720
+    W_fun_id = 'parzen'
 
-params_volatility = [
-    {'window': 120, 'N_lags': 6},
-    {'window': 150, 'N_lags': 4}
-]
+    # Optimisation parameters
+    H_mesh = 0.0001
+    H_min = H_mesh
+    H_max = 0.5 + H_mesh
 
-# Asymptotic variance estimation
-Ln = 180
-Kn = 720
-W_fun_id = 'parzen'
-
-# Optimisation parameters
-H_mesh = 0.0001
-H_min = H_mesh
-H_max = 0.5 + H_mesh
-
+else:
+    raise ValueError("Unknown identificator")
 
 
-
-
-
-
-
-
-#### DO NOT TOUCH BELOW
 
 # Create folder structure
 tmp_folder = os.path.expanduser(f"~/Documents/data/tmp/hurst_inference/{identificator}/")

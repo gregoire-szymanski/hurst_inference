@@ -1,8 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from step_params import * 
-from volatility import * 
+
+from emp.parameters import * 
+from emp.preparations import * 
+
+from lib.volatility import * 
 
 
 

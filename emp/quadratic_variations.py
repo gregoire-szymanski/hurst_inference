@@ -1,8 +1,10 @@
-from step_params import *
-from volatility import *
-from timer import *
-from quadratic_variation import *
+from lib.quadratic_variation import *
 
+from lib.volatility import *
+from lib.timer import *
+
+from emp.parameters import *
+from emp.preparations import *
 
 for (i,param) in enumerate(params_volatility):
     param["pattern"] = DH.get_data(FileTypePattern(asset, param["window"]))

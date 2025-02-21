@@ -1,6 +1,9 @@
-from step_params import *
-from volatility import *
-from timer import *
+from lib.volatility import *
+from lib.timer import *
+
+from emp.parameters import *
+from emp.preparations import *
+
 
 for param in params_volatility:
     window = param['window']
@@ -12,7 +15,6 @@ for param in params_volatility:
         window=window,
         price_truncation=price_truncation_method
     )
-
 
 print("Computing intraday volatilities...")
 timer = Timer(len(dates))
