@@ -247,15 +247,6 @@ def get_optimal_variance(params_volatility, H, eta, n_days, delta_n):
         for j in range(m):
             Sigma[i,j] = compute_gamma(theta[i], theta[j], lags_values[i], lags_values[j], H) * (theta[i] * theta[j])**(2*H-1/2)
 
-
-    AWA = alpha.transpose() @ np.linalg.inv(Sigma) @ alpha
-    AWB = alpha.transpose() @ np.linalg.inv(Sigma) @ beta
-    BWB = beta.transpose() @ np.linalg.inv(Sigma) @ beta
-
-    numerator = BWB
-    denominator = (AWA * BWB) - AWB * AWB
-
-
     u_t = np.array([alpha * R, beta]).transpose()
 
     D = np.array([
@@ -267,6 +258,48 @@ def get_optimal_variance(params_volatility, H, eta, n_days, delta_n):
 
     uWu_inv = np.linalg.inv(u_t.transpose() @ W @ u_t)
     matrix_43 = reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W @ Sigma @ W @ u_t @ uWu_inv @ D.transpose()
+
+    return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
+
+
+
+
+
+def get_confidence_matrix(params_volatility, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
+    window_values = []
+    lags_values = []
+
+    for param in params_volatility:
+        window = param['window']
+        N_lags = param['N_lags']
+        
+        window_values.extend([window for _ in range(N_lags)])
+        lags_values.extend([i for i in range(1,N_lags+1)])
+
+    reference_window = window_values[0]
+    theta = [w / reference_window for w in window_values]
+
+    m = len(window_values)
+
+
+    alpha = np.zeros(m)
+    beta = np.zeros(m)
+
+    for i in range(m):
+        alpha[i] = compute_alpha(theta[i], lags_values[i], H_estimated)
+        beta[i] = compute_beta(theta[i], lags_values[i], H_estimated)
+
+    alpha_beta = np.array([alpha, beta])
+
+    u_t = np.array([alpha * R_estimated, beta]).transpose()
+
+    D = np.array([
+        [1, 0],
+        [-2 * np.log(reference_window * delta_n), 1]
+    ])
+
+    uWu_inv = np.linalg.inv(u_t.transpose() @ W @ u_t)
+    matrix_43 = (delta_n * reference_window)**(1-4*H_estimated) * reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
 
     return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
 
