@@ -1,21 +1,21 @@
 import numpy as np
 
-def computeVolatilityIncrements(window, vol_truncation, volatilities, pattern):
-    mean_volatilities = np.mean(volatilities)
-    volatilities = volatilities / pattern / mean_volatilities
+# def computeVolatilityIncrements(window, vol_truncation, volatilities, pattern):
+#     mean_volatilities = np.mean(volatilities)
+#     volatilities = volatilities / pattern / mean_volatilities
 
-    volatilities_increments = volatilities[window:] - volatilities[:-window]
+#     volatilities_increments = volatilities[window:] - volatilities[:-window]
 
-    if vol_truncation == 'STD3':
-        truncationValue = 3 * np.std(volatilities_increments)
-    elif vol_truncation == 'STD5':
-        truncationValue = 5 * np.std(volatilities_increments)
-    elif type(vol_truncation) == float:
-        truncationValue = vol_truncation
+#     if vol_truncation == 'STD3':
+#         truncationValue = 3 * np.std(volatilities_increments)
+#     elif vol_truncation == 'STD5':
+#         truncationValue = 5 * np.std(volatilities_increments)
+#     elif type(vol_truncation) == float:
+#         truncationValue = vol_truncation
     
-    volatilities_increments[np.abs(volatilities_increments) > truncationValue] = 0
+#     volatilities_increments[np.abs(volatilities_increments) > truncationValue] = 0
     
-    return volatilities_increments
+#     return volatilities_increments
 
 
 class QuadraticCovariationsEstimator:
@@ -85,7 +85,7 @@ class QuadraticCovariationsEstimator:
 
 
 class AsymptoticVarianceEstimator:
-    def __init__(self, W_fun, Ln, Kn):
+    def __init__(self, W_fun, Ln, Kn, delta):
         """
         Parameters
         ----------
@@ -99,6 +99,7 @@ class AsymptoticVarianceEstimator:
         self.W_fun = W_fun
         self.Ln = Ln
         self.Kn = Kn
+        self.delta = delta
         
     def correction(self, DRV):
         """
@@ -175,7 +176,7 @@ class AsymptoticVarianceEstimator:
         
         # Compute mean of product
         val = np.mean(psi_trunc * psi_prime_trunc)
-        return val / np.sqrt(kn * kn_prime)
+        return val / (self.delta * kn * kn_prime)
 
     def compute(self, psi, psi_prime, kn, kn_prime):
         """

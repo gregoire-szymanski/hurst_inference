@@ -13,7 +13,7 @@ for (i,param) in enumerate(params_volatility):
                                                   vol_truncation_method)
 
    
-ave = AsymptoticVarianceEstimator(W_fun, Ln, Kn)
+ave = AsymptoticVarianceEstimator(W_fun, Ln, Kn, delta)
 
 
 

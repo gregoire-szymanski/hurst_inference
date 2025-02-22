@@ -19,35 +19,46 @@ QV = load_QV()
 AV = load_AV()
 
 # Rolling window estimation
-QV_total = QV.sum(axis=0)
+QV_total = QV.mean(axis=0) 
 QV_rolling = np.array([QV[i:i + days_estimation].sum(axis=0)
                         for i in range(len(QV) - days_estimation)]) / days_estimation
 
-AV_total = AV.sum(axis=0)
+AV_total = AV.mean(axis=0)
 AV_rolling = np.array([AV[i:i + days_estimation].sum(axis=0)
                             for i in range(len(QV) - days_estimation)]) / days_estimation
 
-sigma_total = np.linalg.inv(AV_total)
-sigma_rolling = np.array([np.linalg.inv(av) for av in AV_rolling])
+W_total = np.linalg.inv(AV_total)
+W_rolling = np.array([np.linalg.inv(av) for av in AV_rolling])
 
 
-H_total = estimation_GMM(sigma_total,
+H_total, R_total = estimation_GMM(W_total,
                             QV_total,
                             Psi,
                             H_min,
                             H_max,
                             H_mesh)
 
+C1, C2 = get_confidence_size(params_volatility, H_total, R_total, len(QV), delta, AV_total, W_total)
+
+print(AV_total)
+print(QV_total)
+
+print(H_total, R_total)
+print(C1 / np.sqrt(len(QV)))
+
+
+exit()
+
 # GMM Estimation for each rolling window
 estimates_H = []
 
-for (sigma_window, QV_window) in zip(sigma_rolling, QV_rolling):
-    H_si = estimation_GMM(sigma_window,
-                              QV_window,
-                              Psi,
-                              H_min,
-                              H_max,
-                              H_mesh)
+for (sigma_window, QV_window) in zip(W_rolling, QV_rolling):
+    H_si, _ = estimation_GMM(sigma_window,
+                             QV_window,
+                             Psi,
+                             H_min,
+                             H_max,
+                             H_mesh)
 
 
     estimates_H.append(H_si)

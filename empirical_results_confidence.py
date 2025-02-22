@@ -16,21 +16,32 @@ H_max = 0.5 + H_mesh
 
 # Load data
 QV = load_QV()
+AV = load_AV()
 
 # Rolling window estimation
-QV_total = QV.sum(axis=0)
+QV_total = QV.mean(axis=0)
 QV_rolling = np.array([QV[i:i + days_estimation].sum(axis=0)
                         for i in range(len(QV) - days_estimation)]) / days_estimation
 
+AV_total = AV.mean(axis=0)
+AV_rolling = np.array([AV[i:i + days_estimation].sum(axis=0)
+                            for i in range(len(QV) - days_estimation)]) / days_estimation
 
 # GMM Estimation on the entire dataset (QV_total)
-H_total, _ = estimation_GMM(np.identity(len(QV_total)),
+H_total, R_total = estimation_GMM(np.identity(len(QV_total)),
                             QV_total,
                             Psi,
                             H_min,
                             H_max,
                             H_mesh)
 
+
+
+C1, C2 = get_confidence_size(params_volatility, H_total, R_total, len(QV), delta, AV_total, np.identity(len(QV_total)))
+print(H_total, R_total)
+print(C1 / np.sqrt(len(QV)))
+
+exit()
 
 # GMM Estimation for each rolling window
 estimates_H = []

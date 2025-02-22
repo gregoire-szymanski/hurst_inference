@@ -139,6 +139,23 @@ def F_estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H: list, normalisat
     return normalisation * (term0 - R * term1 + term2 * R * R)
 
 
+def F_GMM_get_R(W: np.ndarray, V: np.ndarray, Psi_func, H: float) -> float:
+    V = np.atleast_2d(V).reshape(-1, 1)
+    Psi = np.atleast_2d(Psi_func(H)).reshape(-1, 1)
+        
+    term0 = V.T @ W @ V
+    term1 = (Psi.T @ W @ V) + (V.T @ W @ Psi)
+    term2 = Psi.T @ W @ Psi
+    
+    term0 = term0[0, 0]
+    term1 = term1[0, 0]
+    term2 = term2[0, 0]
+    
+    R = term1 / term2 / 2
+    
+    return R
+
+
 def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001, H_max: float = 0.499, mesh: float = 0.001, debug: bool = False):
     """
     Perform Generalized Method of Moments (GMM) estimation for the Hurst exponent.
@@ -159,9 +176,10 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
     min_index = np.argmin(F_values)
     
     if debug:
-        return H_values, F_values, min_index
+        R_values = [F_GMM_get_R(W, V, Psi_func, H) for H in H_values]
+        return H_values, F_values, min_index, R_values
 
-    return H_values[min_index]
+    return H_values[min_index], F_GMM_get_R(W, V, Psi_func, H_values[min_index])
 
 
 
@@ -265,7 +283,7 @@ def get_optimal_variance(params_volatility, H, eta, n_days, delta_n):
 
 
 
-def get_confidence_matrix(params_volatility, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
+def get_confidence_size(params_volatility, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
     window_values = []
     lags_values = []
 
@@ -298,8 +316,9 @@ def get_confidence_matrix(params_volatility, H_estimated, R_estimated, n_days, d
         [-2 * np.log(reference_window * delta_n), 1]
     ])
 
-    uWu_inv = np.linalg.inv(u_t.transpose() @ W @ u_t)
+    uWu_inv = np.linalg.inv(u_t.transpose() @ W_chosen @ u_t)
     matrix_43 = (delta_n * reference_window)**(1-4*H_estimated) * reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
+    # matrix_43 = reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
 
     return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
 
