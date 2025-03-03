@@ -141,5 +141,3 @@ for H in list_H_values:
     print(f"{H:.2}\t{H_total_id:.4}")
     print()
 
-#for lab, qv in zip(label_array, QV_total):
-#    print(f"{lab}\t{qv*10**5:.3}")

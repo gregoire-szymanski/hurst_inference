@@ -38,16 +38,16 @@ H_total, R_total = estimation_GMM(W_total,
                             H_max,
                             H_mesh)
 
-C1, C2 = get_confidence_size(params_volatility, H_total, R_total, len(QV), delta, AV_total, W_total)
+# C1, C2 = get_confidence_size(params_volatility, H_total, R_total, len(QV), delta, AV_total, W_total)
 
-print(AV_total)
-print(QV_total)
+# print(AV_total)
+# print(QV_total)
 
-print(H_total, R_total)
-print(C1 / np.sqrt(len(QV)))
+# print(H_total, R_total)
+# print(C1 / np.sqrt(len(QV)))
 
 
-exit()
+# exit()
 
 # GMM Estimation for each rolling window
 estimates_H = []
