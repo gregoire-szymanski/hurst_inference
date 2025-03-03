@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from estimator_H import *
+from lib.estimator_H import *
 import os
 
 
@@ -58,7 +58,7 @@ def Psi(H):
         factor = window**(2 * H)
         
         # Compute the first two terms outside the loop
-        p.append(factor * (Phi_Hl(0, H) + Phi_Hl(1, H)))
+        p.append(factor * (Phi_Hl(0, H) + 2 * Phi_Hl(1, H)))
 
         # Compute remaining terms for i in [2, N_lags]
         for i in range(2, N_lags + 1):
@@ -110,7 +110,7 @@ for H in list_H_values:
             QV_total[0] = QV_total[0] 
             QV_total[6] = QV_total[6]
 
-            H_total_id = estimation_GMM(np.identity(len(QV_total)),
+            H_total_id, _ = estimation_GMM(np.identity(len(QV_total)),
                                         QV_total,
                                         Psi,
                                         H_min,
