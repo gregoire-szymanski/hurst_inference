@@ -139,6 +139,8 @@ def F_estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H: list, normalisat
     return normalisation * (term0 - R * term1 + term2 * R * R)
 
 
+
+
 def F_GMM_get_R(W: np.ndarray, V: np.ndarray, Psi_func, H: float) -> float:
     V = np.atleast_2d(V).reshape(-1, 1)
     Psi = np.atleast_2d(Psi_func(H)).reshape(-1, 1)
@@ -231,9 +233,56 @@ def compute_gamma(theta1, theta2, lag1, lag2, H):
     else:
         return uncorrected_gamma(theta1, theta2, lag1, lag2, H)
     
-def get_optimal_variance(params_volatility, H, eta, n_days, delta_n):
-    R = eta * eta * n_days / 252
+def get_optimal_variance(params_volatility, H, eta, t, delta_n):
+    R_t = eta ** 2 * t
+    Gamma_t = eta ** 4 * t
+    
+    window_values = []
+    lags_values = []
 
+    for param in params_volatility:
+        window = param['window']
+        N_lags = param['N_lags']
+        
+        window_values.extend([window for _ in range(N_lags)])
+        lags_values.extend([i for i in range(1,N_lags+1)])
+
+    reference_window = window_values[0]
+
+    theta = [w / reference_window for w in window_values]
+
+    m = len(window_values)
+
+    alpha = np.zeros(m)
+    beta = np.zeros(m)
+
+    for i in range(m):
+        alpha[i] = compute_alpha(theta[i], lags_values[i], H)
+        beta[i] = compute_beta(theta[i], lags_values[i], H)
+
+
+    Sigma = np.zeros((m,m))
+
+    for i in range(m):
+        for j in range(m):
+            Sigma[i,j] = compute_gamma(theta[i], theta[j], lags_values[i], lags_values[j], H) * (theta[i] * theta[j])**(2*H-1/2)
+
+    u_t = np.array([alpha * R_t, beta]).transpose()
+
+    D = np.array([
+        [1, 0],
+        [-2 * np.log(reference_window * delta_n) * R_t, 1]
+    ])
+
+    Sigma = Sigma * Gamma_t
+
+    uSinvu_inv = np.linalg.inv(u_t.transpose() @ np.linalg.inv(Sigma) @ u_t)
+    matrix_43 = reference_window * delta_n * D @ uSinvu_inv @ D.transpose()
+
+    return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
+
+   
+def get_theoretical_variance(params_volatility, H):
     window_values = []
     lags_values = []
 
@@ -249,7 +298,6 @@ def get_optimal_variance(params_volatility, H, eta, n_days, delta_n):
 
     m = len(window_values)
 
-
     alpha = np.zeros(m)
     beta = np.zeros(m)
 
@@ -257,28 +305,13 @@ def get_optimal_variance(params_volatility, H, eta, n_days, delta_n):
         alpha[i] = compute_alpha(theta[i], lags_values[i], H)
         beta[i] = compute_beta(theta[i], lags_values[i], H)
 
-    alpha_beta = np.array([alpha, beta])
-
     Sigma = np.zeros((m,m))
 
     for i in range(m):
         for j in range(m):
             Sigma[i,j] = compute_gamma(theta[i], theta[j], lags_values[i], lags_values[j], H) * (theta[i] * theta[j])**(2*H-1/2)
-
-    u_t = np.array([alpha * R, beta]).transpose()
-
-    D = np.array([
-        [1, 0],
-        [-2 * np.log(reference_window * delta_n), 1]
-    ])
-
-    W = np.linalg.inv(Sigma)
-
-    uWu_inv = np.linalg.inv(u_t.transpose() @ W @ u_t)
-    matrix_43 = reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W @ Sigma @ W @ u_t @ uWu_inv @ D.transpose()
-
-    return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
-
+    
+    return Sigma
 
 
 
@@ -320,5 +353,5 @@ def get_confidence_size(params_volatility, H_estimated, R_estimated, n_days, del
     matrix_43 = (delta_n * reference_window)**(1-4*H_estimated) * reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
     # matrix_43 = reference_window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
 
-    return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
+    return matrix_43[0,0]**0.5 / np.sqrt(n_days), matrix_43[1,1]**0.5  / np.sqrt(n_days)
 

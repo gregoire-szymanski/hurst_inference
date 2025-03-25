@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from scipy.stats import norm
 
 from lib.volatility import * 
 
@@ -10,13 +9,11 @@ from parameters import *
 from preparations import *
 
 # Activate AV
-days_estimation = 252*4
-H_mesh = 0.0001
+days_estimation = 252*2
+H_mesh = 0.01
 H_min = H_mesh
 H_max = 0.5 + H_mesh
 
-alpha = 0.95  # Example: 95% confidence interval
-z_alpha = norm.ppf((1 + alpha) / 2)  # Compute Φ^−1((1 - α) / 2)
 
 # Load data
 QV = load_QV()
@@ -44,26 +41,59 @@ H_total, R_total = estimation_GMM(W_total,
 
 C1, C2 = get_confidence_size(params_volatility, H_total, R_total, len(QV), delta, AV_total, W_total)
 
-print(f"Hurst index: {H_total:.4f}")
-print(f"Confidence interval size: {C1 * z_alpha:.4f}")
-print(f"Confidence interval: [{H_total - C1 * z_alpha:.4f}, {H_total + C1 * z_alpha:.4f}]")
+print("Estimated Asymptotic variance:")
+print(AV_total)
+print()
+
+print("Estimated H:", H_total)
+print("Estimated R:", R_total)
+
+print()
+
+print("Real Asymptotic variance:")
+print(get_theoretical_variance(params_volatility, H_total))
+
+# Create a figure with 1 row and 2 columns
+fig, axes = plt.subplots(1, 2, figsize=(20, 8))
+
+# Plot first heatmap
+sns.heatmap(AV_total, annot=True, fmt=".2f", cmap="coolwarm", linewidths=0.5, ax=axes[0])
+axes[0].set_title("Correlation Matrix Heatmap (AV_total)")
+axes[0].set_xlabel("Variables")
+axes[0].set_ylabel("Variables")
+
+# Plot second heatmap
+sns.heatmap(get_theoretical_variance(params_volatility, H_total), annot=True, fmt=".2f", cmap="coolwarm", linewidths=0.5, ax=axes[1])
+axes[1].set_title("Correlation Matrix Heatmap (Theoretical Variance)")
+axes[1].set_xlabel("Variables")
+axes[1].set_ylabel("Variables")
+
+# Show the figure
+plt.tight_layout()
+plt.show()
+
+
+print("Ratio Asymptotic variance:")
+print(AV_total / get_theoretical_variance(params_volatility, H_total))
+
+
+print(C1 / np.sqrt(len(QV)))
+
+exit()
 
 # GMM Estimation for each rolling window
 estimates_H = []
-confidence_band = []
 
 for (sigma_window, QV_window) in zip(W_rolling, QV_rolling):
-    H_estimated, R_estimated = estimation_GMM(sigma_window,
-                                              QV_window,
-                                              Psi,
-                                              H_min,
-                                              H_max,
-                                              H_mesh)
-    
-    C1, C2 = get_confidence_size(params_volatility, H_estimated, R_estimated, days_estimation, delta, AV_total, W_total)
+    H_si, _ = estimation_GMM(sigma_window,
+                             QV_window,
+                             Psi,
+                             H_min,
+                             H_max,
+                             H_mesh)
 
-    estimates_H.append(H_estimated)
-    confidence_band.append(C1 * z_alpha)
+
+    estimates_H.append(H_si)
 
 # Convert estimates_H to numpy array for analysis
 estimates_H = np.array(estimates_H)
@@ -78,9 +108,7 @@ summary_stats = {
     "25% Quantile": np.percentile(estimates_H, 25),
     "75% Quantile": np.percentile(estimates_H, 75),
     "Min": np.min(estimates_H),
-    "Max": np.max(estimates_H),
-    "Mean confidence": np.mean(confidence_band),
-
+    "Max": np.max(estimates_H)
 }
 
 # Display the summary stats as pandas DataFrames
@@ -97,8 +125,6 @@ first_days = [
 
 plt.figure(figsize=(12, 8))
 plt.plot(first_days, estimates_H, color='blue', linestyle='-')
-plt.fill_between(first_days, estimates_H - confidence_band, estimates_H + confidence_band, 
-                 color='blue', alpha=0.2, label=f"{alpha*100:.0f}% Confidence Band")
 plt.xlabel("$t$")
 plt.ylabel("$H$")
 # plt.title("H Estimates Over Time")

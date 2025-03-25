@@ -175,8 +175,8 @@ class AsymptoticVarianceEstimator:
         psi_prime_trunc = psi_prime_trunc[:N]
         
         # Compute mean of product
-        val = np.mean(psi_trunc * psi_prime_trunc)
-        return val / (self.delta * kn * kn_prime)
+        val = np.sum(psi_trunc * psi_prime_trunc)
+        return val / (kn * kn_prime)
 
     def compute(self, psi, psi_prime, kn, kn_prime):
         """
