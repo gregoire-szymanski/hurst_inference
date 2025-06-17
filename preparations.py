@@ -26,7 +26,7 @@ create_folders(tmp_folder, [f"pattern/{param['window']}" for param in params_vol
 create_folders(tmp_folder, [f"volinc/{param['window']}" for param in params_volatility])
 
 # Create date handler
-DH = DataHandler(prices_folder="~/Documents/data/SPY/price/1s/daily_csv/", 
+DH = DataHandler(prices_folder="~/Documents/data/" + asset + "/price/1s/daily_csv/", 
                  tmp_folder=tmp_folder)
 
 
