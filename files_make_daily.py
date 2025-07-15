@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime, timedelta
-import pandas_market_calendars as mcal
+import pandas_market_calendars as mcal # pip install pandas-market-calendars
 
 # Input folder path and output base folder
 input_folder = "/Users/gregoire.szymanski/Documents/data/year"
