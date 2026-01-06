@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from lib.estimator_H import Phi_Hl
 
 H_values = np.linspace(0.001, 0.999, 1000)
-l_values = [2, 3, 4]
-norm = True
+l_values = [0, 1, 2, 3, 4]
+norm = False
 
 phi0 = np.array([Phi_Hl(0, H) for H in H_values])
 phi_l = [

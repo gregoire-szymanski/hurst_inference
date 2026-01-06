@@ -5,7 +5,7 @@ identificator = "opt_5s_120w_150w"
 
 if identificator ==  "opt_5s_120w_150w":
     # Global parameters
-    asset = 'SPY'
+    asset = 'spy'
     subsampling = 5
     delta = 1.0 / (252.0 * 23400) * subsampling  # Time increment
 

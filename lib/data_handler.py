@@ -43,6 +43,8 @@ class DataHandler:
         self.price_files = os.listdir(prices_folder)
         self.price_files.sort()
 
+        self.price_files = [f for f in self.price_files if not f.startswith('.')]
+    
         # Check that all price files follow pattern xxx_YYYY-MM-DD.csv
         pattern = re.compile(r'^[A-Za-z0-9]{3}_\d{4}-\d{2}-\d{2}\.csv$')
         for f in self.price_files:
@@ -56,6 +58,8 @@ class DataHandler:
             return np.unique([f.split('_')[1].replace('.csv', '') for f in self.price_files]).to_list()
         else:
             # Get all dates
+            #print([f.split('_')[1].replace('.csv', '') for f in self.price_files])
+
             all_price_files = [f for f in self.price_files if f.startswith(asset+'_')]
             return [f.split('_')[1].replace('.csv','') for f in all_price_files]
 
