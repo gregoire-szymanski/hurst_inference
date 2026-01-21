@@ -1,0 +1,23 @@
+{
+  "GMM_weight": "identity",
+  "Kn": 720,
+  "Ln": 180,
+  "N_autocorrelation": 12,
+  "W_fun_id": "parzen",
+  "compute_confidence_interval": false,
+  "hurst_max_value": 0.4999,
+  "hurst_min_value": 0.0001,
+  "hurst_step": 0.0001,
+  "initial_mesh": 1,
+  "input_data": "prepared_data.npy",
+  "normalise_average_value": true,
+  "output_data_folder": "./output",
+  "prefix": "spy_",
+  "price_truncation_mode": "BIVAR_3",
+  "remove_FOMC_days": true,
+  "remove_pattern": "multiplicative",
+  "remove_trading_halts": -1,
+  "subsampling": 5,
+  "volatility_truncation_mode": "STD_3",
+  "volatility_window_size": 60
+}
