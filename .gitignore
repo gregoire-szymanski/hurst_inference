@@ -1,5 +1,6 @@
 __pycache__/
 .DS_Store
 *.npy
-hurst_volatility/prepared_data.npy
+hurst_volatility/*.npy
+hurst_volatility_multi_year/*.npy
 old/
