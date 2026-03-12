@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 from typing import List, Optional, Tuple
 from scipy.stats import norm
 
@@ -135,7 +136,9 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
 
 # main parameters (defaults)
 
-input_data = "prepared_data.npy"
+
+input_data_folder = "data/"
+N_years_backtest = 4
 
 price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
@@ -501,7 +504,7 @@ def create_Psi_function(window: int, N_lags: int):
 
 
 def run_pipeline(
-    input_data: str,
+    input_data_folder: str,
     price_truncation_mode: Optional[str] = None,
     volatility_truncation_mode: Optional[str] = None,
     remove_pattern: Optional[str] = None,
@@ -517,13 +520,13 @@ def run_pipeline(
     Ln: int = 180,
     Kn: int = 720,
     W_fun_id: str = "parzen",
+    N_years_backtest: int = 4,
 ) -> Optional[float]:
-    """Run the end-to-end Hurst inference pipeline on a saved price array.
+    """Run the end-to-end Hurst inference pipeline on saved price arrays.
 
-    Loads prices from a NumPy array, computes volatility-squared series with
-    optional truncation, performs autocorrelation and GMM steps, and returns
-    the estimated Hurst exponent (and optionally confidence interval output
-    via side effects).
+    Loads prices from a folder of NumPy arrays, computes volatility-squared
+    series with optional truncation, trains a linear predictor on rolling
+    windows, and reports aggregated metrics.
     """
     # Step 0
     print("Step 0/7: Checking input/output folders and creating output folder if needed...")
@@ -536,8 +539,8 @@ def run_pipeline(
         #TODO Improve exception
         raise -1
     
-    if input_data is None:
-        raise ValueError("Config error: input_data is None.")
+    if input_data_folder is None:
+        raise ValueError("Config error: input_data_folder is None.")
 
     if volatility_window_size is None or int(volatility_window_size) <= 0:
         raise ValueError("Config error: volatility_window_size must be a positive integer.")
@@ -550,12 +553,33 @@ def run_pipeline(
     # Step 1
     print("Step 1/7: Listing files, filtering by prefix+date format, loading prices, applying filters...")
 
-    input_data = os.path.join(os.path.dirname(__file__), input_data)
+    input_data_folder = os.path.join(os.path.dirname(__file__), input_data_folder)
+    filenames = [
+        name for name in sorted(os.listdir(input_data_folder))
+        if os.path.isfile(os.path.join(input_data_folder, name))
+    ]
+    pattern = re.compile(r"^prepared_data_\d{4}\.npy$")
+    invalid_files = [name for name in filenames if not pattern.match(name)]
+    if invalid_files:
+        raise ValueError(f"Unexpected files in input_data_folder: {invalid_files}")
 
-    X = np.load(input_data, allow_pickle=True)
+    data_files = [name for name in filenames if pattern.match(name)]
+    if not data_files:
+        raise ValueError("No prepared_data_YYYY.npy files found in input_data_folder.")
 
+    arrays = []
+    days_per_file = []
+    for name in data_files:
+        data = np.load(os.path.join(input_data_folder, name), allow_pickle=True)
+        arrays.append(data)
+        days_per_file.append(int(data.shape[0]))
+
+    avg_number_days_per_file = float(np.mean(days_per_file))
+    N_consecutive_days = int(round(N_years_backtest * avg_number_days_per_file))
+
+    X = np.concatenate(arrays, axis=0)
     n_day, price_per_day = X.shape
-    daily_prices = [X[i, :] for i in range(n_day)]
+    daily_prices = X
 
     # Step 2
     print("Step 2/7: Computing daily volatility-squared series for each day...")
@@ -588,126 +612,143 @@ def run_pipeline(
     print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
 
     # Step 3
-    print("Step 3/7: Normalising and removing intraday volatility pattern if applicable...")
+    print("Step 3/7: Normalising average values if applicable...")
 
-    # Align lengths (pattern removal and averaging require same intraday index)
     min_len = min(v.shape[0] for v in daily_volatility_squared_list)
     max_len = max(v.shape[0] for v in daily_volatility_squared_list)
     print(f"Volume intensity length range: min={min_len}, max={max_len}")
-    daily_volatility_squared_list = [v[:min_len].copy() for v in daily_volatility_squared_list]
+    daily_vsq = np.stack([v[:min_len] for v in daily_volatility_squared_list])
 
-    # Normalise average value per day
     if normalise_average_value:
-        for i, v in enumerate(daily_volatility_squared_list):
-            avg = float(np.mean(v))
-            if avg != 0.0 and np.isfinite(avg):
-                daily_volatility_squared_list[i] = v / avg
+        means = np.mean(daily_vsq, axis=1)
+        valid_means = (means != 0.0) & np.isfinite(means)
+        daily_vsq[valid_means] = daily_vsq[valid_means] / means[valid_means, None]
 
-
-    # Remove intraday pattern
+    rp = None
     if remove_pattern is not None:
         rp = str(remove_pattern).strip().lower()
-        if rp == "multiplicative":
-            stacked = np.vstack(daily_volatility_squared_list)  # shape (n_days, min_len)
-            pattern = np.mean(stacked, axis=0)
-            # avoid divide-by-zero
-            pattern = np.where(pattern == 0.0, 1.0, pattern)
-            for i, v in enumerate(daily_volatility_squared_list):
-                daily_volatility_squared_list[i] = v / pattern
-        elif rp == "additive":
-            raise ValueError("remove_pattern='additive' is not supported.")
-        else:
+        if rp not in ("multiplicative", "additive"):
             raise ValueError(f"Invalid remove_pattern: {remove_pattern}. Expected None, 'multiplicative', or 'additive'.")
-    
+        if rp == "additive":
+            raise ValueError("remove_pattern='additive' is not supported.")
 
-    # Step 4: Estimate autocorrelation vectors
-    print("Step 4/7: Estimating autocorrelation vectors...")
+    # Step 4: Rolling train/test backtest
+    print("Step 4/7: Running rolling train/test backtest...")
 
     if N_autocorrelation is None or int(N_autocorrelation) <= 2:
         raise ValueError("Config error: N_autocorrelation must be an integer greater than 2.")
     n_lags = int(N_autocorrelation)
-
-    series_len = daily_volatility_squared_list[0].shape[0]
-    if series_len <= n_lags:
-        raise ValueError(
-            f"Config error: N_autocorrelation ({n_lags}) must be smaller than the volatility series length ({series_len})."
-        )
-
-    daily_vol_squared_increments: List[np.ndarray] = []
-    for vsq in daily_volatility_squared_list:
-        vol_squared_increments = compute_truncated_volatility_increments(
-            vsq,
-            window,
-            truncation_method=vol_trunc_method,
-            truncation_param=vol_trunc_param
-        )
-        daily_vol_squared_increments.append(vol_squared_increments)
-
-
-    predictor_rows: List[np.ndarray] = []
-    target_rows: List[np.ndarray] = []
     offset = window * n_lags
 
-    for day_idx, vol_squared_increments in enumerate(daily_vol_squared_increments, start=1):
-        print(f"New day {day_idx}")
-        series_len = vol_squared_increments.shape[0]
-        max_k = series_len - offset
-        if max_k <= 0:
+    n_days = daily_vsq.shape[0]
+    print(f"Total number of days: {n_days}")
+    last_train_start = n_days - (N_consecutive_days + 2)
+    if last_train_start < 0:
+        raise ValueError("Not enough days to run the backtest.")
+
+    def build_predictor_matrix(vol_days: np.ndarray) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+        predictor_rows: List[np.ndarray] = []
+        target_rows: List[np.ndarray] = []
+        for vol_day in np.atleast_2d(vol_days):
+            vol_squared_increments = compute_truncated_volatility_increments(
+                vol_day,
+                window,
+                truncation_method=vol_trunc_method,
+                truncation_param=vol_trunc_param,
+            )
+            series_len = vol_squared_increments.shape[0]
+            max_k = series_len - offset
+            if max_k <= 0:
+                continue
+            base = np.arange(max_k)
+            cols = [vol_squared_increments[base + i * window] for i in range(n_lags)]
+            predictor_rows.append(np.stack(cols, axis=1))
+            target_rows.append(vol_squared_increments[base + offset])
+
+        if not predictor_rows:
+            return None
+
+        total_predictor_rows = sum(rows.shape[0] for rows in predictor_rows)
+        predictor_shape = predictor_rows[0].shape
+        X = np.empty((total_predictor_rows, predictor_shape[1]), dtype=predictor_rows[0].dtype)
+        start = 0
+        for rows in predictor_rows:
+            end = start + rows.shape[0]
+            X[start:end] = rows
+            start = end
+
+        total_target_rows = sum(rows.shape[0] for rows in target_rows)
+        y = np.empty((total_target_rows,), dtype=target_rows[0].dtype)
+        start = 0
+        for rows in target_rows:
+            end = start + rows.shape[0]
+            y[start:end] = rows
+            start = end
+
+        return X, y
+
+    total_sq_error = 0.0
+    total_abs_error = 0.0
+    total_count = 0
+    y_sum = 0.0
+    y_sum_sq = 0.0
+    n_windows = 0
+
+    for i in range(last_train_start + 1):
+        start_time = time.perf_counter()
+        print(f"Training window {i + 1}/{last_train_start + 1}...")
+        train_start = i
+        train_end = i + N_consecutive_days
+        test_idx = i + N_consecutive_days + 1
+
+        train_days = daily_vsq[train_start:train_end + 1]
+        test_day = daily_vsq[test_idx]
+
+        if rp == "multiplicative":
+            pattern = np.mean(train_days, axis=0)
+            pattern = np.where(pattern == 0.0, 1.0, pattern)
+            train_days = train_days / pattern
+            test_day = test_day / pattern
+
+        train_data = build_predictor_matrix(train_days)
+        test_data = build_predictor_matrix(test_day)
+        if train_data is None or test_data is None:
             continue
-        base = np.arange(max_k)
-        cols = [vol_squared_increments[base + i * window] for i in range(n_lags)]
-        predictor_rows.append(np.stack(cols, axis=1))
-        target_rows.append(vol_squared_increments[base + offset])
 
-    if not predictor_rows:
-        raise ValueError("Not enough data to build the linear predictor.")
+        X_train, y_train = train_data
+        X_test, y_test = test_data
 
-    print("Done")
-    total_predictor_rows = sum(rows.shape[0] for rows in predictor_rows)
-    total_target_rows = sum(rows.shape[0] for rows in target_rows)
-    predictor_shape = predictor_rows[0].shape
-    target_shape = target_rows[0].shape
-    print(
-        "Row sizes:",
-        f"predictor_rows={len(predictor_rows)} total_rows={total_predictor_rows} sample_shape={predictor_shape}",
-        f"target_rows={len(target_rows)} total_rows={total_target_rows} sample_shape={target_shape}",
-    )
+        coeffs, _, _, _ = np.linalg.lstsq(X_train, y_train, rcond=None)
 
-    X = np.empty((total_predictor_rows, predictor_shape[1]), dtype=predictor_rows[0].dtype)
-    start = 0
-    for rows in predictor_rows:
-        end = start + rows.shape[0]
-        X[start:end] = rows
-        start = end
+        y_pred = X_test @ coeffs
+        residual = y_test - y_pred
+        total_sq_error += float(np.sum(residual ** 2))
+        total_abs_error += float(np.sum(np.abs(residual)))
+        total_count += int(y_test.shape[0])
+        y_sum += float(np.sum(y_test))
+        y_sum_sq += float(np.sum(y_test ** 2))
+        n_windows += 1
+        elapsed = time.perf_counter() - start_time
+        print(f"Done in {elapsed:.3f}s, moving to next.")
 
-    y = np.empty((total_target_rows,), dtype=target_rows[0].dtype)
-    start = 0
-    for rows in target_rows:
-        end = start + rows.shape[0]
-        y[start:end] = rows
-        start = end
+    if total_count == 0:
+        raise ValueError("Not enough data to evaluate the linear predictor.")
 
-    print(X.shape)
-    print(y.shape)
-
-    coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
-    y_pred = X @ coeffs
-    residual = y - y_pred
-    mse = np.mean(residual ** 2)
-    mae = np.mean(np.abs(residual))
-    var_y = np.var(y)
+    mse = total_sq_error / total_count
+    mae = total_abs_error / total_count
+    mean_y = y_sum / total_count
+    var_y = (y_sum_sq / total_count) - (mean_y * mean_y)
     r2 = 1.0 - (mse / var_y) if var_y > 0.0 else np.nan
 
-    print("Linear predictor results:")
-    print(f"  samples={y.shape[0]} window={window} n_lags={n_lags}")
+    print("Linear predictor backtest results:")
+    print(f"  windows={n_windows} samples={total_count} window={window} n_lags={n_lags}")
     print(f"  mse={mse:.6e} mae={mae:.6e} r2={r2:.6f}")
-    weights_str = " ".join(f"{w:.6e}" for w in coeffs)
-    print(f"  weights=[{weights_str}]")
+
     return
 
 if __name__ == "__main__":
     run_pipeline(
-        input_data=input_data,
+        input_data_folder=input_data_folder,
         price_truncation_mode=price_truncation_mode,
         volatility_truncation_mode=volatility_truncation_mode,
         remove_pattern=remove_pattern,
@@ -722,5 +763,6 @@ if __name__ == "__main__":
         Ln=Ln,
         Kn=Kn,
         W_fun_id=W_fun_id,
+        N_years_backtest=N_years_backtest,
         delta_n=5.0/(252.0 * 23400.0)
     )

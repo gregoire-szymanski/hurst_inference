@@ -141,7 +141,7 @@ price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
 remove_pattern = 'multiplicative'  # None, multiplicative, additive
 
-volatility_window_size = 1800 // 5  # Integer
+volatility_window_size = 60  # Integer
 
 hurst_min_value = 0.0001  # Float
 hurst_max_value = 0.4999  # Float
@@ -149,7 +149,7 @@ hurst_step = 0.0001  # Float
 
 normalise_average_value = True  # True or False, default True
 
-N_autocorrelation = 4  # Integer (must be larger than 2)
+N_autocorrelation = 12  # Integer (must be larger than 2)
 compute_confidence_interval = False  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
@@ -525,7 +525,7 @@ def run_pipeline(
     vol_trunc_method, vol_trunc_param = parse_truncation_mode(volatility_truncation_mode)
 
     # Step 1
-    print("Step 1/7: Listing files, filtering by prefix+date format, loading prices, applying filters...")
+    # print("Step 1/7: Listing files, filtering by prefix+date format, loading prices, applying filters...")
 
     input_data = os.path.join(os.path.dirname(__file__), input_data)
 
@@ -535,7 +535,7 @@ def run_pipeline(
     daily_prices = [X[i, :] for i in range(n_day)]
 
     # Step 2
-    print("Step 2/7: Computing daily volatility-squared series for each day...")
+    # print("Step 2/7: Computing daily volatility-squared series for each day...")
 
     daily_volatility_squared_list: List[np.ndarray] = []
 
@@ -562,15 +562,15 @@ def run_pipeline(
         print("No volatility series could be computed.")
         return None
     
-    print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
+    # print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
 
     # Step 3
-    print("Step 3/7: Normalising and removing intraday volatility pattern if applicable...")
+    # print("Step 3/7: Normalising and removing intraday volatility pattern if applicable...")
 
     # Align lengths (pattern removal and averaging require same intraday index)
     min_len = min(v.shape[0] for v in daily_volatility_squared_list)
     max_len = max(v.shape[0] for v in daily_volatility_squared_list)
-    print(f"Volume intensity length range: min={min_len}, max={max_len}")
+    # print(f"Volume intensity length range: min={min_len}, max={max_len}")
     daily_volatility_squared_list = [v[:min_len].copy() for v in daily_volatility_squared_list]
 
     # Normalise average value per day
@@ -598,7 +598,7 @@ def run_pipeline(
     
 
     # Step 4: Estimate autocorrelation vectors
-    print("Step 4/7: Estimating autocorrelation vectors...")
+    # print("Step 4/7: Estimating autocorrelation vectors...")
 
     if N_autocorrelation is None or int(N_autocorrelation) <= 2:
         raise ValueError("Config error: N_autocorrelation must be an integer greater than 2.")
@@ -631,7 +631,7 @@ def run_pipeline(
 
     daily_autocorr_matrix = np.vstack(daily_autocorr_vectors)
     average_autocorrelation = np.mean(daily_autocorr_matrix, axis=0)
-    print(LA0)
+    # print(LA0)
 
     # print(f"Average autocorrelation vector: {average_autocorrelation}")
     proportion = (
@@ -639,14 +639,14 @@ def run_pipeline(
         if n_increments_total > 0
         else 0.0
     )
-    print(
-        "Volatility increments truncated: "
-        f"{truncated_increments_total} out of {n_increments_total} "
-        f"(proportion: {proportion:.6f})"
-    )
+    # print(
+    #     "Volatility increments truncated: "
+    #     f"{truncated_increments_total} out of {n_increments_total} "
+    #     f"(proportion: {proportion:.6f})"
+    # )
 
     # Step 5: Estimate covariance matrices
-    print("Step 5/7: Estimating covariance matrices...")
+    # print("Step 5/7: Estimating covariance matrices...")
 
     daily_covariance_matrices: List[np.ndarray] = []
 
@@ -668,10 +668,10 @@ def run_pipeline(
         average_covariance = np.mean(daily_covariance_matrices, axis=0).reshape((n_lags - 1, n_lags - 1))
         
     # Step 6: GMM estimation of Hurst exponent
-    print(
-        f"Step 6/7: Estimating Hurst exponent via GMM on grid H in "
-        f"[{hurst_min_value}, {hurst_max_value}] with step {hurst_step}..."
-    )
+    # print(
+    #     f"Step 6/7: Estimating Hurst exponent via GMM on grid H in "
+    #     f"[{hurst_min_value}, {hurst_max_value}] with step {hurst_step}..."
+    # )
 
     Psi = create_Psi_function(window, n_lags)
 
@@ -687,7 +687,7 @@ def run_pipeline(
                             hurst_step)
     
     # Step 7: Save results to output folder and print results as well
-    print("Step 7/7: Saving results and printing summary...")
+    # print("Step 7/7: Saving results and printing summary...")
     print(f"Estimated Hurst exponent: {H_total}")
 
     if compute_confidence_interval:

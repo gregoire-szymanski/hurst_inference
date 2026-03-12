@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 from scipy.stats import norm
 
 import numpy as np
@@ -135,13 +135,13 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
 
 # main parameters (defaults)
 
-input_data = "prepared_data.npy"
+input_data_folder = "new_data"
 
 price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
 remove_pattern = 'multiplicative'  # None, multiplicative, additive
 
-volatility_window_size = 60 # Integer
+volatility_window_size = 120  # Integer
 
 hurst_min_value = 0.0001  # Float
 hurst_max_value = 0.4999  # Float
@@ -149,12 +149,14 @@ hurst_step = 0.0001  # Float
 
 normalise_average_value = True  # True or False, default True
 
-N_autocorrelation = 12  # Integer (must be larger than 2)
-compute_confidence_interval = False  # True or False, default is False
+N_autocorrelation = 6  # Integer (must be larger than 2)
+compute_confidence_interval = True  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
+
+N_consecutive_years = 4
 
 
 # Helper functions
@@ -251,29 +253,6 @@ def compute_autocorrelation(
     if return_counts:
         return autocorr[1:], n_increments, truncated
     return autocorr[1:]
-
-
-
-def compute_truncated_volatility_increments(
-    vol_squared,
-    window,
-    truncation_method=None,
-    truncation_param=None,
-):
-    vol_squared = np.asarray(vol_squared, dtype=float)
-
-    vol_squared_increments = vol_squared[window:] - vol_squared[:-window]
-
-    if truncation_method is not None:
-        if truncation_method == 'STD':
-            std_dev = np.std(vol_squared_increments)
-            threshold = float(truncation_param) * std_dev
-            vol_squared_increments = truncate_absolute(vol_squared_increments, threshold)
-        else:
-            raise ValueError(f"Unknown truncation method: {truncation_method}")
-
-    return vol_squared_increments
-
 
 def correct_DRV(DRV, Kn):
     DRV = np.asarray(DRV)
@@ -500,8 +479,8 @@ def create_Psi_function(window: int, N_lags: int):
 
 
 
-def run_pipeline(
-    input_data: str,
+def _run_pipeline_from_array(
+    X: np.ndarray,
     price_truncation_mode: Optional[str] = None,
     volatility_truncation_mode: Optional[str] = None,
     remove_pattern: Optional[str] = None,
@@ -518,15 +497,9 @@ def run_pipeline(
     Kn: int = 720,
     W_fun_id: str = "parzen",
 ) -> Optional[float]:
-    """Run the end-to-end Hurst inference pipeline on a saved price array.
-
-    Loads prices from a NumPy array, computes volatility-squared series with
-    optional truncation, performs autocorrelation and GMM steps, and returns
-    the estimated Hurst exponent (and optionally confidence interval output
-    via side effects).
-    """
+    """Run the end-to-end Hurst inference pipeline on a price array."""
     # Step 0
-    print("Step 0/7: Checking input/output folders and creating output folder if needed...")
+    # print("Step 0/7: Checking input/output folders and creating output folder if needed...")
 
     W_fun = None
     if W_fun_id == "parzen":
@@ -536,9 +509,6 @@ def run_pipeline(
         #TODO Improve exception
         raise -1
     
-    if input_data is None:
-        raise ValueError("Config error: input_data is None.")
-
     if volatility_window_size is None or int(volatility_window_size) <= 0:
         raise ValueError("Config error: volatility_window_size must be a positive integer.")
     window = int(volatility_window_size)
@@ -548,17 +518,13 @@ def run_pipeline(
     vol_trunc_method, vol_trunc_param = parse_truncation_mode(volatility_truncation_mode)
 
     # Step 1
-    print("Step 1/7: Listing files, filtering by prefix+date format, loading prices, applying filters...")
-
-    input_data = os.path.join(os.path.dirname(__file__), input_data)
-
-    X = np.load(input_data, allow_pickle=True)
+    # print("Step 1/7: Preparing price data...")
 
     n_day, price_per_day = X.shape
     daily_prices = [X[i, :] for i in range(n_day)]
 
     # Step 2
-    print("Step 2/7: Computing daily volatility-squared series for each day...")
+    # print("Step 2/7: Computing daily volatility-squared series for each day...")
 
     daily_volatility_squared_list: List[np.ndarray] = []
 
@@ -585,15 +551,15 @@ def run_pipeline(
         print("No volatility series could be computed.")
         return None
     
-    print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
+    # print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
 
     # Step 3
-    print("Step 3/7: Normalising and removing intraday volatility pattern if applicable...")
+    # print("Step 3/7: Normalising and removing intraday volatility pattern if applicable...")
 
     # Align lengths (pattern removal and averaging require same intraday index)
     min_len = min(v.shape[0] for v in daily_volatility_squared_list)
     max_len = max(v.shape[0] for v in daily_volatility_squared_list)
-    print(f"Volume intensity length range: min={min_len}, max={max_len}")
+    # print(f"Volume intensity length range: min={min_len}, max={max_len}")
     daily_volatility_squared_list = [v[:min_len].copy() for v in daily_volatility_squared_list]
 
     # Normalise average value per day
@@ -621,7 +587,7 @@ def run_pipeline(
     
 
     # Step 4: Estimate autocorrelation vectors
-    print("Step 4/7: Estimating autocorrelation vectors...")
+    # print("Step 4/7: Estimating autocorrelation vectors...")
 
     if N_autocorrelation is None or int(N_autocorrelation) <= 2:
         raise ValueError("Config error: N_autocorrelation must be an integer greater than 2.")
@@ -633,81 +599,199 @@ def run_pipeline(
             f"Config error: N_autocorrelation ({n_lags}) must be smaller than the volatility series length ({series_len})."
         )
 
-    daily_vol_squared_increments: List[np.ndarray] = []
+    daily_autocorr_vectors: List[np.ndarray] = []
+    n_increments_total = 0
+    truncated_increments_total = 0
+    LA0 = []
     for vsq in daily_volatility_squared_list:
-        vol_squared_increments = compute_truncated_volatility_increments(
+        autocorr, n_increments, truncated = compute_autocorrelation(
             vsq,
+            n_lags,
             window,
             truncation_method=vol_trunc_method,
-            truncation_param=vol_trunc_param
+            truncation_param=vol_trunc_param,
+            return_counts=True,
         )
-        daily_vol_squared_increments.append(vol_squared_increments)
+        # autocorr = autocorr / autocorr[0]
+        daily_autocorr_vectors.append(autocorr)
+        LA0.append(autocorr[0])
+        n_increments_total += n_increments
+        truncated_increments_total += truncated
 
+    daily_autocorr_matrix = np.vstack(daily_autocorr_vectors)
+    average_autocorrelation = np.mean(daily_autocorr_matrix, axis=0)
+    # print(LA0)
 
-    predictor_rows: List[np.ndarray] = []
-    target_rows: List[np.ndarray] = []
-    offset = window * n_lags
-
-    for day_idx, vol_squared_increments in enumerate(daily_vol_squared_increments, start=1):
-        print(f"New day {day_idx}")
-        series_len = vol_squared_increments.shape[0]
-        max_k = series_len - offset
-        if max_k <= 0:
-            continue
-        base = np.arange(max_k)
-        cols = [vol_squared_increments[base + i * window] for i in range(n_lags)]
-        predictor_rows.append(np.stack(cols, axis=1))
-        target_rows.append(vol_squared_increments[base + offset])
-
-    if not predictor_rows:
-        raise ValueError("Not enough data to build the linear predictor.")
-
-    print("Done")
-    total_predictor_rows = sum(rows.shape[0] for rows in predictor_rows)
-    total_target_rows = sum(rows.shape[0] for rows in target_rows)
-    predictor_shape = predictor_rows[0].shape
-    target_shape = target_rows[0].shape
-    print(
-        "Row sizes:",
-        f"predictor_rows={len(predictor_rows)} total_rows={total_predictor_rows} sample_shape={predictor_shape}",
-        f"target_rows={len(target_rows)} total_rows={total_target_rows} sample_shape={target_shape}",
+    # print(f"Average autocorrelation vector: {average_autocorrelation}")
+    proportion = (
+        truncated_increments_total / n_increments_total
+        if n_increments_total > 0
+        else 0.0
     )
+    # print(
+    #     "Volatility increments truncated: "
+    #     f"{truncated_increments_total} out of {n_increments_total} "
+    #     f"(proportion: {proportion:.6f})"
+    # )
 
-    X = np.empty((total_predictor_rows, predictor_shape[1]), dtype=predictor_rows[0].dtype)
-    start = 0
-    for rows in predictor_rows:
-        end = start + rows.shape[0]
-        X[start:end] = rows
-        start = end
+    # Step 5: Estimate covariance matrices
+    # print("Step 5/7: Estimating covariance matrices...")
 
-    y = np.empty((total_target_rows,), dtype=target_rows[0].dtype)
-    start = 0
-    for rows in target_rows:
-        end = start + rows.shape[0]
-        y[start:end] = rows
-        start = end
+    daily_covariance_matrices: List[np.ndarray] = []
 
-    print(X.shape)
-    print(y.shape)
+    if GMM_weight not in {"identity", "optimal"}:
+        raise ValueError(f"Invalid GMM_weight: {GMM_weight}. Expected 'identity' or 'optimal'.")
+    if GMM_weight == "optimal" or compute_confidence_interval:
+        for vsq in daily_volatility_squared_list:
+            daily_covariance_matrices.append(compute_covariance(
+                W_fun, 
+                Ln,
+                Kn, 
+                vsq, 
+                n_lags, 
+                window, 
+                truncation_method=vol_trunc_method, 
+                truncation_param=vol_trunc_param
+            ).flatten())
+        daily_covariance_matrices = np.vstack(daily_covariance_matrices)
+        average_covariance = np.mean(daily_covariance_matrices, axis=0).reshape((n_lags - 1, n_lags - 1))
+        
+    # Step 6: GMM estimation of Hurst exponent
+    # print(
+    #     f"Step 6/7: Estimating Hurst exponent via GMM on grid H in "
+    #     f"[{hurst_min_value}, {hurst_max_value}] with step {hurst_step}..."
+    # )
 
-    coeffs, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
-    y_pred = X @ coeffs
-    residual = y - y_pred
-    mse = np.mean(residual ** 2)
-    mae = np.mean(np.abs(residual))
-    var_y = np.var(y)
-    r2 = 1.0 - (mse / var_y) if var_y > 0.0 else np.nan
+    Psi = create_Psi_function(window, n_lags)
 
-    print("Linear predictor results:")
-    print(f"  samples={y.shape[0]} window={window} n_lags={n_lags}")
-    print(f"  mse={mse:.6e} mae={mae:.6e} r2={r2:.6f}")
-    weights_str = " ".join(f"{w:.6e}" for w in coeffs)
-    print(f"  weights=[{weights_str}]")
-    return
+    weight_matrix = np.identity(n_lags - 1)
+    if GMM_weight == "optimal":
+        weight_matrix = np.linalg.inv(average_covariance)
+
+    H_total, R_total = estimation_GMM(weight_matrix,
+                            average_autocorrelation,
+                            Psi,
+                            hurst_min_value,
+                            hurst_max_value,
+                            hurst_step)
+        
+    # Step 7: Save results to output folder and print results as well
+    # print("Step 7/7: Saving results and printing summary...")
+    # print(f"Estimated Hurst exponent: {H_total}")
+
+    confidence = None
+    if compute_confidence_interval:
+        n_days = len(daily_volatility_squared_list)
+
+        C1, C2 = get_confidence_size(n_lags, window, H_total, R_total, n_days, delta_n, average_covariance, weight_matrix)
+        alpha = 0.95  # Example: 95% confidence interval
+        z_alpha = norm.ppf((1 + alpha) / 2)  # Compute Φ^−1((1 - α) / 2)
+        confidence = C1 * z_alpha
+        # print("Size confidence band:", C1 * z_alpha)
+
+    return H_total, confidence
+
+
+def list_prepared_data_years(input_data_folder: str) -> List[Tuple[int, str]]:
+    pattern = re.compile(r"^prepared_data_(\d{4})\.npy$")
+    years_paths = []
+    for name in os.listdir(input_data_folder):
+        match = pattern.match(name)
+        if match:
+            years_paths.append((int(match.group(1)), os.path.join(input_data_folder, name)))
+    years_paths.sort(key=lambda x: x[0])
+    return years_paths
+
+
+def run_pipeline(
+    input_data_folder: str,
+    price_truncation_mode: Optional[str] = None,
+    volatility_truncation_mode: Optional[str] = None,
+    remove_pattern: Optional[str] = None,
+    volatility_window_size: Optional[int] = None,
+    hurst_min_value: Optional[float] = None,
+    hurst_max_value: Optional[float] = None,
+    hurst_step: Optional[float] = None,
+    delta_n: Optional[float] = None,
+    normalise_average_value: bool = True,
+    N_autocorrelation: Optional[int] = None,
+    compute_confidence_interval: bool = False,
+    GMM_weight: str = "identity",
+    Ln: int = 180,
+    Kn: int = 720,
+    W_fun_id: str = "parzen",
+    N_consecutive_years: int = 0,
+) -> Optional[Union[float, Dict[Tuple[int, ...], Optional[float]]]]:
+    if input_data_folder is None:
+        raise ValueError("Config error: input_data_folder is None.")
+
+    base_dir = os.path.dirname(__file__)
+    folder_path = os.path.join(base_dir, input_data_folder)
+    years_paths = list_prepared_data_years(folder_path)
+    if not years_paths:
+        raise ValueError(f"No prepared data files found in {folder_path}.")
+
+    data_by_year = {year: np.load(path, allow_pickle=True) for year, path in years_paths}
+    years = [year for year, _ in years_paths]
+
+    if N_consecutive_years <= 0:
+        X = np.concatenate([data_by_year[year] for year in years], axis=0)
+        return _run_pipeline_from_array(
+            X,
+            price_truncation_mode=price_truncation_mode,
+            volatility_truncation_mode=volatility_truncation_mode,
+            remove_pattern=remove_pattern,
+            volatility_window_size=volatility_window_size,
+            hurst_min_value=hurst_min_value,
+            hurst_max_value=hurst_max_value,
+            hurst_step=hurst_step,
+            delta_n=delta_n,
+            normalise_average_value=normalise_average_value,
+            N_autocorrelation=N_autocorrelation,
+            compute_confidence_interval=compute_confidence_interval,
+            GMM_weight=GMM_weight,
+            Ln=Ln,
+            Kn=Kn,
+            W_fun_id=W_fun_id,
+        )
+    
+
+
+    results: Dict[Tuple[int, ...], Optional[float]] = {}
+    span = int(N_consecutive_years)
+    for i in range(0, len(years) - span + 1):
+        span_years = years[i:i + span]
+        if span_years[-1] - span_years[0] != span - 1:
+            continue
+        X = np.concatenate([data_by_year[year] for year in span_years], axis=0)
+        results[tuple(span_years)] = _run_pipeline_from_array(
+            X,
+            price_truncation_mode=price_truncation_mode,
+            volatility_truncation_mode=volatility_truncation_mode,
+            remove_pattern=remove_pattern,
+            volatility_window_size=volatility_window_size,
+            hurst_min_value=hurst_min_value,
+            hurst_max_value=hurst_max_value,
+            hurst_step=hurst_step,
+            delta_n=delta_n,
+            normalise_average_value=normalise_average_value,
+            N_autocorrelation=N_autocorrelation,
+            compute_confidence_interval=compute_confidence_interval,
+            GMM_weight=GMM_weight,
+            Ln=Ln,
+            Kn=Kn,
+            W_fun_id=W_fun_id,
+        )
+        H, confidence = results[tuple(span_years)] 
+        if confidence is None:
+            print(f"Span: {span_years[0]}-{span_years[-1]} H={H}")
+        else:
+            print(f"Span: {span_years[0]}-{span_years[-1]} H={H} +/- {confidence:.4f}")
+    return results
 
 if __name__ == "__main__":
     run_pipeline(
-        input_data=input_data,
+        input_data_folder=input_data_folder,
         price_truncation_mode=price_truncation_mode,
         volatility_truncation_mode=volatility_truncation_mode,
         remove_pattern=remove_pattern,
@@ -722,5 +806,6 @@ if __name__ == "__main__":
         Ln=Ln,
         Kn=Kn,
         W_fun_id=W_fun_id,
-        delta_n=5.0/(252.0 * 23400.0)
+        delta_n=5.0/(252.0 * 23400.0),
+        N_consecutive_years=N_consecutive_years,
     )

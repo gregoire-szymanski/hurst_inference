@@ -79,7 +79,7 @@ for year_file in list_year_files:
         dt = pd.date_range(
             start=datetime.combine(day.date(), time(9, 30)),
             periods=prices.shape[0],
-            freq="S",
+            freq="s",
         )
         out_df = pd.DataFrame({"DT": dt, "Price": prices})
         out_name = f"spy_{day.strftime('%Y_%m_%d')}.csv"
