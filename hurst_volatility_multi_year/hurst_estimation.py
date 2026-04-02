@@ -7,9 +7,44 @@ from scipy.stats import norm
 import numpy as np
 
 
+
+# main parameters (defaults)
+
+input_data_folder = "new_data"
+
+price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
+volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
+remove_pattern = 'multiplicative'  # None, multiplicative, additive
+
+volatility_window_size = 48 * 2  # Integer
+increment_volatility_size = 60 * 2 # Integer
+
+hurst_min_value = 0.0001  # Float
+hurst_max_value = 0.4999  # Float
+hurst_step = 0.0001  # Float
+
+normalise_average_value = True  # True or False, default True
+
+N_autocorrelation = 6  # Integer (must be larger than 2)
+compute_confidence_interval = True  # True or False, default is False
+GMM_weight = "identity"  # "identity" or "optimal"
+Ln = 180  # Integer, default value 180
+Kn = 720  # Integer, default value 720
+W_fun_id = "parzen"  # Only allowed value is 'parzen'
+print_truncated_infos = False  # True or False, default is False
+
+start_year = 2018  # None or Integer
+end_year = 2022  # None or Integer
+N_consecutive_years = None  # None or Integer
+
+
+
+
+
+
 ##### Preliminary functions
 
-def Phi_Hl(l: int, H: float) -> float:
+def Phi_Hl(l: int, H: float, kappa: float = 1) -> float:
     """
     Compute the value of $\\Phi^H_\\ell$ using a finite difference formula.
 
@@ -18,15 +53,41 @@ def Phi_Hl(l: int, H: float) -> float:
 
     :param l: Index $\\ell$ in the formula (integer).
     :param H: Hurst exponent $H$, controlling the memory effect (float).
+    :param kappa: Sampling ratio parameter used in the generalized stencil.
     :return: Computed value of $\\Phi^H_\\ell$.
     """
-    numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
-                 6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
-                 np.abs(l - 2) ** (2 * H + 2))
-    denominator = 2 * (2 * H + 1) * (2 * H + 2)
-    return numerator / denominator
+    h2 = 2.0 * H
+    exponent = h2 + 2.0
+    denominator = 2.0 * (h2 + 1.0) * (h2 + 2.0)
 
-def dPhi_Hl_dH(l: int, H: float) -> float:
+    # Fast path for the dominant case used by the rest of the module.
+    if kappa == 1:
+        return (
+            abs(l + 2) ** exponent
+            - 4.0 * abs(l + 1) ** exponent
+            + 6.0 * abs(l) ** exponent
+            - 4.0 * abs(l - 1) ** exponent
+            + abs(l - 2) ** exponent
+        ) / denominator
+
+    inv_kappa = 1.0 / kappa
+    base = abs(l) ** exponent
+    numerator1 = (
+        abs(l + 1 + inv_kappa) ** exponent
+        + abs(l + 1 - inv_kappa) ** exponent
+        + abs(l - 1 + inv_kappa) ** exponent
+        + abs(l - 1 - inv_kappa) ** exponent
+    )
+    numerator2 = (
+        abs(l + 1) ** exponent
+        + abs(l + inv_kappa) ** exponent
+        + abs(l - 1) ** exponent
+        + abs(l - inv_kappa) ** exponent
+    )
+    return (kappa * kappa) * (numerator1 - 2.0 * numerator2 + 4.0 * base) / denominator
+
+
+def dPhi_Hl_dH(l: int, H: float, kappa: float = 1) -> float:
     """
     Compute the derivative of $\\Phi^H_\\ell$ with respect to $H$.
 
@@ -34,27 +95,47 @@ def dPhi_Hl_dH(l: int, H: float) -> float:
 
     :param l: Index $\\ell$ in the formula (integer).
     :param H: Hurst exponent $H$ (float).
+    :param kappa: Sampling ratio parameter used in the generalized stencil.
     :return: The computed derivative $\\frac{d}{dH} \\Phi^H_\\ell$.
     """
-    def power_term_derivative(x, H):
-        if x == 0:
-            return 0
-        return (2 * x ** (2 * H + 2) * np.log(np.abs(x)))
-    
-    numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
-                 6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
-                 np.abs(l - 2) ** (2 * H + 2))
+    exponent = 2.0 * H + 2.0
+    denominator = 2.0 * (2.0 * H + 1.0) * (2.0 * H + 2.0)
+    denominator_derivative = 4.0 * (4.0 * H + 3.0)
 
-    numerator_derivative = (
-        power_term_derivative(np.abs(l + 2), H) - 4 * power_term_derivative(np.abs(l + 1), H) +
-        6 * power_term_derivative(np.abs(l), H) - 4 * power_term_derivative(np.abs(l - 1), H) +
-        power_term_derivative(np.abs(l - 2), H)
-    )
-    
-    denominator = 2 * (2 * H + 1) * (2 * H + 2)
-    denominator_derivative = 4 * (4 * H + 3)
-    
-    return (numerator_derivative * denominator - denominator_derivative * numerator) / (denominator * denominator)
+    def pow_and_derivative(x: float) -> Tuple[float, float]:
+        ax = abs(x)
+        if ax == 0.0:
+            return 0.0, 0.0
+        value = ax ** exponent
+        return value, 2.0 * value * np.log(ax)
+
+    if kappa == 1:
+        p_l2, dp_l2 = pow_and_derivative(l + 2)
+        p_l1, dp_l1 = pow_and_derivative(l + 1)
+        p_l0, dp_l0 = pow_and_derivative(l)
+        p_lm1, dp_lm1 = pow_and_derivative(l - 1)
+        p_lm2, dp_lm2 = pow_and_derivative(l - 2)
+
+        numerator = p_l2 - 4.0 * p_l1 + 6.0 * p_l0 - 4.0 * p_lm1 + p_lm2
+        numerator_derivative = dp_l2 - 4.0 * dp_l1 + 6.0 * dp_l0 - 4.0 * dp_lm1 + dp_lm2
+    else:
+        inv_kappa = 1.0 / kappa
+
+        p1, dp1 = pow_and_derivative(l + 1 + inv_kappa)
+        p2, dp2 = pow_and_derivative(l + 1 - inv_kappa)
+        p3, dp3 = pow_and_derivative(l - 1 + inv_kappa)
+        p4, dp4 = pow_and_derivative(l - 1 - inv_kappa)
+        q1, dq1 = pow_and_derivative(l + 1)
+        q2, dq2 = pow_and_derivative(l + inv_kappa)
+        q3, dq3 = pow_and_derivative(l - 1)
+        q4, dq4 = pow_and_derivative(l - inv_kappa)
+        b, db = pow_and_derivative(l)
+
+        kappa_sq = kappa * kappa
+        numerator = kappa_sq * ((p1 + p2 + p3 + p4) - 2.0 * (q1 + q2 + q3 + q4) + 4.0 * b)
+        numerator_derivative = kappa_sq * ((dp1 + dp2 + dp3 + dp4) - 2.0 * (dq1 + dq2 + dq3 + dq4) + 4.0 * db)
+
+    return (numerator_derivative * denominator - numerator * denominator_derivative) / (denominator * denominator)
 
 ##### GMM estimator
 
@@ -132,34 +213,6 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
         return H_values, F_values, min_index, R_values
 
     return H_values[min_index], F_GMM_get_R(W, V, Psi_func, H_values[min_index])
-
-# main parameters (defaults)
-
-input_data_folder = "new_data"
-
-price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
-volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
-remove_pattern = 'multiplicative'  # None, multiplicative, additive
-
-volatility_window_size = 60  # Integer
-
-hurst_min_value = 0.0001  # Float
-hurst_max_value = 0.4999  # Float
-hurst_step = 0.0001  # Float
-
-normalise_average_value = True  # True or False, default True
-
-N_autocorrelation = 12  # Integer (must be larger than 2)
-compute_confidence_interval = False  # True or False, default is False
-GMM_weight = "identity"  # "identity" or "optimal"
-Ln = 180  # Integer, default value 180
-Kn = 720  # Integer, default value 720
-W_fun_id = "parzen"  # Only allowed value is 'parzen'
-
-start_year = None  # None or Integer
-end_year = None  # None or Integer
-N_consecutive_years = 4  # None or Integer
-
 
 # Helper functions
 
@@ -246,9 +299,9 @@ def compute_autocorrelation(
 
     for lag in range(N_lags):
         if lag == 0:
-            autocorr[lag] = np.mean((vol_squared_increments - mean_vol) ** 2)
+            autocorr[lag] = np.mean((vol_squared_increments - mean_vol) ** 2) * n_increments / (n_increments - truncated)
         else:
-            autocorr[lag] = np.mean((vol_squared_increments[lag*window:] - mean_vol) * (vol_squared_increments[:-lag*window] - mean_vol))
+            autocorr[lag] = np.mean((vol_squared_increments[lag*window:] - mean_vol) * (vol_squared_increments[:-lag*window] - mean_vol)) * n_increments / (n_increments - 2*truncated)
 
     autocorr[1] = autocorr[0] + 2 * autocorr[1]
 
@@ -378,37 +431,35 @@ def compute_covariance(W_fun,
 
 ### Confidence interval ###
 
-def uncorrected_alpha(theta, lag, H):
-    return theta**(2*H-1) * dPhi_Hl_dH(lag, H) + 2 * np.log(theta) * Phi_Hl(lag, H)
+def uncorrected_alpha(theta, lag, H, kappa):
+    return theta**(2*H-1) * dPhi_Hl_dH(lag, H, kappa) + 2 * np.log(theta) * Phi_Hl(lag, H, kappa)
 
-def uncorrected_beta(theta, lag, H):
-    return theta**(2*H-1) * Phi_Hl(lag, H)
+def uncorrected_beta(theta, lag, H, kappa):
+    return theta**(2*H-1) * Phi_Hl(lag, H, kappa)
 
-def compute_alpha(theta, lag, H):
+def compute_alpha(theta, lag, H, kappa):
     if lag == 1:
-        return uncorrected_alpha(theta, 0, H) + 2 * uncorrected_alpha(theta, 1, H)
-    return uncorrected_alpha(theta, lag, H)
+        return uncorrected_alpha(theta, 0, H, kappa) + 2 * uncorrected_alpha(theta, 1, H, kappa)
+    return uncorrected_alpha(theta, lag, H, kappa)
 
 
-def compute_beta(theta, lag, H):
+def compute_beta(theta, lag, H, kappa):
     if lag == 1:
-        return uncorrected_beta(theta, 0, H) + 2 * uncorrected_beta(theta, 1, H)
-    return uncorrected_beta(theta, lag, H)
+        return uncorrected_beta(theta, 0, H, kappa) + 2 * uncorrected_beta(theta, 1, H, kappa)
+    return uncorrected_beta(theta, lag, H, kappa)
 
 
 
 
-def get_confidence_size(N_lags, window, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
+def get_confidence_size(N_lags, window, kappa, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
     theta = 1
 
     alpha = np.zeros(N_lags-1)
     beta = np.zeros(N_lags-1)
 
     for i in range(1,N_lags):
-        alpha[i-1] = compute_alpha(theta, i, H_estimated)
-        beta[i-1] = compute_beta(theta, i, H_estimated)
-
-    alpha_beta = np.array([alpha, beta])
+        alpha[i-1] = compute_alpha(theta, i, H_estimated, kappa)
+        beta[i-1] = compute_beta(theta, i, H_estimated, kappa)
 
     u_t = np.array([alpha * R_estimated, beta]).transpose()
 
@@ -444,7 +495,7 @@ def parse_truncation_mode(mode: Optional[str]) -> Tuple[Optional[str], Optional[
     return method, param
 
 
-def create_Psi_function(window: int, N_lags: int):
+def create_Psi_function(window: int, N_lags: int, kappa: float):
     def Psi(H):
         """
         Precompute the Psi(H) function for the given parameter configurations.
@@ -470,11 +521,11 @@ def create_Psi_function(window: int, N_lags: int):
         factor = window**(2 * H)
         
         # Compute the first two terms outside the loop
-        p.append(factor * (Phi_Hl(0, H) + 2 * Phi_Hl(1, H)))
+        p.append(factor * (Phi_Hl(0, H, kappa) + 2 * Phi_Hl(1, H, kappa)))
 
         # Compute remaining terms for i in [2, N_lags]
         for i in range(2, N_lags):
-            p.append(factor * Phi_Hl(i, H))
+            p.append(factor * Phi_Hl(i, H, kappa))
 
         return np.array(p)
     return Psi
@@ -487,6 +538,7 @@ def _run_pipeline_from_array(
     volatility_truncation_mode: Optional[str] = None,
     remove_pattern: Optional[str] = None,
     volatility_window_size: Optional[int] = None,
+    increment_volatility_size: Optional[int] = None,
     hurst_min_value: Optional[float] = None,
     hurst_max_value: Optional[float] = None,
     hurst_step: Optional[float] = None,
@@ -498,22 +550,40 @@ def _run_pipeline_from_array(
     Ln: int = 180,
     Kn: int = 720,
     W_fun_id: str = "parzen",
-) -> Optional[float]:
+    print_truncated_infos: bool = False,
+) -> Optional[Tuple[float, Optional[float]]]:
     """Run the end-to-end Hurst inference pipeline on a price array."""
     # Step 0
     # print("Step 0/7: Checking input/output folders and creating output folder if needed...")
+
 
     W_fun = None
     if W_fun_id == "parzen":
         kernel_k = lambda x: 1 - 6 * x**2 + 6 * x**3 if x <= 0.5 else 2 * (1 - x)**3
         W_fun = lambda Lmax, L: kernel_k(np.abs(L / Lmax))
     else:
-        #TODO Improve exception
-        raise -1
+        raise ValueError(f"Invalid W_fun_id: {W_fun_id}. Expected 'parzen'.")
     
     if volatility_window_size is None or int(volatility_window_size) <= 0:
         raise ValueError("Config error: volatility_window_size must be a positive integer.")
     window = int(volatility_window_size)
+
+    if increment_volatility_size is None:
+        increment_window = window
+    else:
+        increment_window = int(increment_volatility_size)
+    if increment_window < window:
+        raise ValueError(
+            "Config error: increment_volatility_size must be greater than or equal to volatility_window_size."
+        )
+    if compute_confidence_interval:
+        if delta_n is None or not np.isfinite(delta_n) or float(delta_n) <= 0:
+            raise ValueError(
+                "Config error: delta_n must be a positive finite float when compute_confidence_interval=True."
+            )
+        delta_n = float(delta_n)
+
+    kappa = increment_window / window
 
     # Parse truncation
     price_trunc_method, price_trunc_param = parse_truncation_mode(price_truncation_mode)
@@ -605,11 +675,12 @@ def _run_pipeline_from_array(
     n_increments_total = 0
     truncated_increments_total = 0
     LA0 = []
+    n_truncated_days = 0
     for vsq in daily_volatility_squared_list:
         autocorr, n_increments, truncated = compute_autocorrelation(
             vsq,
             n_lags,
-            window,
+            increment_window,
             truncation_method=vol_trunc_method,
             truncation_param=vol_trunc_param,
             return_counts=True,
@@ -619,22 +690,26 @@ def _run_pipeline_from_array(
         LA0.append(autocorr[0])
         n_increments_total += n_increments
         truncated_increments_total += truncated
+        if truncated > 0:
+            n_truncated_days += 1
 
     daily_autocorr_matrix = np.vstack(daily_autocorr_vectors)
     average_autocorrelation = np.mean(daily_autocorr_matrix, axis=0)
     # print(LA0)
 
     # print(f"Average autocorrelation vector: {average_autocorrelation}")
-    proportion = (
-        truncated_increments_total / n_increments_total
-        if n_increments_total > 0
-        else 0.0
-    )
-    # print(
-    #     "Volatility increments truncated: "
-    #     f"{truncated_increments_total} out of {n_increments_total} "
-    #     f"(proportion: {proportion:.6f})"
-    # )
+    if print_truncated_infos:
+        proportion = (
+            truncated_increments_total / n_increments_total
+            if n_increments_total > 0
+            else 0.0
+        )
+        print(
+            "Volatility increments truncated: "
+            f"{truncated_increments_total} out of {n_increments_total} "
+            f"(proportion: {proportion:.6f}) "
+            f"(n_truncated_days: {n_truncated_days:.6f})"
+        )
 
     # Step 5: Estimate covariance matrices
     # print("Step 5/7: Estimating covariance matrices...")
@@ -651,7 +726,7 @@ def _run_pipeline_from_array(
                 Kn, 
                 vsq, 
                 n_lags, 
-                window, 
+                increment_window, 
                 truncation_method=vol_trunc_method, 
                 truncation_param=vol_trunc_param
             ).flatten())
@@ -664,7 +739,7 @@ def _run_pipeline_from_array(
     #     f"[{hurst_min_value}, {hurst_max_value}] with step {hurst_step}..."
     # )
 
-    Psi = create_Psi_function(window, n_lags)
+    Psi = create_Psi_function(increment_window, n_lags, kappa)
 
     weight_matrix = np.identity(n_lags - 1)
     if GMM_weight == "optimal":
@@ -685,7 +760,7 @@ def _run_pipeline_from_array(
     if compute_confidence_interval:
         n_days = len(daily_volatility_squared_list)
 
-        C1, C2 = get_confidence_size(n_lags, window, H_total, R_total, n_days, delta_n, average_covariance, weight_matrix)
+        C1, C2 = get_confidence_size(n_lags, increment_window, kappa, H_total, R_total, n_days, delta_n, average_covariance, weight_matrix)
         alpha = 0.95  # Example: 95% confidence interval
         z_alpha = norm.ppf((1 + alpha) / 2)  # Compute Φ^−1((1 - α) / 2)
         confidence = C1 * z_alpha
@@ -711,6 +786,7 @@ def run_pipeline(
     volatility_truncation_mode: Optional[str] = None,
     remove_pattern: Optional[str] = None,
     volatility_window_size: Optional[int] = None,
+    increment_volatility_size: Optional[int] = None,
     hurst_min_value: Optional[float] = None,
     hurst_max_value: Optional[float] = None,
     hurst_step: Optional[float] = None,
@@ -725,9 +801,28 @@ def run_pipeline(
     N_consecutive_years: Optional[int] = 0,
     start_year: Optional[int] = None,
     end_year: Optional[int] = None,
-) -> Optional[Union[float, Dict[Tuple[int, ...], Optional[float]]]]:
+    print_truncated_infos: bool = False,
+) -> Optional[
+    Union[
+        Tuple[float, Optional[float]],
+        Dict[Tuple[int, ...], Optional[Tuple[float, Optional[float]]]],
+    ]
+]:
     if input_data_folder is None:
         raise ValueError("Config error: input_data_folder is None.")
+
+    if volatility_window_size is None or int(volatility_window_size) <= 0:
+        raise ValueError("Config error: volatility_window_size must be a positive integer.")
+    window = int(volatility_window_size)
+
+    if increment_volatility_size is None:
+        increment_window = window
+    else:
+        increment_window = int(increment_volatility_size)
+    if increment_window < window:
+        raise ValueError(
+            "Config error: increment_volatility_size must be greater than or equal to volatility_window_size."
+        )
 
     base_dir = os.path.dirname(__file__)
     folder_path = os.path.join(base_dir, input_data_folder)
@@ -773,6 +868,7 @@ def run_pipeline(
             volatility_truncation_mode=volatility_truncation_mode,
             remove_pattern=remove_pattern,
             volatility_window_size=volatility_window_size,
+            increment_volatility_size=increment_window,
             hurst_min_value=hurst_min_value,
             hurst_max_value=hurst_max_value,
             hurst_step=hurst_step,
@@ -784,23 +880,25 @@ def run_pipeline(
             Ln=Ln,
             Kn=Kn,
             W_fun_id=W_fun_id,
+            print_truncated_infos=print_truncated_infos,
         )
     
 
 
-    results: Dict[Tuple[int, ...], Optional[float]] = {}
+    results: Dict[Tuple[int, ...], Optional[Tuple[float, Optional[float]]]] = {}
     span = N_consecutive_years
     for i in range(0, len(years) - span + 1):
         span_years = years[i:i + span]
         if span_years[-1] - span_years[0] != span - 1:
             continue
         X = np.concatenate([data_by_year[year] for year in span_years], axis=0)
-        results[tuple(span_years)] = _run_pipeline_from_array(
+        result = _run_pipeline_from_array(
             X,
             price_truncation_mode=price_truncation_mode,
             volatility_truncation_mode=volatility_truncation_mode,
             remove_pattern=remove_pattern,
             volatility_window_size=volatility_window_size,
+            increment_volatility_size=increment_volatility_size,
             hurst_min_value=hurst_min_value,
             hurst_max_value=hurst_max_value,
             hurst_step=hurst_step,
@@ -812,13 +910,19 @@ def run_pipeline(
             Ln=Ln,
             Kn=Kn,
             W_fun_id=W_fun_id,
+            print_truncated_infos=print_truncated_infos,
         )
-        H, confidence = results[tuple(span_years)] 
+        results[tuple(span_years)] = result
+        if result is None:
+            print(f"Span: {span_years[0]}-{span_years[-1]} H=None")
+            continue
+        H, confidence = result
         if confidence is None:
             print(f"Span: {span_years[0]}-{span_years[-1]} H={H}")
         else:
             print(f"Span: {span_years[0]}-{span_years[-1]} H={H} +/- {confidence:.4f}")
     return results
+
 
 if __name__ == "__main__":
     run_pipeline(
@@ -827,6 +931,7 @@ if __name__ == "__main__":
         volatility_truncation_mode=volatility_truncation_mode,
         remove_pattern=remove_pattern,
         volatility_window_size=volatility_window_size,
+        increment_volatility_size=increment_volatility_size,
         hurst_min_value=hurst_min_value,
         hurst_max_value=hurst_max_value,
         hurst_step=hurst_step,
@@ -841,4 +946,5 @@ if __name__ == "__main__":
         N_consecutive_years=N_consecutive_years,
         start_year=start_year,
         end_year=end_year,
+        print_truncated_infos=print_truncated_infos,
     )
