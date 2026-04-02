@@ -156,7 +156,9 @@ Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
 
-N_consecutive_years = 4
+start_year = None  # None or Integer
+end_year = None  # None or Integer
+N_consecutive_years = 4  # None or Integer
 
 
 # Helper functions
@@ -720,7 +722,9 @@ def run_pipeline(
     Ln: int = 180,
     Kn: int = 720,
     W_fun_id: str = "parzen",
-    N_consecutive_years: int = 0,
+    N_consecutive_years: Optional[int] = 0,
+    start_year: Optional[int] = None,
+    end_year: Optional[int] = None,
 ) -> Optional[Union[float, Dict[Tuple[int, ...], Optional[float]]]]:
     if input_data_folder is None:
         raise ValueError("Config error: input_data_folder is None.")
@@ -731,8 +735,35 @@ def run_pipeline(
     if not years_paths:
         raise ValueError(f"No prepared data files found in {folder_path}.")
 
+    available_start_year = years_paths[0][0]
+    available_end_year = years_paths[-1][0]
+    effective_start_year = available_start_year if start_year is None else int(start_year)
+    effective_end_year = available_end_year if end_year is None else int(end_year)
+
+    if effective_start_year > effective_end_year:
+        raise ValueError(
+            f"Invalid year range: start_year ({effective_start_year}) > "
+            f"end_year ({effective_end_year})."
+        )
+
+    years_paths = [
+        (year, path)
+        for year, path in years_paths
+        if effective_start_year <= year <= effective_end_year
+    ]
+    if not years_paths:
+        raise ValueError(
+            f"No prepared data files found in {folder_path} for years "
+            f"{effective_start_year}-{effective_end_year}."
+        )
+
     data_by_year = {year: np.load(path, allow_pickle=True) for year, path in years_paths}
     years = [year for year, _ in years_paths]
+
+    if N_consecutive_years is None:
+        N_consecutive_years = len(years)
+    else:
+        N_consecutive_years = int(N_consecutive_years)
 
     if N_consecutive_years <= 0:
         X = np.concatenate([data_by_year[year] for year in years], axis=0)
@@ -758,7 +789,7 @@ def run_pipeline(
 
 
     results: Dict[Tuple[int, ...], Optional[float]] = {}
-    span = int(N_consecutive_years)
+    span = N_consecutive_years
     for i in range(0, len(years) - span + 1):
         span_years = years[i:i + span]
         if span_years[-1] - span_years[0] != span - 1:
@@ -808,4 +839,6 @@ if __name__ == "__main__":
         W_fun_id=W_fun_id,
         delta_n=5.0/(252.0 * 23400.0),
         N_consecutive_years=N_consecutive_years,
+        start_year=start_year,
+        end_year=end_year,
     )
