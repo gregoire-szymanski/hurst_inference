@@ -2,11 +2,14 @@ import json
 import os
 import re
 from typing import Dict, List, Optional, Tuple, Union
+from scipy.optimize import minimize
 from scipy.stats import norm
 
 import numpy as np
 
 
+
+print("Import done")
 
 # main parameters (defaults)
 
@@ -26,12 +29,13 @@ hurst_step = 0.0001  # Float
 normalise_average_value = True  # True or False, default True
 
 N_autocorrelation = 6  # Integer (must be larger than 2)
-compute_confidence_interval = True  # True or False, default is False
+compute_confidence_interval = False  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
 print_truncated_infos = False  # True or False, default is False
+optimization_method = "BFGS"  # "brute" or "BFGS"
 
 start_year = 2018  # None or Integer
 end_year = 2022  # None or Integer
@@ -189,7 +193,15 @@ def F_GMM_get_R(W: np.ndarray, V: np.ndarray, Psi_func, H: float) -> float:
     
     return R
 
-def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001, H_max: float = 0.499, mesh: float = 0.001, debug: bool = False):
+def estimation_GMM_brute(
+    W: np.ndarray,
+    V: np.ndarray,
+    Psi_func,
+    H_min: float = 0.001,
+    H_max: float = 0.499,
+    mesh: float = 0.001,
+    debug: bool = False,
+):
     """
     Perform Generalized Method of Moments (GMM) estimation for the Hurst exponent.
     
@@ -213,6 +225,58 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
         return H_values, F_values, min_index, R_values
 
     return H_values[min_index], F_GMM_get_R(W, V, Psi_func, H_values[min_index])
+
+
+def estimation_GMM_BFGS(
+    W: np.ndarray,
+    V: np.ndarray,
+    Psi_func,
+    H_min: float = 0.001,
+    H_max: float = 0.499,
+    mesh: float = 0.001,
+    debug: bool = False,
+):
+    """
+    Perform 1D GMM estimation for the Hurst exponent using BFGS.
+
+    The optimized objective remains F_estimation_GMM(W, V, Psi_func, [H]).
+    """
+    del mesh  # mesh is unused for BFGS, kept for API compatibility
+
+    if H_min >= H_max:
+        raise ValueError("H_min must be strictly smaller than H_max.")
+
+    def objective(x: np.ndarray) -> float:
+        H = float(np.atleast_1d(x)[0])
+        return float(F_estimation_GMM(W, V, Psi_func, [H]))
+
+    x0 = np.array([(H_min + H_max) / 2.0], dtype=float)
+    result = minimize(objective, x0=x0, method="BFGS")
+
+    H_estimated = float(np.clip(result.x[0], H_min, H_max))
+    R_estimated = F_GMM_get_R(W, V, Psi_func, H_estimated)
+
+    if debug:
+        return H_estimated, R_estimated, result
+    return H_estimated, R_estimated
+
+
+def estimation_GMM(
+    W: np.ndarray,
+    V: np.ndarray,
+    Psi_func,
+    H_min: float = 0.001,
+    H_max: float = 0.499,
+    mesh: float = 0.001,
+    debug: bool = False,
+    optimization_method: str = "brute",
+):
+    method = str(optimization_method).strip().lower()
+    if method == "brute":
+        return estimation_GMM_brute(W, V, Psi_func, H_min, H_max, mesh, debug)
+    if method == "bfgs":
+        return estimation_GMM_BFGS(W, V, Psi_func, H_min, H_max, mesh, debug)
+    raise ValueError("optimization_method must be either 'brute' or 'BFGS'.")
 
 # Helper functions
 
@@ -461,17 +525,18 @@ def get_confidence_size(N_lags, window, kappa, H_estimated, R_estimated, n_days,
         alpha[i-1] = compute_alpha(theta, i, H_estimated, kappa)
         beta[i-1] = compute_beta(theta, i, H_estimated, kappa)
 
-    u_t = np.array([alpha * R_estimated, beta]).transpose()
+    u_t = np.array([alpha, beta]).transpose()
 
     D = np.array([
         [1, 0],
-        [-2 * np.log(window * delta_n), 1]
+        [-2 * np.log(window * delta_n) * R_estimated, 1]
     ])
 
     uWu_inv = np.linalg.inv(u_t.transpose() @ W_chosen @ u_t)
     matrix_43 = (delta_n * window)**(1-4*H_estimated) * window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
 
-    return matrix_43[0,0]**0.5 / np.sqrt(n_days), matrix_43[1,1]**0.5  / np.sqrt(n_days)
+    return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
+    # return matrix_43[0,0]**0.5 / np.sqrt(n_days), matrix_43[1,1]**0.5 / np.sqrt(n_days)
 
 
 
@@ -551,6 +616,7 @@ def _run_pipeline_from_array(
     Kn: int = 720,
     W_fun_id: str = "parzen",
     print_truncated_infos: bool = False,
+    optimization_method: str = "brute",
 ) -> Optional[Tuple[float, Optional[float]]]:
     """Run the end-to-end Hurst inference pipeline on a price array."""
     # Step 0
@@ -750,7 +816,8 @@ def _run_pipeline_from_array(
                             Psi,
                             hurst_min_value,
                             hurst_max_value,
-                            hurst_step)
+                            hurst_step,
+                            optimization_method=optimization_method)
         
     # Step 7: Save results to output folder and print results as well
     # print("Step 7/7: Saving results and printing summary...")
@@ -802,6 +869,7 @@ def run_pipeline(
     start_year: Optional[int] = None,
     end_year: Optional[int] = None,
     print_truncated_infos: bool = False,
+    optimization_method: str = "brute",
 ) -> Optional[
     Union[
         Tuple[float, Optional[float]],
@@ -881,6 +949,7 @@ def run_pipeline(
             Kn=Kn,
             W_fun_id=W_fun_id,
             print_truncated_infos=print_truncated_infos,
+            optimization_method=optimization_method,
         )
     
 
@@ -911,6 +980,7 @@ def run_pipeline(
             Kn=Kn,
             W_fun_id=W_fun_id,
             print_truncated_infos=print_truncated_infos,
+            optimization_method=optimization_method,
         )
         results[tuple(span_years)] = result
         if result is None:
@@ -947,4 +1017,5 @@ if __name__ == "__main__":
         start_year=start_year,
         end_year=end_year,
         print_truncated_infos=print_truncated_infos,
+        optimization_method=optimization_method,
     )
