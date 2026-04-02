@@ -150,10 +150,10 @@ hurst_step = 0.0001  # Float
 normalise_average_value = True  # True or False, default True
 
 N_autocorrelation = 12  # Integer (must be larger than 2)
-compute_confidence_interval = False  # True or False, default is False
+compute_confidence_interval = True  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
-Ln = 180  # Integer, default value 180
-Kn = 720  # Integer, default value 720
+Ln = 720 + 360 # 180  # Integer, default value 180
+Kn = 720 * 2 # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
 
 

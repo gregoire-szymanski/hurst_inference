@@ -4,3 +4,4 @@ __pycache__/
 hurst_volatility/*.npy
 hurst_volatility_multi_year/*.npy
 old/
+.vscode/*

@@ -141,7 +141,7 @@ price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
 remove_pattern = 'multiplicative'  # None, multiplicative, additive
 
-volatility_window_size = 120  # Integer
+volatility_window_size = 60  # Integer
 
 hurst_min_value = 0.0001  # Float
 hurst_max_value = 0.4999  # Float
@@ -149,8 +149,8 @@ hurst_step = 0.0001  # Float
 
 normalise_average_value = True  # True or False, default True
 
-N_autocorrelation = 6  # Integer (must be larger than 2)
-compute_confidence_interval = True  # True or False, default is False
+N_autocorrelation = 12  # Integer (must be larger than 2)
+compute_confidence_interval = False  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
