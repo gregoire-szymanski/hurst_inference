@@ -36,6 +36,7 @@ Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
 print_truncated_infos = False  # True or False, default is False
 optimization_method = "BFGS"  # "brute" or "BFGS"
+check_optimisation = 0.0001  # None/False or positive float
 
 start_year = 2018  # None or Integer
 end_year = 2022  # None or Integer
@@ -251,7 +252,16 @@ def estimation_GMM_BFGS(
         return float(F_estimation_GMM(W, V, Psi_func, [H]))
 
     x0 = np.array([(H_min + H_max) / 2.0], dtype=float)
-    result = minimize(objective, x0=x0, method="BFGS")
+    # result = minimize(objective, x0=x0, method="BFGS")
+    result = minimize(
+        objective,
+        x0=x0,
+        method="L-BFGS-B",
+        bounds=[(1e-12, 1 - 1e-12)],
+        jac="3-point",
+        options={"ftol": 1e-25, "gtol": 1e-15, "maxiter": 2000},
+    )
+
 
     H_estimated = float(np.clip(result.x[0], H_min, H_max))
     R_estimated = F_GMM_get_R(W, V, Psi_func, H_estimated)
@@ -277,6 +287,49 @@ def estimation_GMM(
     if method == "bfgs":
         return estimation_GMM_BFGS(W, V, Psi_func, H_min, H_max, mesh, debug)
     raise ValueError("optimization_method must be either 'brute' or 'BFGS'.")
+
+
+def maybe_plot_optimisation_check(
+    check_optimisation: Optional[Union[float, bool]],
+    H_estimated: float,
+    W: np.ndarray,
+    V: np.ndarray,
+    Psi_func,
+) -> None:
+    if check_optimisation is None or check_optimisation is False:
+        return
+    if isinstance(check_optimisation, bool):
+        return
+
+    try:
+        half_width = float(check_optimisation)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("check_optimisation must be None, False, or a float.") from exc
+
+    if not np.isfinite(half_width) or half_width <= 0:
+        raise ValueError("check_optimisation must be a strictly positive finite float.")
+
+    h_left = H_estimated - half_width
+    h_right = H_estimated + half_width
+    h_values = np.linspace(h_left, h_right, 401)
+    f_values = [F_estimation_GMM(W, V, Psi_func, [h]) for h in h_values]
+    f_estimated = F_estimation_GMM(W, V, Psi_func, [H_estimated])
+
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError("check_optimisation requires matplotlib to be installed.") from exc
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(h_values, f_values, label="F_estimation_GMM(H)")
+    plt.scatter([H_estimated], [f_estimated], color="red", zorder=3, label="H_estimated")
+    plt.xlabel("H")
+    plt.ylabel("F_estimation_GMM")
+    plt.title("GMM objective around H_estimated")
+    plt.grid(True, alpha=0.2)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 # Helper functions
 
@@ -617,6 +670,7 @@ def _run_pipeline_from_array(
     W_fun_id: str = "parzen",
     print_truncated_infos: bool = False,
     optimization_method: str = "brute",
+    check_optimisation: Optional[Union[float, bool]] = None,
 ) -> Optional[Tuple[float, Optional[float]]]:
     """Run the end-to-end Hurst inference pipeline on a price array."""
     # Step 0
@@ -818,6 +872,14 @@ def _run_pipeline_from_array(
                             hurst_max_value,
                             hurst_step,
                             optimization_method=optimization_method)
+
+    maybe_plot_optimisation_check(
+        check_optimisation=check_optimisation,
+        H_estimated=H_total,
+        W=weight_matrix,
+        V=average_autocorrelation,
+        Psi_func=Psi,
+    )
         
     # Step 7: Save results to output folder and print results as well
     # print("Step 7/7: Saving results and printing summary...")
@@ -870,6 +932,7 @@ def run_pipeline(
     end_year: Optional[int] = None,
     print_truncated_infos: bool = False,
     optimization_method: str = "brute",
+    check_optimisation: Optional[Union[float, bool]] = None,
 ) -> Optional[
     Union[
         Tuple[float, Optional[float]],
@@ -950,6 +1013,7 @@ def run_pipeline(
             W_fun_id=W_fun_id,
             print_truncated_infos=print_truncated_infos,
             optimization_method=optimization_method,
+            check_optimisation=check_optimisation,
         )
     
 
@@ -981,6 +1045,7 @@ def run_pipeline(
             W_fun_id=W_fun_id,
             print_truncated_infos=print_truncated_infos,
             optimization_method=optimization_method,
+            check_optimisation=check_optimisation,
         )
         results[tuple(span_years)] = result
         if result is None:
@@ -1018,4 +1083,5 @@ if __name__ == "__main__":
         end_year=end_year,
         print_truncated_infos=print_truncated_infos,
         optimization_method=optimization_method,
+        check_optimisation=check_optimisation,
     )
