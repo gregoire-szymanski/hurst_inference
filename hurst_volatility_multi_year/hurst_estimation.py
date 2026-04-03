@@ -4,6 +4,7 @@ import re
 from typing import Dict, List, Optional, Tuple, Union
 from scipy.optimize import minimize
 from scipy.stats import norm
+import matplotlib.pyplot as plt
 
 import numpy as np
 
@@ -29,7 +30,7 @@ hurst_step = 0.0001  # Float
 normalise_average_value = True  # True or False, default True
 
 N_autocorrelation = 6  # Integer (must be larger than 2)
-compute_confidence_interval = False  # True or False, default is False
+compute_confidence_interval = True  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
@@ -37,10 +38,11 @@ W_fun_id = "parzen"  # Only allowed value is 'parzen'
 print_truncated_infos = False  # True or False, default is False
 optimization_method = "BFGS"  # "brute" or "BFGS"
 check_optimisation = 0.0001  # None/False or positive float
+plot_covariance_matrix = True  # True or False, default is False
 
-start_year = 2018  # None or Integer
-end_year = 2022  # None or Integer
-N_consecutive_years = None  # None or Integer
+start_year = None  # None or Integer
+end_year = None  # None or Integer
+N_consecutive_years = None # None or Integer
 
 
 
@@ -671,6 +673,7 @@ def _run_pipeline_from_array(
     print_truncated_infos: bool = False,
     optimization_method: str = "brute",
     check_optimisation: Optional[Union[float, bool]] = None,
+    plot_covariance_matrix: bool = False,
 ) -> Optional[Tuple[float, Optional[float]]]:
     """Run the end-to-end Hurst inference pipeline on a price array."""
     # Step 0
@@ -887,6 +890,72 @@ def _run_pipeline_from_array(
 
     confidence = None
     if compute_confidence_interval:
+        if plot_covariance_matrix:
+            diagonal = np.diag(average_covariance)
+            max_abs_diagonal = float(np.max(np.abs(diagonal)))
+            if np.isfinite(max_abs_diagonal) and max_abs_diagonal > 0.0:
+                covariance_to_plot = average_covariance / max_abs_diagonal
+            else:
+                covariance_to_plot = average_covariance.copy()
+
+
+            diagonal_covariance = np.diag(average_covariance)
+            inv_std = np.zeros_like(diagonal_covariance)
+            np.divide(1.0, np.sqrt(diagonal_covariance), out=inv_std, where=diagonal_covariance > 0.0)
+            average_correlation = average_covariance * inv_std[:, None] * inv_std[None, :]
+
+
+
+            # fig, ax = plt.subplots(figsize=(7, 6))
+            # image = ax.imshow(covariance_to_plot, cmap="coolwarm", vmin=-1.0, vmax=1.0)
+            # n_rows, n_cols = covariance_to_plot.shape
+            # for row in range(n_rows):
+            #     for col in range(n_cols):
+            #         value = covariance_to_plot[row, col]
+            #         text_color = "white" if abs(value) > 0.5 else "black"
+            #         ax.text(
+            #             col,
+            #             row,
+            #             f"{value:.2f}",
+            #             ha="center",
+            #             va="center",
+            #             color=text_color,
+            #             fontsize=8,
+            #         )
+            # ax.set_title("Normalised average covariance matrix")
+            # ax.set_xlabel("Lag index")
+            # ax.set_ylabel("Lag index")
+            # fig.colorbar(image, ax=ax, label="Covariance")
+            # fig.tight_layout()
+            # plt.show()
+
+
+            # TODO On the next plot, add on the left side a column with the values of the vector diagonal (make something beautiful and easy to understand)
+            fig, ax = plt.subplots(figsize=(7, 6))
+            image = ax.imshow(average_correlation, cmap="coolwarm", vmin=-1.0, vmax=1.0)
+            n_rows, n_cols = average_correlation.shape
+            for row in range(n_rows):
+                for col in range(n_cols):
+                    value = average_correlation[row, col]
+                    text_color = "white" if abs(value) > 0.5 else "black"
+                    ax.text(
+                        col,
+                        row,
+                        f"{value:.2f}",
+                        ha="center",
+                        va="center",
+                        color=text_color,
+                        fontsize=8,
+                    )
+            ax.set_title("Normalised average covariance matrix")
+            ax.set_xlabel("Lag index")
+            ax.set_ylabel("Lag index")
+            fig.colorbar(image, ax=ax, label="Covariance")
+            fig.tight_layout()
+            plt.show()
+
+
+
         n_days = len(daily_volatility_squared_list)
 
         C1, C2 = get_confidence_size(n_lags, increment_window, kappa, H_total, R_total, n_days, delta_n, average_covariance, weight_matrix)
@@ -933,6 +1002,7 @@ def run_pipeline(
     print_truncated_infos: bool = False,
     optimization_method: str = "brute",
     check_optimisation: Optional[Union[float, bool]] = None,
+    plot_covariance_matrix: bool = False,
 ) -> Optional[
     Union[
         Tuple[float, Optional[float]],
@@ -1014,6 +1084,7 @@ def run_pipeline(
             print_truncated_infos=print_truncated_infos,
             optimization_method=optimization_method,
             check_optimisation=check_optimisation,
+            plot_covariance_matrix=plot_covariance_matrix,
         )
     
 
@@ -1046,6 +1117,7 @@ def run_pipeline(
             print_truncated_infos=print_truncated_infos,
             optimization_method=optimization_method,
             check_optimisation=check_optimisation,
+            plot_covariance_matrix=plot_covariance_matrix,
         )
         results[tuple(span_years)] = result
         if result is None:
@@ -1084,4 +1156,5 @@ if __name__ == "__main__":
         print_truncated_infos=print_truncated_infos,
         optimization_method=optimization_method,
         check_optimisation=check_optimisation,
+        plot_covariance_matrix=plot_covariance_matrix,
     )
