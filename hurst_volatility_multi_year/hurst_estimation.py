@@ -891,49 +891,52 @@ def _run_pipeline_from_array(
     confidence = None
     if compute_confidence_interval:
         if plot_covariance_matrix:
-            diagonal = np.diag(average_covariance)
-            max_abs_diagonal = float(np.max(np.abs(diagonal)))
-            if np.isfinite(max_abs_diagonal) and max_abs_diagonal > 0.0:
-                covariance_to_plot = average_covariance / max_abs_diagonal
-            else:
-                covariance_to_plot = average_covariance.copy()
-
-
             diagonal_covariance = np.diag(average_covariance)
             inv_std = np.zeros_like(diagonal_covariance)
             np.divide(1.0, np.sqrt(diagonal_covariance), out=inv_std, where=diagonal_covariance > 0.0)
             average_correlation = average_covariance * inv_std[:, None] * inv_std[None, :]
 
+            diagonal_covariance = diagonal_covariance / diagonal_covariance[0]
 
-
-            # fig, ax = plt.subplots(figsize=(7, 6))
-            # image = ax.imshow(covariance_to_plot, cmap="coolwarm", vmin=-1.0, vmax=1.0)
-            # n_rows, n_cols = covariance_to_plot.shape
-            # for row in range(n_rows):
-            #     for col in range(n_cols):
-            #         value = covariance_to_plot[row, col]
-            #         text_color = "white" if abs(value) > 0.5 else "black"
-            #         ax.text(
-            #             col,
-            #             row,
-            #             f"{value:.2f}",
-            #             ha="center",
-            #             va="center",
-            #             color=text_color,
-            #             fontsize=8,
-            #         )
-            # ax.set_title("Normalised average covariance matrix")
-            # ax.set_xlabel("Lag index")
-            # ax.set_ylabel("Lag index")
-            # fig.colorbar(image, ax=ax, label="Covariance")
-            # fig.tight_layout()
-            # plt.show()
-
-
-            # TODO On the next plot, add on the left side a column with the values of the vector diagonal (make something beautiful and easy to understand)
-            fig, ax = plt.subplots(figsize=(7, 6))
-            image = ax.imshow(average_correlation, cmap="coolwarm", vmin=-1.0, vmax=1.0)
             n_rows, n_cols = average_correlation.shape
+            fig = plt.figure(figsize=(8.3, 6))
+            grid = fig.add_gridspec(1, 2, width_ratios=[1.2, n_cols], wspace=0.08)
+            ax_diag = fig.add_subplot(grid[0, 0])
+            ax = fig.add_subplot(grid[0, 1], sharey=ax_diag)
+
+            finite_diagonal = diagonal_covariance[np.isfinite(diagonal_covariance)]
+            if finite_diagonal.size > 0:
+                diag_min = float(np.min(finite_diagonal))
+                diag_max = float(np.max(finite_diagonal))
+                if diag_min == diag_max:
+                    padding = abs(diag_min) * 0.1 if diag_min != 0.0 else 1.0
+                    diag_min -= padding
+                    diag_max += padding
+            else:
+                diag_min, diag_max = -1.0, 1.0
+
+            diagonal_column = diagonal_covariance[:, None]
+            ax_diag.imshow(diagonal_column, cmap="YlGnBu", aspect="auto", vmin=diag_min, vmax=diag_max)
+            diagonal_span = diag_max - diag_min
+            for row in range(n_rows):
+                value = diagonal_covariance[row]
+                if np.isfinite(value) and diagonal_span > 0.0:
+                    color_position = (value - diag_min) / diagonal_span
+                else:
+                    color_position = 0.0
+                text_color = "white" if color_position > 0.55 else "black"
+                ax_diag.text(
+                    0,
+                    row,
+                    f"{value:.3g}" if np.isfinite(value) else "nan",
+                    ha="center",
+                    va="center",
+                    color=text_color,
+                    fontsize=8,
+                    fontweight="bold",
+                )
+
+            image = ax.imshow(average_correlation, cmap="coolwarm", vmin=-1.0, vmax=1.0)
             for row in range(n_rows):
                 for col in range(n_cols):
                     value = average_correlation[row, col]
@@ -947,10 +950,19 @@ def _run_pipeline_from_array(
                         color=text_color,
                         fontsize=8,
                     )
+
+            ax_diag.set_title("diag(Cov)")
+            ax_diag.set_xticks([])
+            ax_diag.set_yticks(np.arange(n_rows))
+            ax_diag.set_yticklabels(np.arange(n_rows))
+            ax_diag.set_ylabel("Lag index")
+            for spine_name in ("top", "right", "bottom"):
+                ax_diag.spines[spine_name].set_visible(False)
+
             ax.set_title("Normalised average covariance matrix")
             ax.set_xlabel("Lag index")
-            ax.set_ylabel("Lag index")
-            fig.colorbar(image, ax=ax, label="Covariance")
+            ax.tick_params(axis="y", left=False, labelleft=False)
+            fig.colorbar(image, ax=ax, label="Correlation")
             fig.tight_layout()
             plt.show()
 
