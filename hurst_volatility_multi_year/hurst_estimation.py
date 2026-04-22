@@ -30,7 +30,7 @@ hurst_step = 0.0001  # Float
 normalise_average_value = True  # True or False, default True
 
 N_autocorrelation = 6  # Integer (must be larger than 2)
-compute_confidence_interval = False  # True or False, default is False
+compute_confidence_interval = True  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
@@ -42,7 +42,7 @@ plot_covariance_matrix = False  # True or False, default is False
 
 start_year = None  # None or Integer
 end_year = None  # None or Integer
-N_consecutive_years = None # None or Integer
+N_consecutive_years = 1 # None or Integer
 
 
 
@@ -821,8 +821,6 @@ def _run_pipeline_from_array(
     daily_autocorr_matrix = np.vstack(daily_autocorr_vectors)
     average_autocorrelation = np.mean(daily_autocorr_matrix, axis=0)
 
-    print(average_autocorrelation)
-
     # print(f"Average autocorrelation vector: {average_autocorrelation}")
     if print_truncated_infos:
         proportion = (
@@ -902,8 +900,8 @@ def _run_pipeline_from_array(
         diagonal_covariance = diagonal_covariance / diagonal_covariance[0]
 
         n_rows, n_cols = average_correlation.shape
-        fig = plt.figure(figsize=(8.3, 6))
-        grid = fig.add_gridspec(1, 2, width_ratios=[1.2, n_cols], wspace=0.08)
+        fig = plt.figure(figsize=(8.3, 6), constrained_layout=True)
+        grid = fig.add_gridspec(1, 2, width_ratios=[1.2, n_cols])
         ax_diag = fig.add_subplot(grid[0, 0])
         ax = fig.add_subplot(grid[0, 1], sharey=ax_diag)
 
@@ -966,7 +964,6 @@ def _run_pipeline_from_array(
         ax.set_xlabel("Lag index")
         ax.tick_params(axis="y", left=False, labelleft=False)
         fig.colorbar(image, ax=ax, label="Correlation")
-        fig.tight_layout()
         plt.show()
 
     if compute_confidence_interval:
