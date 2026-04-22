@@ -30,15 +30,15 @@ hurst_step = 0.0001  # Float
 normalise_average_value = True  # True or False, default True
 
 N_autocorrelation = 6  # Integer (must be larger than 2)
-compute_confidence_interval = True  # True or False, default is False
+compute_confidence_interval = False  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
 print_truncated_infos = False  # True or False, default is False
 optimization_method = "BFGS"  # "brute" or "BFGS"
-check_optimisation = 0.0001  # None/False or positive float
-plot_covariance_matrix = True  # True or False, default is False
+check_optimisation = None  # None/False or positive float
+plot_covariance_matrix = False  # True or False, default is False
 
 start_year = None  # None or Integer
 end_year = None  # None or Integer
@@ -248,10 +248,12 @@ def estimation_GMM_BFGS(
 
     if H_min >= H_max:
         raise ValueError("H_min must be strictly smaller than H_max.")
+    
+    normalisation = 1 / V[0]**2
 
     def objective(x: np.ndarray) -> float:
         H = float(np.atleast_1d(x)[0])
-        return float(F_estimation_GMM(W, V, Psi_func, [H]))
+        return float(F_estimation_GMM(W, V, Psi_func, [H], normalisation=normalisation))
 
     x0 = np.array([(H_min + H_max) / 2.0], dtype=float)
     # result = minimize(objective, x0=x0, method="BFGS")
@@ -261,7 +263,7 @@ def estimation_GMM_BFGS(
         method="L-BFGS-B",
         bounds=[(1e-12, 1 - 1e-12)],
         jac="3-point",
-        options={"ftol": 1e-25, "gtol": 1e-15, "maxiter": 2000},
+        # options={"ftol": 1e-25, "gtol": 1e-15, "maxiter": 2000},
     )
 
 
@@ -818,7 +820,8 @@ def _run_pipeline_from_array(
 
     daily_autocorr_matrix = np.vstack(daily_autocorr_vectors)
     average_autocorrelation = np.mean(daily_autocorr_matrix, axis=0)
-    # print(LA0)
+
+    print(average_autocorrelation)
 
     # print(f"Average autocorrelation vector: {average_autocorrelation}")
     if print_truncated_infos:
@@ -841,7 +844,7 @@ def _run_pipeline_from_array(
 
     if GMM_weight not in {"identity", "optimal"}:
         raise ValueError(f"Invalid GMM_weight: {GMM_weight}. Expected 'identity' or 'optimal'.")
-    if GMM_weight == "optimal" or compute_confidence_interval:
+    if GMM_weight == "optimal" or compute_confidence_interval or plot_covariance_matrix:
         for vsq in daily_volatility_squared_list:
             daily_covariance_matrices.append(compute_covariance(
                 W_fun, 
@@ -889,85 +892,84 @@ def _run_pipeline_from_array(
     # print(f"Estimated Hurst exponent: {H_total}")
 
     confidence = None
-    if compute_confidence_interval:
-        if plot_covariance_matrix:
-            diagonal_covariance = np.diag(average_covariance)
-            inv_std = np.zeros_like(diagonal_covariance)
-            np.divide(1.0, np.sqrt(diagonal_covariance), out=inv_std, where=diagonal_covariance > 0.0)
-            average_correlation = average_covariance * inv_std[:, None] * inv_std[None, :]
 
-            diagonal_covariance = diagonal_covariance / diagonal_covariance[0]
+    if plot_covariance_matrix:
+        diagonal_covariance = np.diag(average_covariance)
+        inv_std = np.zeros_like(diagonal_covariance)
+        np.divide(1.0, np.sqrt(diagonal_covariance), out=inv_std, where=diagonal_covariance > 0.0)
+        average_correlation = average_covariance * inv_std[:, None] * inv_std[None, :]
 
-            n_rows, n_cols = average_correlation.shape
-            fig = plt.figure(figsize=(8.3, 6))
-            grid = fig.add_gridspec(1, 2, width_ratios=[1.2, n_cols], wspace=0.08)
-            ax_diag = fig.add_subplot(grid[0, 0])
-            ax = fig.add_subplot(grid[0, 1], sharey=ax_diag)
+        diagonal_covariance = diagonal_covariance / diagonal_covariance[0]
 
-            finite_diagonal = diagonal_covariance[np.isfinite(diagonal_covariance)]
-            if finite_diagonal.size > 0:
-                diag_min = float(np.min(finite_diagonal))
-                diag_max = float(np.max(finite_diagonal))
-                if diag_min == diag_max:
-                    padding = abs(diag_min) * 0.1 if diag_min != 0.0 else 1.0
-                    diag_min -= padding
-                    diag_max += padding
+        n_rows, n_cols = average_correlation.shape
+        fig = plt.figure(figsize=(8.3, 6))
+        grid = fig.add_gridspec(1, 2, width_ratios=[1.2, n_cols], wspace=0.08)
+        ax_diag = fig.add_subplot(grid[0, 0])
+        ax = fig.add_subplot(grid[0, 1], sharey=ax_diag)
+
+        finite_diagonal = diagonal_covariance[np.isfinite(diagonal_covariance)]
+        if finite_diagonal.size > 0:
+            diag_min = float(np.min(finite_diagonal))
+            diag_max = float(np.max(finite_diagonal))
+            if diag_min == diag_max:
+                padding = abs(diag_min) * 0.1 if diag_min != 0.0 else 1.0
+                diag_min -= padding
+                diag_max += padding
+        else:
+            diag_min, diag_max = -1.0, 1.0
+
+        diagonal_column = diagonal_covariance[:, None]
+        ax_diag.imshow(diagonal_column, cmap="YlGnBu", aspect="auto", vmin=diag_min, vmax=diag_max)
+        diagonal_span = diag_max - diag_min
+        for row in range(n_rows):
+            value = diagonal_covariance[row]
+            if np.isfinite(value) and diagonal_span > 0.0:
+                color_position = (value - diag_min) / diagonal_span
             else:
-                diag_min, diag_max = -1.0, 1.0
+                color_position = 0.0
+            text_color = "white" if color_position > 0.55 else "black"
+            ax_diag.text(
+                0,
+                row,
+                f"{value:.3g}" if np.isfinite(value) else "nan",
+                ha="center",
+                va="center",
+                color=text_color,
+                fontsize=8,
+                fontweight="bold",
+            )
 
-            diagonal_column = diagonal_covariance[:, None]
-            ax_diag.imshow(diagonal_column, cmap="YlGnBu", aspect="auto", vmin=diag_min, vmax=diag_max)
-            diagonal_span = diag_max - diag_min
-            for row in range(n_rows):
-                value = diagonal_covariance[row]
-                if np.isfinite(value) and diagonal_span > 0.0:
-                    color_position = (value - diag_min) / diagonal_span
-                else:
-                    color_position = 0.0
-                text_color = "white" if color_position > 0.55 else "black"
-                ax_diag.text(
-                    0,
+        image = ax.imshow(average_correlation, cmap="coolwarm", vmin=-1.0, vmax=1.0)
+        for row in range(n_rows):
+            for col in range(n_cols):
+                value = average_correlation[row, col]
+                text_color = "white" if abs(value) > 0.5 else "black"
+                ax.text(
+                    col,
                     row,
-                    f"{value:.3g}" if np.isfinite(value) else "nan",
+                    f"{value:.2f}",
                     ha="center",
                     va="center",
                     color=text_color,
                     fontsize=8,
-                    fontweight="bold",
                 )
 
-            image = ax.imshow(average_correlation, cmap="coolwarm", vmin=-1.0, vmax=1.0)
-            for row in range(n_rows):
-                for col in range(n_cols):
-                    value = average_correlation[row, col]
-                    text_color = "white" if abs(value) > 0.5 else "black"
-                    ax.text(
-                        col,
-                        row,
-                        f"{value:.2f}",
-                        ha="center",
-                        va="center",
-                        color=text_color,
-                        fontsize=8,
-                    )
+        ax_diag.set_title("diag(Cov)")
+        ax_diag.set_xticks([])
+        ax_diag.set_yticks(np.arange(n_rows))
+        ax_diag.set_yticklabels(np.arange(1, 1 + n_rows))
+        ax_diag.set_ylabel("Lag index")
+        for spine_name in ("top", "right", "bottom"):
+            ax_diag.spines[spine_name].set_visible(False)
 
-            ax_diag.set_title("diag(Cov)")
-            ax_diag.set_xticks([])
-            ax_diag.set_yticks(np.arange(n_rows))
-            ax_diag.set_yticklabels(np.arange(n_rows))
-            ax_diag.set_ylabel("Lag index")
-            for spine_name in ("top", "right", "bottom"):
-                ax_diag.spines[spine_name].set_visible(False)
+        ax.set_title("Normalised average covariance matrix")
+        ax.set_xlabel("Lag index")
+        ax.tick_params(axis="y", left=False, labelleft=False)
+        fig.colorbar(image, ax=ax, label="Correlation")
+        fig.tight_layout()
+        plt.show()
 
-            ax.set_title("Normalised average covariance matrix")
-            ax.set_xlabel("Lag index")
-            ax.tick_params(axis="y", left=False, labelleft=False)
-            fig.colorbar(image, ax=ax, label="Correlation")
-            fig.tight_layout()
-            plt.show()
-
-
-
+    if compute_confidence_interval:
         n_days = len(daily_volatility_squared_list)
 
         C1, C2 = get_confidence_size(n_lags, increment_window, kappa, H_total, R_total, n_days, delta_n, average_covariance, weight_matrix)
