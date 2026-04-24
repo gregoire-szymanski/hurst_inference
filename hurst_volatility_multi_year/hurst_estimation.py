@@ -37,14 +37,14 @@ Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
 print_truncated_infos = False  # True or False, default is False
 optimization_method = "BFGS"  # "brute" or "BFGS"
-check_optimisation = None  # None/False or positive float
+check_optimisation = False  # None/False or positive float
 plot_covariance_matrix = False  # True or False, default is False
 
 start_year = None  # None or Integer
 end_year = None  # None or Integer
-N_consecutive_years = 1 # None or Integer
+N_consecutive_years = None # None or Integer
 
-
+delta_n = 5.0 / (252.0 * 23400.0)
 
 
 
@@ -385,7 +385,7 @@ def compute_volatility_squared(price, window_size, truncation_method=None, trunc
                 log_returns = truncate_absolute(log_returns, threshold)
 
     rv = np.concatenate([[0.0], np.cumsum(log_returns ** 2)])
-    volatilities_squared = (rv[window_size:] - rv[:-window_size]) / float(window_size)
+    volatilities_squared = (rv[window_size:] - rv[:-window_size]) / (float(window_size) * delta_n)
     return volatilities_squared, n, N
 
 def compute_autocorrelation(
@@ -418,17 +418,28 @@ def compute_autocorrelation(
     mean_vol = 0
     autocorr = np.zeros(N_lags)
 
+    sequence_average = []       # Will contain the sequence of truncated vol increments times the lagged increment 
+    factor_truncation = 1       # Used to dampen the fact that truncation affect more lagged increments that non-lagged increments
+    factor_increments = 1       # Used to dampen the fact that when k_n and lag is large we have much less observation which makes the sums notably smaller
+
     for lag in range(N_lags):
+
         if lag == 0:
-            autocorr[lag] = np.mean((vol_squared_increments - mean_vol) ** 2) * n_increments / (n_increments - truncated)
+            sequence_average = (vol_squared_increments - mean_vol) ** 2
+            factor_truncation = n_increments / (n_increments - truncated)
         else:
-            autocorr[lag] = np.mean((vol_squared_increments[lag*window:] - mean_vol) * (vol_squared_increments[:-lag*window] - mean_vol)) * n_increments / (n_increments - 2*truncated)
+            sequence_average = (vol_squared_increments[lag*window:] - mean_vol) * (vol_squared_increments[:-lag*window] - mean_vol)
+            factor_truncation = n_increments / (n_increments - 2*truncated)
+        factor_increments = n_increments / len(sequence_average) 
+
+        autocorr[lag] = np.sum(sequence_average) * factor_truncation * factor_increments
 
     autocorr[1] = autocorr[0] + 2 * autocorr[1]
 
     if return_counts:
         return autocorr[1:], n_increments, truncated
-    return autocorr[1:]
+    
+    return autocorr[1:] / float(window) * 17
 
 def correct_DRV(DRV, Kn):
     DRV = np.asarray(DRV)
@@ -436,8 +447,9 @@ def correct_DRV(DRV, Kn):
         raise ValueError("DRV length must be at least Kn.")
     # Simple moving average
     kernel = np.ones(Kn) / Kn
-    psi = np.convolve(DRV, kernel, mode='valid')
-    return psi
+    local_average_DRV = np.convolve(DRV, kernel, mode='valid')
+    length_local_average = len(local_average_DRV)
+    return DRV[:length_local_average] - local_average_DRV
 
 def compute_term(psi, psi_prime, kn, kn_prime, L):
     """
@@ -582,7 +594,7 @@ def get_confidence_size(N_lags, window, kappa, H_estimated, R_estimated, n_days,
         alpha[i-1] = compute_alpha(theta, i, H_estimated, kappa)
         beta[i-1] = compute_beta(theta, i, H_estimated, kappa)
 
-    u_t = np.array([alpha, beta]).transpose()
+    u_t = np.array([alpha * R_estimated, beta]).transpose()
 
     D = np.array([
         [1, 0],
@@ -590,7 +602,7 @@ def get_confidence_size(N_lags, window, kappa, H_estimated, R_estimated, n_days,
     ])
 
     uWu_inv = np.linalg.inv(u_t.transpose() @ W_chosen @ u_t)
-    matrix_43 = (delta_n * window)**(1-4*H_estimated) * window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
+    matrix_43 = (delta_n * window)**(1-4*H_estimated) * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
 
     return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
     # return matrix_43[0,0]**0.5 / np.sqrt(n_days), matrix_43[1,1]**0.5 / np.sqrt(n_days)
@@ -640,7 +652,7 @@ def create_Psi_function(window: int, N_lags: int, kappa: float):
         """
         p = []
 
-        factor = window**(2 * H)
+        factor = (window * delta_n)**(2 * H - 1)
         
         # Compute the first two terms outside the loop
         p.append(factor * (Phi_Hl(0, H, kappa) + 2 * Phi_Hl(1, H, kappa)))
@@ -678,10 +690,12 @@ def _run_pipeline_from_array(
     plot_covariance_matrix: bool = False,
 ) -> Optional[Tuple[float, Optional[float]]]:
     """Run the end-to-end Hurst inference pipeline on a price array."""
-    # Step 0
-    # print("Step 0/7: Checking input/output folders and creating output folder if needed...")
 
-
+    ########## PART 1 -- Check all the parameters, raise exceptions if necessary
+    if N_autocorrelation is None or int(N_autocorrelation) <= 2:
+        raise ValueError("Config error: N_autocorrelation must be an integer greater than 2.")
+    n_lags = int(N_autocorrelation)
+    
     W_fun = None
     if W_fun_id == "parzen":
         kernel_k = lambda x: 1 - 6 * x**2 + 6 * x**3 if x <= 0.5 else 2 * (1 - x)**3
@@ -714,15 +728,16 @@ def _run_pipeline_from_array(
     price_trunc_method, price_trunc_param = parse_truncation_mode(price_truncation_mode)
     vol_trunc_method, vol_trunc_param = parse_truncation_mode(volatility_truncation_mode)
 
-    # Step 1
-    # print("Step 1/7: Preparing price data...")
+    if GMM_weight not in {"identity", "optimal"}:
+        raise ValueError(f"Invalid GMM_weight: {GMM_weight}. Expected 'identity' or 'optimal'.")
 
+
+    ########## PART 2 -- Load price data
     n_day, price_per_day = X.shape
     daily_prices = [X[i, :] for i in range(n_day)]
 
-    # Step 2
-    # print("Step 2/7: Computing daily volatility-squared series for each day...")
 
+    ########## PART 3 -- Compute intraday volatility
     daily_volatility_squared_list: List[np.ndarray] = []
 
     n_total = 0
@@ -750,8 +765,7 @@ def _run_pipeline_from_array(
     
     # print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
 
-    # Step 3
-    # print("Step 3/7: Normalising and removing intraday volatility pattern if applicable...")
+    ########## PART 4 -- Removing the intraday pattern and normalising by average value
 
     # Align lengths (pattern removal and averaging require same intraday index)
     min_len = min(v.shape[0] for v in daily_volatility_squared_list)
@@ -783,12 +797,7 @@ def _run_pipeline_from_array(
             raise ValueError(f"Invalid remove_pattern: {remove_pattern}. Expected None, 'multiplicative', or 'additive'.")
     
 
-    # Step 4: Estimate autocorrelation vectors
-    # print("Step 4/7: Estimating autocorrelation vectors...")
-
-    if N_autocorrelation is None or int(N_autocorrelation) <= 2:
-        raise ValueError("Config error: N_autocorrelation must be an integer greater than 2.")
-    n_lags = int(N_autocorrelation)
+    ########## PART 5 -- Computing autocorrelation vectors
 
     series_len = daily_volatility_squared_list[0].shape[0]
     if series_len <= n_lags:
@@ -799,8 +808,8 @@ def _run_pipeline_from_array(
     daily_autocorr_vectors: List[np.ndarray] = []
     n_increments_total = 0
     truncated_increments_total = 0
-    LA0 = []
     n_truncated_days = 0
+
     for vsq in daily_volatility_squared_list:
         autocorr, n_increments, truncated = compute_autocorrelation(
             vsq,
@@ -812,14 +821,13 @@ def _run_pipeline_from_array(
         )
         # autocorr = autocorr / autocorr[0]
         daily_autocorr_vectors.append(autocorr)
-        LA0.append(autocorr[0])
         n_increments_total += n_increments
         truncated_increments_total += truncated
         if truncated > 0:
             n_truncated_days += 1
 
     daily_autocorr_matrix = np.vstack(daily_autocorr_vectors)
-    average_autocorrelation = np.mean(daily_autocorr_matrix, axis=0)
+    average_autocorrelation = np.sum(daily_autocorr_matrix, axis=0)
 
     # print(f"Average autocorrelation vector: {average_autocorrelation}")
     if print_truncated_infos:
@@ -835,13 +843,11 @@ def _run_pipeline_from_array(
             f"(n_truncated_days: {n_truncated_days:.6f})"
         )
 
-    # Step 5: Estimate covariance matrices
-    # print("Step 5/7: Estimating covariance matrices...")
 
+
+    ########## PART 6 -- Computing covariance matrix 
     daily_covariance_matrices: List[np.ndarray] = []
 
-    if GMM_weight not in {"identity", "optimal"}:
-        raise ValueError(f"Invalid GMM_weight: {GMM_weight}. Expected 'identity' or 'optimal'.")
     if GMM_weight == "optimal" or compute_confidence_interval or plot_covariance_matrix:
         for vsq in daily_volatility_squared_list:
             daily_covariance_matrices.append(compute_covariance(
@@ -855,14 +861,10 @@ def _run_pipeline_from_array(
                 truncation_param=vol_trunc_param
             ).flatten())
         daily_covariance_matrices = np.vstack(daily_covariance_matrices)
-        average_covariance = np.mean(daily_covariance_matrices, axis=0).reshape((n_lags - 1, n_lags - 1))
+        average_covariance = np.sum(daily_covariance_matrices, axis=0).reshape((n_lags - 1, n_lags - 1))
         
-    # Step 6: GMM estimation of Hurst exponent
-    # print(
-    #     f"Step 6/7: Estimating Hurst exponent via GMM on grid H in "
-    #     f"[{hurst_min_value}, {hurst_max_value}] with step {hurst_step}..."
-    # )
 
+    ########## PART 7 -- Proceeds to GMM Estimation
     Psi = create_Psi_function(increment_window, n_lags, kappa)
 
     weight_matrix = np.identity(n_lags - 1)
@@ -884,13 +886,9 @@ def _run_pipeline_from_array(
         V=average_autocorrelation,
         Psi_func=Psi,
     )
-        
-    # Step 7: Save results to output folder and print results as well
-    # print("Step 7/7: Saving results and printing summary...")
-    # print(f"Estimated Hurst exponent: {H_total}")
 
-    confidence = None
 
+    ########## PART 8 -- Plot covariance matrix
     if plot_covariance_matrix:
         diagonal_covariance = np.diag(average_covariance)
         inv_std = np.zeros_like(diagonal_covariance)
@@ -966,6 +964,9 @@ def _run_pipeline_from_array(
         fig.colorbar(image, ax=ax, label="Correlation")
         plt.show()
 
+
+    ########## PART 9 -- Computes confidence intervals
+    confidence = None
     if compute_confidence_interval:
         n_days = len(daily_volatility_squared_list)
 
@@ -1160,7 +1161,7 @@ if __name__ == "__main__":
         Ln=Ln,
         Kn=Kn,
         W_fun_id=W_fun_id,
-        delta_n=5.0/(252.0 * 23400.0),
+        delta_n=delta_n,
         N_consecutive_years=N_consecutive_years,
         start_year=start_year,
         end_year=end_year,
