@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import re
@@ -29,6 +30,7 @@ GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
 Kn = 720  # Integer, default value 720
 W_fun_id = "parzen"  # Only allowed value is 'parzen'
+evaluation_output_csv = "output/prediction_backtest_results.csv"
 
 
 
@@ -468,6 +470,82 @@ def parse_truncation_mode(mode: Optional[str]) -> Tuple[Optional[str], Optional[
     return method, param
 
 
+def load_optional_day_index(
+    input_folder: str,
+    base_name: str,
+    expected_days: int,
+) -> Optional[List[str]]:
+    """Load optional day-index metadata for a prepared_data_YYYY file."""
+    candidates = [
+        f"{base_name}_dates.npy",
+        f"{base_name}_dates.json",
+        f"{base_name}_dates.csv",
+        f"{base_name}_dates.txt",
+    ]
+    for candidate in candidates:
+        path = os.path.join(input_folder, candidate)
+        if not os.path.isfile(path):
+            continue
+        try:
+            if path.endswith(".npy"):
+                values = np.asarray(np.load(path, allow_pickle=True)).reshape(-1)
+                labels = [str(v) for v in values]
+            elif path.endswith(".json"):
+                with open(path, "r", encoding="utf-8") as handle:
+                    loaded = json.load(handle)
+                if not isinstance(loaded, list):
+                    continue
+                labels = [str(v) for v in loaded]
+            else:
+                with open(path, "r", encoding="utf-8", newline="") as handle:
+                    reader = csv.reader(handle)
+                    labels = [row[0].strip() for row in reader if row and row[0].strip()]
+
+            if len(labels) == expected_days:
+                return labels
+        except Exception:
+            continue
+    return None
+
+
+def build_day_index_labels(
+    data_files: List[str],
+    days_per_file: List[int],
+    input_folder: str,
+) -> List[str]:
+    """Build day indices; use date metadata if available, fallback to file-index labels."""
+    labels: List[str] = []
+    for name, expected_days in zip(data_files, days_per_file):
+        base_name, _ = os.path.splitext(name)
+        file_labels = load_optional_day_index(input_folder, base_name, expected_days)
+        if file_labels is not None:
+            labels.extend(file_labels)
+            continue
+
+        match = re.search(r"(\d{4})", name)
+        year = match.group(1) if match else base_name
+        labels.extend([f"{year}_day_{day_idx + 1:03d}" for day_idx in range(expected_days)])
+    return labels
+
+
+def save_backtest_results_csv(
+    output_csv_path: str,
+    rows: List[List[object]],
+    n_params: int,
+) -> None:
+    header = ["start_training", "end_training", "testing", "mse", "mae", "r2"]
+    header.extend([f"p_{i + 1}" for i in range(n_params)])
+
+    output_dir = os.path.dirname(output_csv_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    with open(output_csv_path, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(header)
+        writer.writerows(rows)
+
+
 def create_Psi_function(window: int, N_lags: int):
     def Psi(H):
         """
@@ -523,6 +601,7 @@ def run_pipeline(
     Kn: int = 720,
     W_fun_id: str = "parzen",
     N_years_backtest: int = 4,
+    output_results_csv: str = evaluation_output_csv,
 ) -> Optional[float]:
     """Run the end-to-end Hurst inference pipeline on saved price arrays.
 
@@ -543,6 +622,13 @@ def run_pipeline(
     
     if input_data_folder is None:
         raise ValueError("Config error: input_data_folder is None.")
+    if output_results_csv is None or str(output_results_csv).strip() == "":
+        raise ValueError("Config error: output_results_csv must be a non-empty path.")
+
+    if os.path.isabs(output_results_csv):
+        output_csv_path = output_results_csv
+    else:
+        output_csv_path = os.path.join(os.path.dirname(__file__), output_results_csv)
 
     if volatility_window_size is None or int(volatility_window_size) <= 0:
         raise ValueError("Config error: volatility_window_size must be a positive integer.")
@@ -561,7 +647,12 @@ def run_pipeline(
         if os.path.isfile(os.path.join(input_data_folder, name))
     ]
     pattern = re.compile(r"^prepared_data_\d{4}\.npy$")
-    invalid_files = [name for name in filenames if not pattern.match(name)]
+    date_index_pattern = re.compile(r"^prepared_data_\d{4}_dates\.(npy|json|csv|txt)$")
+    invalid_files = [
+        name
+        for name in filenames
+        if not pattern.match(name) and not date_index_pattern.match(name)
+    ]
     if invalid_files:
         raise ValueError(f"Unexpected files in input_data_folder: {invalid_files}")
 
@@ -575,6 +666,8 @@ def run_pipeline(
         data = np.load(os.path.join(input_data_folder, name), allow_pickle=True)
         arrays.append(data)
         days_per_file.append(int(data.shape[0]))
+
+    day_index_labels = build_day_index_labels(data_files, days_per_file, input_data_folder)
 
     avg_number_days_per_file = float(np.mean(days_per_file))
     N_consecutive_days = int(round(N_years_backtest * avg_number_days_per_file))
@@ -695,6 +788,7 @@ def run_pipeline(
     y_sum = 0.0
     y_sum_sq = 0.0
     n_windows = 0
+    rows_for_csv: List[List[object]] = []
 
     for i in range(last_train_start + 1):
         start_time = time.perf_counter()
@@ -721,9 +815,30 @@ def run_pipeline(
         X_test, y_test = test_data
 
         coeffs, _, _, _ = np.linalg.lstsq(X_train, y_train, rcond=None)
+        coeffs = np.asarray(coeffs, dtype=float).reshape(-1)
 
         y_pred = X_test @ coeffs
         residual = y_test - y_pred
+        window_mse = float(np.mean(residual ** 2))
+        window_mae = float(np.mean(np.abs(residual)))
+        window_var_y = float(np.var(y_test))
+        window_r2 = 1.0 - (window_mse / window_var_y) if window_var_y > 0.0 else np.nan
+
+        coeffs_row = np.zeros(n_lags, dtype=float)
+        take = min(coeffs.shape[0], n_lags)
+        coeffs_row[:take] = coeffs[:take]
+        rows_for_csv.append(
+            [
+                day_index_labels[train_start],
+                day_index_labels[train_end],
+                day_index_labels[test_idx],
+                window_mse,
+                window_mae,
+                window_r2,
+                *coeffs_row.tolist(),
+            ]
+        )
+
         total_sq_error += float(np.sum(residual ** 2))
         total_abs_error += float(np.sum(np.abs(residual)))
         total_count += int(y_test.shape[0])
@@ -746,6 +861,9 @@ def run_pipeline(
     print(f"  windows={n_windows} samples={total_count} window={window} n_lags={n_lags}")
     print(f"  mse={mse:.6e} mae={mae:.6e} r2={r2:.6f}")
 
+    save_backtest_results_csv(output_csv_path, rows_for_csv, n_lags)
+    print(f"Saved evaluation details to: {output_csv_path}")
+
     return
 
 if __name__ == "__main__":
@@ -766,5 +884,6 @@ if __name__ == "__main__":
         Kn=Kn,
         W_fun_id=W_fun_id,
         N_years_backtest=N_years_backtest,
+        output_results_csv=evaluation_output_csv,
         delta_n=5.0/(252.0 * 23400.0)
     )
