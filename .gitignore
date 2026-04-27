@@ -8,3 +8,4 @@ old/
 .vscode/*
 *.png
 output/*
+*.csv
