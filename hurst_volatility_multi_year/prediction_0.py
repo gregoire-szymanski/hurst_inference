@@ -138,8 +138,8 @@ def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001,
 # main parameters (defaults)
 
 
-input_data_folder = "data/"
-N_years_backtest = 4
+input_data_folder = "clean_data/"
+N_years_backtest = 1
 
 price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)

@@ -9,8 +9,8 @@ from scipy.stats import norm
 import numpy as np
 
 
-input_data_folder = "data/"
-N_years_backtest = 4
+input_data_folder = "clean_data/"
+N_years_backtest = 1
 
 price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
@@ -24,7 +24,7 @@ hurst_step = 0.0001  # Float
 
 normalise_average_value = True  # True or False, default True
 
-N_autocorrelation = 12  # Integer (must be larger than 2)
+N_autocorrelation = 1  # Integer
 compute_confidence_interval = False  # True or False, default is False
 GMM_weight = "identity"  # "identity" or "optimal"
 Ln = 180  # Integer, default value 180
@@ -730,8 +730,8 @@ def run_pipeline(
     # Step 4: Rolling train/test backtest
     print("Step 4/7: Running rolling train/test backtest...")
 
-    if N_autocorrelation is None or int(N_autocorrelation) <= 2:
-        raise ValueError("Config error: N_autocorrelation must be an integer greater than 2.")
+    if N_autocorrelation is None or int(N_autocorrelation) < 1:
+        raise ValueError("Config error: N_autocorrelation must be an integer greater than 1.")
     n_lags = int(N_autocorrelation)
     offset = window * n_lags
 

@@ -3,6 +3,8 @@ __pycache__/
 *.npy
 hurst_volatility/*.npy
 hurst_volatility_multi_year/*.npy
+hurst_volatility_multi_year/*.csv
 old/
 .vscode/*
 *.png
+output/*

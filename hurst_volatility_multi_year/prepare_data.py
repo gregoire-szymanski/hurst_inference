@@ -12,7 +12,7 @@ from scipy.special import gamma
 # main parameters (defaults)
 
 input_data_folder = "/Users/gregoireszymanski/Documents/data/spy/price/1s/c_daily_csv"
-output_data_name = "new_data/prepared_data.npy"
+output_data_name = "clean_data/prepared_data.npy"
 prefix = "spy_"  # String prefix for data files
 remove_FOMC_days = True
 subsampling = 5 
