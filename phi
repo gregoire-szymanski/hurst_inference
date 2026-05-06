@@ -1,0 +1,23 @@
+import numpy as np
+
+def Phi_Hl(l: int, H: float) -> float:
+    """
+    Compute the value of $\\Phi^H_\\ell$ using a finite difference formula.
+
+    This function evaluates a discrete approximation based on powers of absolute values,
+    commonly used in fractional Brownian motion and related models.
+
+    :param l: Index $\\ell$ in the formula (integer).
+    :param H: Hurst exponent $H$, controlling the memory effect (float).
+    :return: Computed value of $\\Phi^H_\\ell$.
+    """
+    numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
+                 6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
+                 np.abs(l - 2) ** (2 * H + 2))
+    denominator = 2 * (2 * H + 1) * (2 * H + 2)
+    return numerator / denominator
+
+
+print(Phi_Hl(0, 0.5))  # Example usage
+print(Phi_Hl(1, 0.5))  # Example usage
+print(Phi_Hl(2, 0.5))  # Example usage

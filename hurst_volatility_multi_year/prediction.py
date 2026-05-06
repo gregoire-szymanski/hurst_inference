@@ -1,3 +1,4 @@
+import argparse
 import csv
 import json
 import os
@@ -8,161 +9,41 @@ from scipy.stats import norm
 
 import numpy as np
 
-
 input_data_folder = "clean_data/"
+input_data_folder = "short_data/"
+
 N_years_backtest = 1
 
 price_truncation_mode = 'BIVAR_3'  # None, STD_X, BIVAR_X (X int/float)
 volatility_truncation_mode = 'STD_3'  # None, STD_X (X int/float)
 remove_pattern = 'multiplicative'  # None, multiplicative, additive
 
-volatility_window_size = 60 # Integer
-
-hurst_min_value = 0.0001  # Float
-hurst_max_value = 0.4999  # Float
-hurst_step = 0.0001  # Float
+volatility_window_size = 60 * 3 # Integer
 
 normalise_average_value = True  # True or False, default True
 
-N_autocorrelation = 1  # Integer
-compute_confidence_interval = False  # True or False, default is False
-GMM_weight = "identity"  # "identity" or "optimal"
-Ln = 180  # Integer, default value 180
-Kn = 720  # Integer, default value 720
-W_fun_id = "parzen"  # Only allowed value is 'parzen'
-evaluation_output_csv = "output/prediction_backtest_results.csv"
+N_autocorrelation = 6  # Integer
 
+_args = {}
+_global_args = globals().get("args")
+if isinstance(_global_args, dict):
+    _args.update(_global_args)
 
+_cli_parser = argparse.ArgumentParser(add_help=False)
+_cli_parser.add_argument("--N", type=int)
+_cli_parser.add_argument("--volatility_window_size", type=int)
+_cli_args, _ = _cli_parser.parse_known_args()
+if _cli_args.N is not None:
+    _args["N"] = _cli_args.N
+if _cli_args.volatility_window_size is not None:
+    _args["volatility_window_size"] = _cli_args.volatility_window_size
 
-##### Preliminary functions
+if "N" in _args and _args["N"] is not None:
+    N_autocorrelation = int(_args["N"])
+if "volatility_window_size" in _args and _args["volatility_window_size"] is not None:
+    volatility_window_size = int(_args["volatility_window_size"])
 
-def Phi_Hl(l: int, H: float) -> float:
-    """
-    Compute the value of $\\Phi^H_\\ell$ using a finite difference formula.
-
-    This function evaluates a discrete approximation based on powers of absolute values,
-    commonly used in fractional Brownian motion and related models.
-
-    :param l: Index $\\ell$ in the formula (integer).
-    :param H: Hurst exponent $H$, controlling the memory effect (float).
-    :return: Computed value of $\\Phi^H_\\ell$.
-    """
-    numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
-                 6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
-                 np.abs(l - 2) ** (2 * H + 2))
-    denominator = 2 * (2 * H + 1) * (2 * H + 2)
-    return numerator / denominator
-
-def dPhi_Hl_dH(l: int, H: float) -> float:
-    """
-    Compute the derivative of $\\Phi^H_\\ell$ with respect to $H$.
-
-    Uses the chain rule to differentiate power terms in the finite difference formula.
-
-    :param l: Index $\\ell$ in the formula (integer).
-    :param H: Hurst exponent $H$ (float).
-    :return: The computed derivative $\\frac{d}{dH} \\Phi^H_\\ell$.
-    """
-    def power_term_derivative(x, H):
-        if x == 0:
-            return 0
-        return (2 * x ** (2 * H + 2) * np.log(np.abs(x)))
-    
-    numerator = (np.abs(l + 2) ** (2 * H + 2) - 4 * np.abs(l + 1) ** (2 * H + 2) +
-                 6 * np.abs(l) ** (2 * H + 2) - 4 * np.abs(l - 1) ** (2 * H + 2) +
-                 np.abs(l - 2) ** (2 * H + 2))
-
-    numerator_derivative = (
-        power_term_derivative(np.abs(l + 2), H) - 4 * power_term_derivative(np.abs(l + 1), H) +
-        6 * power_term_derivative(np.abs(l), H) - 4 * power_term_derivative(np.abs(l - 1), H) +
-        power_term_derivative(np.abs(l - 2), H)
-    )
-    
-    denominator = 2 * (2 * H + 1) * (2 * H + 2)
-    denominator_derivative = 4 * (4 * H + 3)
-    
-    return (numerator_derivative * denominator - denominator_derivative * numerator) / (denominator * denominator)
-
-##### GMM estimator
-
-def F_estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H: list, normalisation: float = 1) -> float:
-    """
-    Compute the GMM objective function $F(H, R)$ for given parameters.
-    
-    This function minimizes:
-    
-    $$ F(H, R) = (V - P)^T W (V - P) $$
-    
-    where $P$ is computed based on $H$.
-
-    :param W: Weight matrix (numpy array).
-    :param V: Observation vector (numpy array).
-    :param Psi_func: Function $\\Psi(H)$ providing model predictions.
-    :param H: Scalar Hurst exponent wrapped in a list.
-    :param normalisation: Normalization factor for the function value.
-    :return: Evaluated objective function value.
-    """
-
-    H = H[0]
-    V = np.atleast_2d(V).reshape(-1, 1)
-    Psi = np.atleast_2d(Psi_func(H)).reshape(-1, 1)
-        
-    term0 = V.T @ W @ V
-    term1 = (Psi.T @ W @ V) + (V.T @ W @ Psi)
-    term2 = Psi.T @ W @ Psi
-    
-    term0 = term0[0, 0]
-    term1 = term1[0, 0]
-    term2 = term2[0, 0]
-    
-    R = term1 / term2 / 2
-    
-    return normalisation * (term0 - R * term1 + term2 * R * R)
-
-def F_GMM_get_R(W: np.ndarray, V: np.ndarray, Psi_func, H: float) -> float:
-    V = np.atleast_2d(V).reshape(-1, 1)
-    Psi = np.atleast_2d(Psi_func(H)).reshape(-1, 1)
-        
-    term0 = V.T @ W @ V
-    term1 = (Psi.T @ W @ V) + (V.T @ W @ Psi)
-    term2 = Psi.T @ W @ Psi
-    
-    term0 = term0[0, 0]
-    term1 = term1[0, 0]
-    term2 = term2[0, 0]
-    
-    R = term1 / term2 / 2
-    
-    return R
-
-def estimation_GMM(W: np.ndarray, V: np.ndarray, Psi_func, H_min: float = 0.001, H_max: float = 0.499, mesh: float = 0.001, debug: bool = False):
-    """
-    Perform Generalized Method of Moments (GMM) estimation for the Hurst exponent.
-    
-    This method finds $H$ that minimizes the GMM objective function over a predefined grid.
-    
-    :param W: Weight matrix (numpy array).
-    :param V: Observation vector (numpy array).
-    :param Psi_func: Function returning model predictions $\\Psi(H)$.
-    :param H_min: Minimum value for H search grid.
-    :param H_max: Maximum value for H search grid.
-    :param mesh: Step size for grid search.
-    :param debug: If True, return intermediate results.
-    :return: Estimated Hurst exponent.
-    """
-    H_values = np.arange(H_min, H_max, mesh)
-    F_values = [F_estimation_GMM(W, V, Psi_func, [H]) for H in H_values]
-    min_index = np.argmin(F_values)
-    
-    if debug:
-        R_values = [F_GMM_get_R(W, V, Psi_func, H) for H in H_values]
-        return H_values, F_values, min_index, R_values
-
-    return H_values[min_index], F_GMM_get_R(W, V, Psi_func, H_values[min_index])
-
-# main parameters (defaults)
-
-
+evaluation_output_csv = f"output/prediction_backtest_results_{volatility_window_size}_{N_autocorrelation}.csv"
 
 # Helper functions
 
@@ -259,8 +140,6 @@ def compute_autocorrelation(
         return autocorr[1:], n_increments, truncated
     return autocorr[1:]
 
-
-
 def compute_truncated_volatility_increments(
     vol_squared,
     window,
@@ -281,175 +160,6 @@ def compute_truncated_volatility_increments(
 
     return vol_squared_increments
 
-
-def correct_DRV(DRV, Kn):
-    DRV = np.asarray(DRV)
-    if len(DRV) < Kn:
-        raise ValueError("DRV length must be at least Kn.")
-    # Simple moving average
-    kernel = np.ones(Kn) / Kn
-    psi = np.convolve(DRV, kernel, mode='valid')
-    return psi
-
-def compute_term(psi, psi_prime, kn, kn_prime, L):
-    """
-    Compute a single term in the asymptotic variance estimator for a given lag L.
-    
-    Parameters
-    ----------
-    psi : np.ndarray
-        A time series of corrected values.
-    psi_prime : np.ndarray
-        Another time series of corrected values.
-    kn : float
-        A scaling parameter.
-    kn_prime : float
-        Another scaling parameter.
-    L : int
-        The lag at which to compute the term.
-    
-    Returns
-    -------
-    float
-        The computed term.
-    """
-    psi = np.asarray(psi)
-    psi_prime = np.asarray(psi_prime)
-    
-    # Align psi and psi_prime based on lag L
-    if L > 0:
-        # psi_prime is shifted forward by L relative to psi
-        # so we must drop the last L elements of psi and the first L elements of psi_prime
-        psi_trunc = psi[:-L]
-        psi_prime_trunc = psi_prime[L:]
-    elif L < 0:
-        # psi is shifted forward by -L relative to psi_prime
-        # so we must drop the first -L elements of psi and the last -L elements of psi_prime
-        shift = -L
-        psi_trunc = psi[shift:]
-        psi_prime_trunc = psi_prime[:-shift]
-    else:
-        # L = 0, no shift
-        psi_trunc = psi
-        psi_prime_trunc = psi_prime
-    
-    # Ensure equal lengths
-    N = min(len(psi_trunc), len(psi_prime_trunc))
-    if N == 0:
-        return 0.0
-    
-    psi_trunc = psi_trunc[:N]
-    psi_prime_trunc = psi_prime_trunc[:N]
-    
-    # Compute mean of product
-    val = np.sum(psi_trunc * psi_prime_trunc)
-    return val / (kn * kn_prime)
-
-def compute_covariance(W_fun, 
-                       Ln,
-                       Kn, 
-                       vol_squared, 
-                       N_lags, 
-                       window, 
-                       truncation_method=None, 
-                       truncation_param=None):
-    if N_lags < 2:
-        raise ValueError("N_lags must be >= 2 so autocovariance has size N_lags-1.")
-
-    vol_squared = np.asarray(vol_squared, dtype=float)
-    n = len(vol_squared)
-    if n <= N_lags*window:
-        raise ValueError("Not enough data points to compute autocorrelation with the given number of lags.")
-
-    vol_squared_increments = vol_squared[window:] - vol_squared[:-window]
-
-    if truncation_method is not None:
-        if truncation_method == 'STD':
-            std_dev = np.std(vol_squared_increments)
-            threshold = float(truncation_param) * std_dev
-            vol_squared_increments = truncate_absolute(vol_squared_increments, threshold)
-        else:
-            raise ValueError(f"Unknown truncation method: {truncation_method}")
-    
-    DRV = []
-    for lag in range(N_lags):
-        if lag == 0:
-            DRV.append(vol_squared_increments**2)
-        else:
-            DRV.append(vol_squared_increments[(lag * window):] * vol_squared_increments[: - (lag * window)])
-    DRV[0] = DRV[0][:len(DRV[1])]
-    DRV[1] = DRV[0] + 2 * DRV[1]
-    DRV = DRV[1:]
-
-    psi = [correct_DRV(drv, Kn) for drv in DRV]
-
-    sigma = np.zeros((N_lags-1, N_lags-1))
-
-    for idx_i in range(N_lags-1):
-        for idx_j in range(N_lags-1):
-            for L in range(1, Ln + 1):
-                w = W_fun(Ln,L)
-                term = compute_term(psi[idx_i], psi[idx_j], window, window, L)
-                sigma[idx_i, idx_j] += w * term
-
-
-    sigma = sigma + sigma.transpose()
-
-    # for idx_i in range(N_lags-1):
-    #     for idx_j in range(N_lags-1):
-    #         w = W_fun(Ln,0)
-    #         sigma[idx_i, idx_j] += compute_term(psi[idx_i], psi[idx_j], window, window, 0)
-
-    return sigma
-
-### Confidence interval ###
-
-def uncorrected_alpha(theta, lag, H):
-    return theta**(2*H-1) * dPhi_Hl_dH(lag, H) + 2 * np.log(theta) * Phi_Hl(lag, H)
-
-def uncorrected_beta(theta, lag, H):
-    return theta**(2*H-1) * Phi_Hl(lag, H)
-
-def compute_alpha(theta, lag, H):
-    if lag == 1:
-        return uncorrected_alpha(theta, 0, H) + 2 * uncorrected_alpha(theta, 1, H)
-    return uncorrected_alpha(theta, lag, H)
-
-
-def compute_beta(theta, lag, H):
-    if lag == 1:
-        return uncorrected_beta(theta, 0, H) + 2 * uncorrected_beta(theta, 1, H)
-    return uncorrected_beta(theta, lag, H)
-
-
-
-
-def get_confidence_size(N_lags, window, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
-    theta = 1
-
-    alpha = np.zeros(N_lags-1)
-    beta = np.zeros(N_lags-1)
-
-    for i in range(1,N_lags):
-        alpha[i-1] = compute_alpha(theta, i, H_estimated)
-        beta[i-1] = compute_beta(theta, i, H_estimated)
-
-    alpha_beta = np.array([alpha, beta])
-
-    u_t = np.array([alpha * R_estimated, beta]).transpose()
-
-    D = np.array([
-        [1, 0],
-        [-2 * np.log(window * delta_n), 1]
-    ])
-
-    uWu_inv = np.linalg.inv(u_t.transpose() @ W_chosen @ u_t)
-    matrix_43 = (delta_n * window)**(1-4*H_estimated) * window * delta_n * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
-
-    return matrix_43[0,0]**0.5 / np.sqrt(n_days), matrix_43[1,1]**0.5  / np.sqrt(n_days)
-
-
-
 def parse_truncation_mode(mode: Optional[str]) -> Tuple[Optional[str], Optional[float]]:
     """
     Parse truncation modes like:
@@ -468,7 +178,6 @@ def parse_truncation_mode(mode: Optional[str]) -> Tuple[Optional[str], Optional[
     method = m.group(1)
     param = float(m.group(2))
     return method, param
-
 
 def load_optional_day_index(
     input_folder: str,
@@ -507,7 +216,6 @@ def load_optional_day_index(
             continue
     return None
 
-
 def build_day_index_labels(
     data_files: List[str],
     days_per_file: List[int],
@@ -527,13 +235,12 @@ def build_day_index_labels(
         labels.extend([f"{year}_day_{day_idx + 1:03d}" for day_idx in range(expected_days)])
     return labels
 
-
 def save_backtest_results_csv(
     output_csv_path: str,
     rows: List[List[object]],
     n_params: int,
 ) -> None:
-    header = ["start_training", "end_training", "testing", "mse", "mae", "r2"]
+    header = ["start_training", "end_training", "testing", "mse", "mae", "r2", "aic", "aicc", "bic"]
     header.extend([f"p_{i + 1}" for i in range(n_params)])
 
     output_dir = os.path.dirname(output_csv_path)
@@ -546,40 +253,32 @@ def save_backtest_results_csv(
         writer.writerows(rows)
 
 
-def create_Psi_function(window: int, N_lags: int):
-    def Psi(H):
-        """
-        Precompute the Psi(H) function for the given parameter configurations.
-        Psi(H) uses the pre-defined parameters (window sizes and number of lags)
-        to generate a set of values that depend on H.
+def compute_information_criteria(
+    residuals: np.ndarray,
+    n_params: int,
+    n_train_days: int,
+) -> Tuple[float, float, float]:
+    """Return training-window AIC, AICc, and BIC for the linear predictor.
 
-        Parameters
-        ----------
-        H : float
-            The Hurst exponent value to use for computations.
-        params : list of dict
-            A list of parameter configurations. Each dict contains:
-            - 'window': int
-            - 'N_lags': int
+    AICc uses n - k * n_train_days for the finite-sample correction.
+    """
+    residuals = np.asarray(residuals, dtype=float).reshape(-1)
+    n = int(residuals.shape[0])
+    k = int(n_params)
+    rss = float(np.sum(residuals ** 2))
 
-        Returns
-        -------
-        np.array
-            A NumPy array of computed Psi values.
-        """
-        p = []
+    if n <= 0 or k < 0 or not np.isfinite(rss):
+        return np.nan, np.nan, np.nan
 
-        factor = window**(2 * H)
-        
-        # Compute the first two terms outside the loop
-        p.append(factor * (Phi_Hl(0, H) + 2 * Phi_Hl(1, H)))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        log_mse = float(np.log(rss / n))
 
-        # Compute remaining terms for i in [2, N_lags]
-        for i in range(2, N_lags):
-            p.append(factor * Phi_Hl(i, H))
+    aic = float(n * log_mse + 2 * k)
+    bic = float(n * log_mse + k * np.log(n))
+    aicc = float(aic + (2 * k * (k + 1)) / (n - k * int(n_train_days) - 1))
 
-        return np.array(p)
-    return Psi
+    return aic, aicc, bic
+
 
 
 
@@ -589,17 +288,8 @@ def run_pipeline(
     volatility_truncation_mode: Optional[str] = None,
     remove_pattern: Optional[str] = None,
     volatility_window_size: Optional[int] = None,
-    hurst_min_value: Optional[float] = None,
-    hurst_max_value: Optional[float] = None,
-    hurst_step: Optional[float] = None,
-    delta_n: Optional[float] = None,
     normalise_average_value: bool = True,
     N_autocorrelation: Optional[int] = None,
-    compute_confidence_interval: bool = False,
-    GMM_weight: str = "identity",
-    Ln: int = 180,
-    Kn: int = 720,
-    W_fun_id: str = "parzen",
     N_years_backtest: int = 4,
     output_results_csv: str = evaluation_output_csv,
 ) -> Optional[float]:
@@ -609,16 +299,6 @@ def run_pipeline(
     series with optional truncation, trains a linear predictor on rolling
     windows, and reports aggregated metrics.
     """
-    # Step 0
-    print("Step 0/7: Checking input/output folders and creating output folder if needed...")
-
-    W_fun = None
-    if W_fun_id == "parzen":
-        kernel_k = lambda x: 1 - 6 * x**2 + 6 * x**3 if x <= 0.5 else 2 * (1 - x)**3
-        W_fun = lambda Lmax, L: kernel_k(np.abs(L / Lmax))
-    else:
-        #TODO Improve exception
-        raise -1
     
     if input_data_folder is None:
         raise ValueError("Config error: input_data_folder is None.")
@@ -639,7 +319,7 @@ def run_pipeline(
     vol_trunc_method, vol_trunc_param = parse_truncation_mode(volatility_truncation_mode)
 
     # Step 1
-    print("Step 1/7: Listing files, filtering by prefix+date format, loading prices, applying filters...")
+    # print("Step 1/7: Listing files, filtering by prefix+date format, loading prices, applying filters...")
 
     input_data_folder = os.path.join(os.path.dirname(__file__), input_data_folder)
     filenames = [
@@ -677,7 +357,7 @@ def run_pipeline(
     daily_prices = X
 
     # Step 2
-    print("Step 2/7: Computing daily volatility-squared series for each day...")
+    # print("Step 2/7: Computing daily volatility-squared series for each day...")
 
     daily_volatility_squared_list: List[np.ndarray] = []
 
@@ -704,14 +384,14 @@ def run_pipeline(
         print("No volatility series could be computed.")
         return None
     
-    print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
+    # print(f"Total log-returns processed: n={n_total}, truncated points: N={N_total}, proportion: p={N_total / n_total if n_total > 0 else 0.0:.6f}")
 
     # Step 3
-    print("Step 3/7: Normalising average values if applicable...")
+    # print("Step 3/7: Normalising average values if applicable...")
 
     min_len = min(v.shape[0] for v in daily_volatility_squared_list)
     max_len = max(v.shape[0] for v in daily_volatility_squared_list)
-    print(f"Volume intensity length range: min={min_len}, max={max_len}")
+    # print(f"Volume intensity length range: min={min_len}, max={max_len}")
     daily_vsq = np.stack([v[:min_len] for v in daily_volatility_squared_list])
 
     if normalise_average_value:
@@ -728,12 +408,17 @@ def run_pipeline(
             raise ValueError("remove_pattern='additive' is not supported.")
 
     # Step 4: Rolling train/test backtest
-    print("Step 4/7: Running rolling train/test backtest...")
+    # print("Step 4/7: Running rolling train/test backtest...")
 
     if N_autocorrelation is None or int(N_autocorrelation) < 1:
         raise ValueError("Config error: N_autocorrelation must be an integer greater than 1.")
     n_lags = int(N_autocorrelation)
     offset = window * n_lags
+    
+    MAX_OFFSET = window * 10  # To ensure we have the same data points for predictors for all choices of n_lags up to 10.
+
+    if MAX_OFFSET > offset:
+        print("Warning: The current configuration may lead to fewer training samples due to the offset.")
 
     n_days = daily_vsq.shape[0]
     print(f"Total number of days: {n_days}")
@@ -744,6 +429,7 @@ def run_pipeline(
     def build_predictor_matrix(vol_days: np.ndarray) -> Optional[Tuple[np.ndarray, np.ndarray]]:
         predictor_rows: List[np.ndarray] = []
         target_rows: List[np.ndarray] = []
+        
         for vol_day in np.atleast_2d(vol_days):
             vol_squared_increments = compute_truncated_volatility_increments(
                 vol_day,
@@ -755,13 +441,15 @@ def run_pipeline(
             max_k = series_len - offset
             if max_k <= 0:
                 continue
-            base = np.arange(max_k)
+            base = np.arange(max(MAX_OFFSET - offset, 0), max_k)
+        
             cols = [vol_squared_increments[base + i * window] for i in range(n_lags)]
             predictor_rows.append(np.stack(cols, axis=1))
             target_rows.append(vol_squared_increments[base + offset])
 
         if not predictor_rows:
             return None
+        
 
         total_predictor_rows = sum(rows.shape[0] for rows in predictor_rows)
         predictor_shape = predictor_rows[0].shape
@@ -806,16 +494,27 @@ def run_pipeline(
             train_days = train_days / pattern
             test_day = test_day / pattern
 
+
         train_data = build_predictor_matrix(train_days)
         test_data = build_predictor_matrix(test_day)
         if train_data is None or test_data is None:
             continue
+
+
+
 
         X_train, y_train = train_data
         X_test, y_test = test_data
 
         coeffs, _, _, _ = np.linalg.lstsq(X_train, y_train, rcond=None)
         coeffs = np.asarray(coeffs, dtype=float).reshape(-1)
+
+        train_residual = y_train - (X_train @ coeffs)
+        aic, aicc, bic = compute_information_criteria(
+            train_residual,
+            n_params=n_lags,
+            n_train_days=int(train_days.shape[0]),
+        )
 
         y_pred = X_test @ coeffs
         residual = y_test - y_pred
@@ -835,6 +534,9 @@ def run_pipeline(
                 window_mse,
                 window_mae,
                 window_r2,
+                aic,
+                aicc,
+                bic,
                 *coeffs_row.tolist(),
             ]
         )
@@ -873,17 +575,8 @@ if __name__ == "__main__":
         volatility_truncation_mode=volatility_truncation_mode,
         remove_pattern=remove_pattern,
         volatility_window_size=volatility_window_size,
-        hurst_min_value=hurst_min_value,
-        hurst_max_value=hurst_max_value,
-        hurst_step=hurst_step,
         normalise_average_value=normalise_average_value,
         N_autocorrelation=N_autocorrelation,
-        compute_confidence_interval=compute_confidence_interval,
-        GMM_weight=GMM_weight,
-        Ln=Ln,
-        Kn=Kn,
-        W_fun_id=W_fun_id,
         N_years_backtest=N_years_backtest,
         output_results_csv=evaluation_output_csv,
-        delta_n=5.0/(252.0 * 23400.0)
     )
