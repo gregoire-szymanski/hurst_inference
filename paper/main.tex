@@ -1,0 +1,2234 @@
+%global uniquenss of GMM
+
+
+\documentclass[ecta,nameyear,draft]{econsocart}
+%
+%\usepackage{}
+\RequirePackage[colorlinks,citecolor=blue,linkcolor=blue,urlcolor=blue,pagebackref]{hyperref}
+\usepackage{xr}
+\externaldocument{supplement}
+\usepackage{amsmath, amsfonts, amsthm, verbatim, amssymb,dsfont,color, accents}
+\usepackage[utf8x]{inputenc}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,arrows,decorations.pathreplacing}
+\usepackage{tabularx,booktabs}
+\usepackage{multirow}
+
+% To do
+% \usepackage{todonotes}
+
+% Enumeration control
+\usepackage{enumerate}
+\usepackage{enumitem}
+
+
+\startlocaldefs
+
+\newcommand{\subscript}[2]{$#1 _ #2$}
+\newcommand{\concatenate}[2]{#1.#2}
+
+
+
+
+% Theorems styles
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{Def}[theorem]{Definition}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{thm}[theorem]{Theorem}
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{cor}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{Assumption}{Assumption}
+\newtheorem{rem}{Remark}
+
+
+\usepackage[notref,notcite]{showkeys}
+
+
+\renewcommand{\theAssumption}{\Alph{Assumption}}
+\makeatletter
+\newcommand{\settheoremtag}[1]{% \settheoremtag{<tag>}
+	\let\oldtheAssumption\theAssumption% Store \thetheorem
+	\renewcommand{\theAssumption}{#1}% Redefine it to a fixed value
+	\g@addto@macro\endAssumption{% At \end{theorem}, ...
+	%	\addtocounter{Assumption}{-1}% ...restore theorem counter value and...
+		\global\let\theAssumption\oldtheAssumption}% ...restore \thetheorem
+}
+\makeatother
+
+%%%  Maths shortcuts %%%
+
+% Decorations
+\def\wt{\widetilde}
+\def\wh{\widehat}
+\def\wb{\overline}
+\def\wc{\widecheck}
+
+
+
+%% Basics %%
+% Max and min
+\DeclareMathOperator*{\argmin}{arg\,min} 
+\DeclareMathOperator*{\argmax}{arg\,max} 
+\DeclareMathOperator*{\supess}{ess\,sup} 
+\DeclareMathOperator*{\infess}{ess\,inf} 
+
+% Limits
+\newcommand{\limP}{\stackrel{\PX}{\Longrightarrow}}
+\newcommand{\limL}{\stackrel{L^1}{\Longrightarrow}}
+\newcommand{\limst}{\stackrel{st}{\to}}
+
+
+
+% Matrices
+\newcommand*{\transp}[2][-1mu]{\ensuremath{\mskip1mu\prescript{\smash{\mathrm t \mkern#1}}{}{\mathstrut#2}}}
+%
+\DeclareMathOperator{\Tr}{Tr}
+
+% Norm
+\newcommand{\norm}[1]{{\vert\kern-0.25ex\vert #1 
+  \vert\kern-0.25ex\vert}}
+\newcommand{\bignorm}[1]{{\big\vert\kern-0.25ex\big\vert #1 
+  \big\vert\kern-0.25ex\big\vert}}
+
+% Operator norm
+\newcommand{\opnorm}[1]{{\vert\kern-0.25ex\vert\kern-0.25ex\vert #1 
+  \vert\kern-0.25ex\vert\kern-0.25ex\vert}}
+
+%% Functionals %%
+
+% indicator function
+\newcommand{\1}{\mathbf 1}
+
+% Expectations
+\newcommand{\PX} { \mathbb{P}}
+\newcommand{\EX} { \mathbb{E}}
+\def\E{\mathbb{E}}
+
+% Covariances
+\DeclareMathOperator{\Corr}{Corr}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\Var}{Var}
+
+
+
+
+\newcommand{\qandq} {\quad \text{ and } \quad}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%% Mathbb %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\bbR{\mathbb{R}}
+\def\bbB{\mathbb{B}}
+\def\bbC{\mathbb{C}}
+\def\bbN{\mathbb{N}}
+\def\bbE{\mathbb{E}}
+\def\bbZ{\mathbb{Z}}
+\def\bbH{\mathbb{H}}
+\def\bbX{\mathbb{X}}
+\def\bbY{\mathbb{Y}}
+\def\bbP{\mathbb{P}}
+\def\bbQ{\mathbb{Q}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%% Mathbf %%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\bfa{{\mathbf a}}
+\def\bfb{{\mathbf b}} \def\bfB{{\mathbf B}}
+\def\bfc{{\mathbf c}}
+\def\bfd{{\mathbf d}}
+\def\bfe{{\mathbf e}}
+\def\bff{{\mathbf f}}
+\def\bfg{{\mathbf g}}
+\def\bfh{{\mathbf h}}
+\def\bfi{{\mathbf i}}
+\def\bfj{{\mathbf j}}
+\def\bfk{{\mathbf k}}
+\def\bfl{{\mathbf l}}
+\def\bfm{{\mathbf m}} \def\bfW{{\mathbf M}}
+\def\bfn{{\mathbf n}}
+\def\bfo{{\mathbf o}}
+\def\bfp{{\mathbf p}}
+\def\bfq{{\mathbf q}}
+\def\bfr{{\mathbf r}}
+\def\bfs{{\mathbf s}}
+\def\bft{{\mathbf t}}
+\def\bfu{{\mathbf u}}
+\def\bfv{{\mathbf v}}
+\def\bfw{{\mathbf w}} \def\bfW{{\mathbf W}}
+\def\bfx{{\mathbf x}} \def\bfX{{\mathbf X}}
+\def\bfy{{\mathbf y}}
+\def\bfz{{\mathbf z}}
+
+\newcommand{\bfnu}{{\boldsymbol{\nu}}}
+\newcommand{\bfeta}{{\boldsymbol{\eta}}}
+\newcommand{\bfzeta}{{\boldsymbol{\zeta}}}
+%\newcommand{\bfM}{{\boldsymbol{M}}}
+%\newcommand{\bfW}{{\boldsymbol{W}}}
+\newcommand{\bftheta}{{\boldsymbol{\theta}}}
+\newcommand{\bfbeta}{{\boldsymbol{\beta}}}
+\newcommand{\bfvartheta}{{\boldsymbol{\vartheta}}}
+
+
+% Cal symbols
+
+\newcommand{\cA}{\cal{A}}
+\newcommand{\cB}{\cal{B}}
+\newcommand{\cC}{\cal{C}}
+\newcommand{\cD}{\cal{D}}
+\newcommand{\cE}{\cal{E}}
+\newcommand{\cF}{\cal{F}}
+\newcommand{\cG}{\cal{G}}
+\newcommand{\cH}{\cal{H}}
+\newcommand{\cI}{\cal{I}}
+\newcommand{\cJ}{\cal{J}}
+\newcommand{\cK}{\cal{K}}
+\newcommand{\cL}{\cal{L}}
+\newcommand{\cM}{\cal{M}}
+\newcommand{\cN}{\cal{N}}
+\newcommand{\cO}{\cal{O}}
+\newcommand{\cP}{\cal{P}}
+\newcommand{\cQ}{\cal{Q}}
+\newcommand{\cR}{\cal{R}}
+\newcommand{\cS}{\cal{S}}
+\newcommand{\cT}{\cal{T}}
+\newcommand{\cU}{\cal{U}}
+\newcommand{\cV}{\cal{V}}
+\newcommand{\cW}{\cal{W}}
+\newcommand{\cX}{\cal{X}}
+\newcommand{\cY}{\cal{Y}}
+\newcommand{\cZ}{\cal{Z}}
+
+
+\newcommand{\calA}{\mathcal{A}}
+\newcommand{\calB}{\mathcal{B}}
+\newcommand{\calC}{\mathcal{C}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\calH}{\mathcal{H}}
+\newcommand{\calI}{\mathcal{I}}
+\newcommand{\calJ}{\mathcal{J}}
+\newcommand{\calK}{\mathcal{K}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calP}{\mathcal{P}}
+\newcommand{\calQ}{\mathcal{Q}}
+\newcommand{\calR}{\mathcal{R}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\calT}{\mathcal{T}}
+\newcommand{\calU}{\mathcal{U}}
+\newcommand{\calV}{\mathcal{V}}
+\newcommand{\calW}{\mathcal{W}}
+\newcommand{\calX}{\mathcal{X}}
+\newcommand{\calY}{\mathcal{Y}}
+\newcommand{\calZ}{\mathcal{Z}}
+
+\newcommand{\ca}{{\mathcal A}}
+\newcommand{\cb}{{\mathcal B}}
+\newcommand{\cd}{{\mathcal D}}
+\newcommand{\ce}{{\mathcal E}}
+\newcommand{\cf}{{\mathcal F}}
+\newcommand{\cg}{{\mathcal G}}
+\newcommand{\ch}{{\mathcal H}}
+\newcommand{\ci}{{\mathcal I}}
+\newcommand{\cj}{{\mathcal J}}
+\newcommand{\ck}{{\mathcal K}}
+\newcommand{\cl}{{\mathcal L}}
+\newcommand{\cn}{{\mathcal N}}
+\newcommand{\co}{{\mathcal O}}
+\newcommand{\cp}{{\mathcal P}}
+\newcommand{\cq}{{\mathcal Q}}
+\newcommand{\cs}{{\mathcal S}}
+\newcommand{\ct}{{\mathcal T}}
+\newcommand{\cu}{{\mathcal U}}
+\newcommand{\cv}{{\mathcal V}}
+\newcommand{\cw}{{\mathcal W}}
+\newcommand{\cx}{{\mathcal X}}
+\newcommand{\cy}{{\mathcal Y}}
+\newcommand{\cz}{{\mathcal Z}}
+
+
+\newcommand{\constclose}{\varrho}
+
+\newcommand{\jump}{\delta}
+
+\newcommand{\st}{\stackrel{st}{\to}}
+
+\newcommand{\tr}{\mathrm{tr}}
+
+\numberwithin{equation}{section}
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+\usepackage{tcolorbox}
+\newtcolorbox{case01}[1][]{colback=yellow!10!white, colframe=red!50!black, title=Case 0 and 1, #1}
+
+%%%Carsten
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\F}{\mathbb{F}}
+\renewcommand{\H}{\mathbb{H}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\Q}{\mathbb{Q}}
+\renewcommand{\S}{\mathbb{S}}
+\newcommand{\G}{\mathbb{G}}
+\newcommand{\D}{\mathbb{D}}
+\newcommand{\bone}{\mathbf 1}
+
+\newcommand{\cals}{{\cal S}}
+\newcommand{\calc}{{\cal C}}
+\newcommand{\calh}{{\cal H}}
+\newcommand{\cali}{{\cal I}}
+\newcommand{\calu}{{\cal U}}
+\newcommand{\calf}{{\cal F}}
+\newcommand{\cala}{{\cal A}}
+\newcommand{\cale}{{\cal E}}
+\newcommand{\calp}{{\cal P}}
+\newcommand{\calb}{{\cal B}}
+\newcommand{\call}{{\cal L}}
+\newcommand{\caln}{{\cal N}}
+\newcommand{\calr}{{\cal R}}
+\newcommand{\calt}{{\cal T}}
+\newcommand{\calm}{{\cal M}}
+\newcommand{\calg}{{\cal G}}
+\newcommand{\calx}{{\cal X}}
+\newcommand{\caly}{{\cal Y}}
+\newcommand{\cald}{{\cal D}}
+\newcommand{\calv}{{\cal V}}
+\newcommand{\calo}{{\cal O}}
+\newcommand{\calq}{{\cal Q}}
+\newcommand{\pf}{{\mathfrak p}}
+\newcommand{\qf}{{\mathfrak q}}
+
+
+\newcommand{\al}{{\alpha}}
+\newcommand{\la}{{\lambda}}
+\newcommand{\La}{{\Lambda}}
+\newcommand{\eps}{{\epsilon}}
+\newcommand{\ga}{{\gamma}}
+\newcommand{\Ga}{{\Gamma}}
+\newcommand{\vp}{{\varphi}}
+\newcommand{\si}{{\sigma}}
+\newcommand{\Si}{{\Sigma}}
+\newcommand{\om}{{\omega}}
+\newcommand{\Om}{{\Omega}}
+
+\newcommand{\ov}{\overline}
+\newcommand{\un}{\underline}
+\newcommand{\wa}{\accentset{\ast}}
+\newcommand{\ws}{\accentset{\star}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\mm}{\mathrm{m}}
+\newcommand{\ee}{\mathrm{e}}
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\jj}{\mathrm{j}}
+\newcommand{\pp}{\mathrm{p}}
+\newcommand{\bb}{\mathrm{b}}
+\newcommand{\cc}{\mathrm{c}}
+\newcommand{\bnu}{{\boldsymbol{\nu}}}
+\newcommand{\bj}{{\boldsymbol{j}}}
+\newcommand{\bs}{{\boldsymbol{s}}}
+\newcommand{\bz}{{\boldsymbol{z}}}
+\newcommand{\by}{{\boldsymbol{y}}}
+\newcommand{\bY}{{\boldsymbol{Y}}}
+\newcommand{\bta}{{\boldsymbol{\eta}}}
+\newcommand{\bW}{{\boldsymbol{W}}}
+\newcommand{\Den}{\Delta_n}
+\newcommand{\lec}{\lesssim}
+\newcommand{\uc}{\mathrm{uc}}
+\newcommand{\red}{\textcolor{red}}
+\newcommand{\Leb}{\mathrm{Leb}}
+\newcommand{\avar}{\mathrm{AVar}}
+\newcommand{\hf}{\mathrm{hf}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\limp}{\stackrel{\mathbb{P}}{\longrightarrow}}
+%%%end Carsten
+
+\allowdisplaybreaks
+
+\endlocaldefs
+
+\begin{document}
+
+	\begin{frontmatter}
+		
+	\title{Intraday Volatility Dynamics}
+	\runtitle{Intraday Volatility Dynamics}
+	
+	\begin{aug}
+		% use \particle for den|der|de|van|von (only lc!)
+		% [id=?,addressref=?,corref]{\fnms{}~\snm{}\ead[label=e?]{}\thanksref{}}
+		%
+		%% e-mail is mandatory for each author
+		%
+		%%% initials in fnms (if any) with spaces
+		%
+		\author[id=au1,addressref={add1}]{\fnms{Carsten H.}~\snm{Chong}\ead[label=e1]{carstenchong@ust.hk}}
+		\author[id=au2,addressref={add2}]{\fnms{Marc}~\snm{Hoffmann}\ead[label=e2]{hoffmann@ceremade.dauphine.fr}}
+				\author[id=au3,addressref={add3}]{\fnms{Mathieu}~\snm{Rosenbaum}\ead[label=e3]{mathieu.rosenbaum@polytechnique.edu}}
+				\author[id=au4,addressref={add4}]{\fnms{Grégoire}~\snm{Szymanski}\ead[label=e4]{gregoire.szymanski@uni.lu}}
+		
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		%% Addresses                                %%
+		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		\address[id=add1]{%
+			\orgdiv{Department of Information Systems, Business Statistics and Operations Management},\\
+			\orgname{The Hong Kong University of Science and Technology}}
+		
+		\address[id=add2]{%
+			\orgdiv{CEREMADE},
+			\orgname{Universit\'e Paris-Dauphine -- PSL}}
+		
+			\address[id=add3]{%
+			\orgdiv{CMAP},
+			\orgname{Ecole Polytechnique}}
+		
+		\address[id=add4]{%
+			\orgdiv{Department of Mathematics},
+			\orgname{University of Luxembourg}}
+	\end{aug}
+	
+	%% Put support info here. Reminder: do not thank the handling coeditor anonymously or by name
+	\support{We would like to thank Viktor Todorov and participants of various seminars and conferences for helpful comments and suggestions.}
+	%
+	\coeditor{\fnm{[Name} \snm{Surname}; will be inserted later]}
+	
+	\begin{abstract} 
+ Return-based spot volatility estimates  are noisy and prone to biases. In this paper, we present a robust inference method for the autocorrelation of intraday volatility changes that simultaneously overcome the latency of volatility and potential biases due to  jumps and microstructure noise in observed prices. Our procedure rests on two key results: First, we show that the existence of a limiting   autocorrelation function of volatility increments at high frequency implies that the latter must be of regular variation. Second, we show a feasible central limit theorem for the sample autocovariances of estimated spot volatility increments  that does not require any debiasing or denoising of the initial spot volatility estimates.  These two results combine  to yield a robust GMM estimator of the autocorrelation of high-frequency volatility increments. In an empirical application to SPY transaction data, we document widespread predictability of intraday volatility changes.
+		%
+%		investigates the problem of estimating the Hurst parameter $H$ in rough volatility models. Existing methods for estimating $H$ often fail to account for critical market complexities such as microstructure noise, price jumps, and jumps in the volatility process. We propose a robust estimator for $H$ that explicitly addresses these challenges. We prove a Central Limit Theorem for the realized autocovariances of the realised variance of the price process, and we leverage the Generalized Method of Moments to construct an estimator of the Hurst parameter $H$ in the presence of jumps and of microstructure noise. We establish the asymptotic properties of this estimator, including a Central Limit Theorem, and derive an estimator for its asymptotic variance. The performance of the proposed methodology is validated through Monte Carlo simulations and an empirical analysis using financial data.
+	\end{abstract}
+	
+	
+	\begin{keyword}
+		\kwd{Generalized method of moments}
+		\kwd{high-frequency data}
+		\kwd{nonparametric estimation}
+		\kwd{robust inference}
+		\kwd{rough volatility}
+	\end{keyword}
+	
+\end{frontmatter}
+
+%\date{\today}
+
+
+%\noindent \textbf{Mathematics Subject Classification (2020) }: Primary 62G15, 62G20, 62M09; secondary 60F05, 62P20, 60J76.\\
+
+%\noindent \textbf{Keywords}: 
+%{Central limit theorem, Rough volatility, fractional Brownian motion, Hurst parameter, nonparametric estimation, jump process, Generalized Method of Moments}
+
+
+
+
+\section{Introduction}
+
+
+This paper conducts inference about the dynamical properties of intraday asset return volatility. We construct an estimator of the autocorrelation of volatility changes based on high-frequency return data and derive its limiting distribution as the sampling frequency tends to infinity. Importantly, we demonstrate that our estimator overcomes the latency of volatility and is robust to  biases arising from time-varying volatility, microstructure noise and   jumps---issues   known to affect classical spot volatility estimators. 
+
+%Key to the robustness of our autocorrelation estimator is a theoretical argument  that allows us to estimate the correlation of volatility increments without estimating their variance in the high-frequency setting we consider.
+
+%This is a crucial point. 
+Because spot volatility estimates are subject to   sampling errors, the sample variance of their increments is biased as an estimator of the population variance of volatility increments. In particular,   the sample autocorrelation of first-differenced spot volatility estimators is   \emph{inconsistent}   for the autocorrelation of changes in  true, unobserved, volatility.  
+Key to the robustness of our  estimator is an econometric procedure  that allows us to estimate the autocorrelation of volatility increments at high frequency \emph{without} estimating their variance. It consists of three steps.
+
+%This renders our inference problem   nonstandard. We address it in a three-step econometric  procedure.
+
+
+%This paper conducts inference about the dynamical properties of  asset return volatility. We construct an estimator of the autocorrelation of  intraday volatility changes based on high-frequency return data and derive its  limiting distribution as the sampling frequency tends to infinity. Much of the non-standard nature of this inference problem stems from the latency of volatility. Because volatility is unobserved, any econometric method must start from \emph{estimates} of volatility. These estimates, in addition to biases due to time-varying volatility as well as  microstructure noise and  jumps in observed asset returns, contain non-negligible  estimation errors, which are further amplified when sample variances of first-order differences of volatility estimates are formed. As a result, the standard route of   separately estimating covariance and variance and dividing the resulting estimates to obtain correlation is inconsistent  in our setting.
+%
+%This paper conducts inference about the dynamical properties of intraday asset return volatility. We construct an estimator of the autocorrelation of volatility changes based on high-frequency return data and derive its limiting distribution as the sampling frequency tends to infinity.   This inference problem is non-standard because volatility is latent and, as a result,  the standard route of   separately estimating covariance and variance produces inconsistent estimators. 
+%
+%
+%Importantly, we demonstrate that our estimator is robust to estimation errors and biases arising from time-varying volatility, microstructure noise and price jumps---issues that are known to affect classical spot volatility estimators. Key to the robustness
+%of our autocorrelation estimator are theoretical arguments that are unique to the high-frequency setting we consider and allow us to estimate the correlation of volatility increments without estimating their variance. Our econometric procedure consists of three steps
+
+
+%Importantly,  we demonstrate that our estimator is  robust to estimation errors and biases arising from time-varying volatility, microstructure noise and price jumps---issues that are known to  affect classical spot volatility estimators. Key to the robustness of our autocorrelation estimator are theoretical arguments that are unique to the high-frequency setting we consider and allow us to estimate the correlation of  volatility increments without estimating their variance. Our econometric procedure consists of three steps.
+
+In a first step, we show that for a continuous-time process satisfying mild regularity conditions, the convergence of the autocorrelation function of its increments  in the high-frequency limit implies that the   variance of its increments, viewed as function of the sampling frequency, must be regularly varying at the origin in the sense of Karamata. As a consequence, the limiting autocorrelation function has a known functional form and coincides with the autocorrelation function of fractional Gaussian noise\footnote{Fractional Gaussian noise denotes the first-order difference of \cite{MVN68}'s fractional Brownian motion. The latter appears, for instance, in continuous-time limits of  fractional time series models (see e.g., \cite{S90}, \cite{CR96} and \cite{MW08}).} with fractional parameter determined by the index of regular variation. Thus, inference about the autocorrelation function of volatility increments, a nonparametric problem at any fixed frequency, reduces under high-frequency asymptotics to a one-dimensional parametric problem.
+
+In a second step, we identify the limiting distribution of sample autocovariances of increments of spot variance estimates. We start by estimating spot variance in the classical way, using  truncated sums of squared returns over local blocks of high-frequency data. We then form first-order differences of these spot variance estimators and consider their sample autocovariances. Under mild structural assumptions on the data generating process, we show that any finite number of  sample autocovariances with lags greater than or equal to two converges jointly to a mixed normal distribution with a consistently estimable asymptotic covariance matrix. The center of the limiting distribution is \emph{not} the autocovariance of fractional Gaussian noise but the autocovariance of \emph{local averages} of fractional Gaussian noise. This fact obtains because spot variance estimators do not primarily estimate spot variance but local averages thereof. We extend the aforementioned central limit theorem (CLT) by including   the sample variance  plus twice the first-order sample autocovariance of   increments of   spot variance estimators. This particular linear combination ensures that  sampling errors inherent to spot variance estimators cancel out. Crucially, we do not (and need not) consider autocovariances at lags 0 and   1 separately.
+
+In a third step, we use a general methods of moment (GMM) approach to derive a consistent estimator and asymptotic confidence intervals for the index of regular variation and, by extension, for the autocorrelation of volatility increments at high frequency. This estimator minimizes the weighted sum of squared distances between the sample autocovariances  and their theoretical counterparts up to a given maximum lag, with weights optimally chosen to minimize the asymptotic variance of the resulting estimator. 
+
+In an empirical application to transaction data of SPY, the exchange-traded fund tracking the S\&P 500 index, from 2013 to 2021, we find strong evidence of negatively correlated intraday volatility changes, with the 95\%-confidence asymptotic confidence interval for the  first-order autocorrelation given by $[...,...]$. We also demonstrate that for predicting realized variance over the next ten minutes ...
+
+\subsection*{Related Literature}
+
+It has long been recognized  that volatility is time-varying (see e.g., \cite{M63}, \cite{F65}). Early models of stochastic volatility   primarily describe daily, low-frequency, dynamics of volatility  or aim at   applications such as option pricing with horizons of more than one day. These include the  GARCH   models of \cite{E82} and \cite{B86}, the time-changed models studied by \cite{C73} and \cite{TP83}, and continuous-time models like those of \cite{CIR85}, \cite{HW87} and  \cite{heston1993closed}.\footnote{See also \cite{SA09} for a more detailed review of the stochastic volatility literature.}
+
+Our paper, by contrast, focuses on the \emph{intraday} dynamics of stochastic volatility and, in particular, on the autocorrelation of short-term volatility changes. It is well known since the early works on realized measures (\cite{Andersen-Bollerslev-Diebold-Labys-2001,ABDL03}, \cite{BNS02}) that the econometric analysis of high-frequency intraday data involves infill asymptotics, where the time interval is fixed and the sampling frequency tends to infinity. A key new insight of our paper is that for virtually any continuous-time volatility model, the limiting autocorrelation function of volatility increments, if it exists under infill asymptotics, is parametrically determined and coincides with that of fractional Gaussian noise. 
+
+Our paper is  related to the literature on estimation  of spot volatility and its   properties. The idea of estimating spot volatility from local blocks of data    appears in \cite{FN96} and has been extended in various directions; we refer to Chapter~8 of \cite{ait2014high} for an overview. Our focus in this paper is not on estimating spot volatility  itself but   its dynamical properties within a trading day. In contrast to works analyzing   deterministic patterns of intraday volatility  (e.g., \cite{WMO85}, \cite{H86}, \cite{BB91} and \cite{ASTZ24}), we examine its statistical properties. Unlike \cite{BLX18, BLL21, BLR24} who use spot volatility estimates for intraday event studies, we investigate  properties of spot volatility during typical, uneventful, periods.
+
+
+Our paper  contributes to a growing literature studying dynamical properties of volatility using fractional instead of standard Brownian motion  (\cite{CR96}, \cite{gatheral2018volatility}). While previous literature typically imposes either a fractional or a non-fractional volatility model as an assumption,\footnote{Papers investigating  the dynamical properties of volatility  include \cite{BR12}, \cite{AFL13, AFLWY17}, \cite{WM14}, \cite{KX17}, \cite{li2022volatility} and \cite{CT24} for  volatility of volatility and the leverage effect and \cite{jacod2010price}, \cite{todorov2011volatility} and \cite{BR16}  for  volatility jumps, all in a  non-fractional setting, as well as   \cite{bolko2023gmm}, \cite{chong2022CLT}, \cite{wang2023modeling} and \cite{chong2024nonparametric} in a fractional setting.} we provide a novel interpretation of this model choice:  non-fractional models imply asymptotically uncorrelated volatility increments, while fractional models imply that volatility increments are  correlated in the high-frequency limit. Furthermore, we  derive asymptotic confidence intervals for the limiting autocorrelation of volatility increments that are valid in both fractional and non-fractional settings and are simultaneously robust to sampling errors, noise and jumps.
+
+Our paper studies a very particular instance of errors in variables. Because spot variance estimates contain sampling errors, the  sample autocorrelation of their increments suffers from an attenuation bias (\cite{H01}). While  existing approaches  to obtaining valid inferences in the presence of mismeasured variables  often rely on instrumental variables (\cite{HNIP91}, \cite{S07}, \cite{HS08}), auxiliary information (\cite{HNIP91}, \cite{S04}, \cite{CHT05}) or bias correction (\cite{C91}, \cite{EZ24}), our solution   exploits the fact that the sampling errors inherent to spot variance estimates---while potentially correlated with the latter---are  uncorrelated in the time series dimension. That is, the measurement errors in spot variance \emph{increments} form an approximate  MA(1) sequence with moving average parameter $-1$. As a consequence, we show that the sample variance plus twice the first-order autocovariance as well as all higher-order autocovariances of increments of spot variance estimates are asymptotically unbiased. Together with the fractional   form of the    limiting autocorrelation function, this enables us to conduct  asymptotically valid inference about the correlation of volatility changes without estimating their variance.
+
+%In this paper, we show how standard or fractional Brownian motion is related to the asymptotic autocorrelation of volatility increments  in continuous-time stochastic volatility models, not by assumption but \emph{by consequence}.  In contrast to the aforementioned works, in this paper, 
+
+%In the former case, the interpretation of the fractional parameter is oftentimes ambiguous.\footnote{Fractional Brownian motion is parametrized by its Hurst parameter $H\in(0,1)$. If $H=0.5$, it reduces to standard Brownian motion; if $H<0.5$, it is rough (i.e., of infinite quadratic variation) and has short memory; if $H>0.5$, it is smooth (i.e., of zero quadratic variation) and has long memory. In particular, $H$ parametrizes   roughness/smoothness and short/long memory behavior at the same time and lead,  \cite{shi2023volatility} and \cite{LPSY25} find in related models, this can be problematic due to weak identification in practice as roughness and long-memory. In particular, } 
+
+
+%Many papers investigating dynamical properties of volatility using high-frequency data rest on the assumption that volatility follows a semimartingale process (i.e., is non-fractional). These include \cite{BR12}, \cite{AFL13}, \cite{WM14}, \cite{AFLWY17} and \cite{li2022volatility}  on  volatility of volatility and the leverage effect and \cite{jacod2010price}, \cite{todorov2011volatility} and \cite{BR16}  on  volatility jumps. Recent papers that concern inference for fractional  volatility models include \cite{bolko2023gmm}, \cite{chong2022CLT}, \cite{wang2023modeling} and \cite{chong2024nonparametric}. 
+
+
+
+%are of parametric nature, do not derive   asymptotic confidence intervals and/or do not take into account jumps or microstructure noise in the data. 
+
+
+ %and allow for  autocorrelation of arbitrary sign in short-term volatility changes.\footnote{By contrast,      volatility models based on Brownian motion or  L\'evy processes (including those mentioned at the end of the first paragraph) imply asymptotically uncorrelated volatility increments at high frequency.} Whereas previous papers 
+
+%The importance of conducting inference about spot volatility has been emphasized 
+%Our paper is related to the literature on continuous-time   volatility models. Traditionally, stochastic volatility in continuous time is modeled as the solution to stochastic differential equations driven by Brownian motion, or more generally, L\'evy processes (\cite{heston1993closed}).
+
+\subsection*{Outline}
+%The remainder of this paper is organized as follows. 
+Section~\ref{sec:acf} establishes the class of possible  limits for the   autocorrelation function of high-frequency volatility increments. Section  \ref{sec:CLT} presents the main CLT for realized autocovariances of increments of spot variance estimators.   Section \ref{sec:estimation} leverages the results of the previous two sections and constructs a GMM estimator for the autocorrelation of volatility increments. Section \ref{sec:numerical} evaluates the performance of this estimator in finite samples, while Section \ref{sec:data} contains an empirical application to SPY transaction data. Section~\ref{sec:conclude} concludes. Appendix~\ref{sec:outline_proof} outlines the proof of the main theoretical results, providing   key steps and arguments. Technical details   are deferred to the Supplementary Material. 
+
+\section{The Autocorrelation of Increments of a Continuous-Time Process}\label{sec:acf}
+
+In this section, we show that  mild conditions guarantee that the limiting autocorrelation function of increments of a continuous-time process must be that of fractional Gaussian noise. Throughout this section,  $(X_t)_{t\geq0}$ denotes a   mean-square continuous stochastic process and $t>0$ is a fixed time point.\footnote{In fact, for the subsequent results to hold, it suffices to assume that $X$ is mean-square continuous from the right at $t$. This would also accommodate situations in which $X$ has fixed times of discontinuity, which is important  if $X$ is intraday volatility and $t$ is the time of a  scheduled announcement.} Our main interest is when $X$ is volatility, but $X$ can be general for the purposes of this section. We define the local autocovariance function of the increments of $X$ around $t$  by
+\begin{equation}\label{eq:ga-k} 
+	\gamma_t(k;\Delta)= \Cov(X_{t+\Delta}-X_t,X_{t+(k+1)\Delta}-X_{t+k\Delta}),\quad \gamma_t(\Delta)=\gamma_t(0;\Delta),\quad  k\geq0.
+\end{equation}
+In \eqref{eq:ga-k}, $\Delta>0$ denotes the step size  of an increment. We are interested in $\Delta\to0$ asymptotics for fixed $t$. Because $\gamma_t^{(k)}$ is allowed to depend on $t$, $X$ can be nonstationary.
+
+\settheoremtag{$\gamma$}
+\begin{Assumption}\label{ass:fgn}~
+%The following conditions hold: 	
+\begin{enumerate}
+	\item[(i)] There is  an autocorrelation function $(\rho_t(k))_{k\geq0}$ such that for all $j,k\geq 0$, we have	\begin{equation}\label{eq:conv} 
+		\Biggl\lvert	\frac{\gamma_{t+j\Delta}(k;\Delta)}{\gamma_t(\Delta)} - \rho_t(k)\Biggr\rvert\longrightarrow0\quad\text{as } \Delta\to0,
+	\end{equation}
+with the convention $\frac00=1$.
+	\item[(ii)] The following regularity condition holds:
+	\begin{equation}\label{eq:reg} 
+		\liminf_{\lambda\downarrow1}\liminf_{\Delta\to0} \frac{\gamma_t(\lambda\Delta)-\gamma_t( \Delta)}{\gamma_t( \Delta)}\geq0.
+	\end{equation}
+\end{enumerate} 
+\end{Assumption}
+
+If we set $j=0$ in \eqref{eq:conv}, we see that $\rho_t(k)$ is precisely the infill asymptotic limit of the  autocorrelation at lag $k$ of the increments of $X$. The first condition of Assumption~\ref{ass:fgn}  requires this limit be a proper autocorrelation function. If $X$ is a process with stationary   increments, then condition \eqref{eq:conv} for $j=0$  automatically implies the same condition for all $j\geq1$. If $X$ has nonstationary increments, condition \eqref{eq:conv} requires  the time-dependence of $\gamma^{(k)}_t(\Delta)$  be of lower asymptotic order, so that we obtain the same limit $\rho_t(k)$ if time is shifted by a constant multiple of $\Delta$. This condition is mild: for example, if $X$ is an It\^o semimartingale or a fractional process (like the price and volatility processes we consider in \eqref{eqn.s} and \eqref{eq:si} below), \eqref{eq:conv} is satisfied as soon as the coefficients of $X$ are also mean-square continuous. Essentially all parametric volatility models considered in prior literature satisfy this condition.
+
+Condition~\eqref{eq:reg} is a mild regularity assumption to rule out pathological cases. For example, if $\gamma_t(\Delta)=\Var(X_{t+\Delta}-X_t)$ is nondecreasing in $\Delta$, which is true for most volatility models considered in the literature, then \eqref{eq:reg} is trivially satisfied. Even if not, for a continuous-time process, the limit in \eqref{eq:reg} is typically zero, which just means that the relative difference between $\Var(X_{t+\lambda\Delta}-X_t)$ and $\Var(X_{t+\Delta}-X_t)$ converges to zero as $\lambda$ approaches unity. We are not aware of any existing volatility model where \eqref{eq:reg} is violated.
+
+\begin{theorem}\label{thm:acf} If  Assumption~\ref{ass:fgn} holds for a   mean-square continuous process  $(X_t)_{t\geq0}$ at time $t>0$, then  $\gamma_t$ is  regularly varying   at zero with some index $\alpha\in[0,2]$ as a function of $\Delta$. Moreover, with the convention $0^0=0$, we have
+\begin{equation}\label{eq:acf} 
+	\rho_t(k)=\frac12((k+1)^\alpha-2k^\alpha+\lvert k-1\rvert^\alpha),\quad k\geq0.
+\end{equation}
+In particular, if $\alpha\in(0,2)$, $\rho_t$ is the autocorrelation function of fractional Gaussian noise with fractional parameter $e=\frac{\alpha-1}2$.\footnote{Fractional Brownian motion is a centered Gaussian process $(B^e_t)_{t\geq0}$ with covariance function $\E[B^e_tB^e_s]= \frac12(t^{2e+1}+s^{2e+1}-\lvert t-s\rvert^{2e+1})$ for $s,t\geq0$. It has stationary increments and $(B^e_t-B^e_{t-1})_{t\in\mathbb{N}}$ is called \emph{fractional Gaussian noise}. The range of the fractional parameter is $e\in(-\frac12,\frac12)$. Fractional Brownian motion and fractional Gaussian noise can also be parametrized by its Hurst index, which is given by $H=e+\frac12=\frac\alpha2$.}
+\end{theorem}
+
+The theorem implies that the limiting autocorrelation function of volatility increments, if it exists under  high-frequency asymptotics, must be the autocorrelation function of fractional Gaussian noise. In contrast to previous occurrences of fractional Brownian motion in the econometric literature (see e.g., \cite{S90}, \cite{L91}, \cite{CR96} and \cite{MW08}), here it appears as a consequence of infill asymptotic theory, without assuming fractional differencing/integration in the initial model.
+
+We refer to $e=\frac{\alpha-1}2$ as the \emph{smoothness parameter} of $X$ at time $t$. If $e<0$, the increments of $X$ are asymptotically negatively correlated and we say that $X$ is \emph{rough} at time $t$; if $e=0$, they are asymptotically uncorrelated; and if $e>0$, they are asymptotically positively correlated and we say that $X$ is  \emph{smooth} at time $t$.\footnote{This terminology follows \cite{gatheral2018volatility} and \cite{chong2024nonparametric} and reflects the fact that processes with $e<0$, $e=0$ and $e>0$ typically have paths of infinite, finite nonzero and zero quadratic variation, respectively. Moreover, if $X$ is continuous, then the H\"older regularity of its sample paths is typically lower or higher than that of Brownian motion paths depending on whether $e<0$ or $e>0$.}
+%	\cite{M82}, page 353; see also \cite{L91}. If $e<0$, we also say that $X$ is \emph{rough}, following \cite{gatheral2018volatility} and \cite{chong2024nonparametric}. Another common definition in the literature (see e.g., \cite{DG02}) is to call a covariance-stationary time series   antipersistent if its long-run variance is zero and persistent if the latter is infinite. Our definition of (anti-)persistence is related,   but different in two aspects: first, our definition is not only restricted to covariance-stationary processes; second, and more importantly, our definition is related to the local (infill asymptotic) properties of the process rather than to its long-run behavior. As we discuss in the next paragraph, our definition allows us to separate the local persistence properties of a process from its long-run memory properties.} 
+If $X$ is an It\^o semimartingale process with nonzero quadratic variation (e.g., if $X$ has a nonzero diffusion coefficient), its increments are asymptotically uncorrelated  and we are in the case $e=0$. The boundary cases $e=-\frac12$ and $e=\frac12$ can also occur: in the first case, we obtain an MA(1) noise (the increment of white noise); in the second case, the increments of $X$ are perfectly correlated and the paths of $X$ are straight lines.
+ 
+ If $X$ is  covariance-stationary, the smoothness parameter $e$ is related to the decay of its spectral density at infinity.
+ \begin{theorem}\label{thm:sd} Let $(X_t)_{t\in\mathbb{R}}$ be a continuous-time covariance-stationary process satisfying Assumption~\ref{ass:fgn} with autocovariance function $C(r) = \Cov(X_0,X_r)$, $r\in\mathbb{R}$. Let $F$ be its spectral distribution function, that is, the unique distribution function with total mass $C(0)$ such that
+ 	\[ C(r) = \int_{-\infty}^\infty \cos(\la r) dF(\la),\quad r\in\R. \]
+ Then $X$ has smoothness parameter $e\in(-\frac12,\frac12)$ if and only if $1-F$ is regularly varying at infinity with index $-1-2e$.
+ 	
+Consider the special case where $C(r)$ is integrable with spectral density $f$, that is,
+\[f(\lambda) = \frac{1}{2\pi}\int_{-\infty}^\infty \cos(\la r) C(r)dr,\quad \lambda\in\mathbb{R}.\]
+Suppose that $f$ is nondecreasing on $(a,\infty)$ for large enough $a>0$.
+Then $X$ has smoothness parameter $e\in(-\frac12,\frac12)$ if and only if $f$ is regularly varying at infinity with index $-2-2e$.
+ \end{theorem}
+
+
+The theorem highlights that the smoothness parameter $e$  is distinct from the \emph{memory parameter} $d$ of $X$.  A covariance-stationary process $X$ has memory parameter $d\in(-\frac12,\frac12)$ if its spectral density satisfies $f(\lambda) \asymp \lvert\lambda\rvert^{-2d}$ as $\lambda\to0$ (\cite{DG02}). If $d>0$, $X$ has \emph{long memory}; if $d=0$, $X$ has \emph{short memory}; and if $d<0$, $X$ is \emph{antipersistent}. While $d$ describes the behavior of the spectral density at the origin, $e$ concerns its asymptotic decay at infinity. 
+
+  Theorem~\ref{thm:acf} demonstrates that
+infill asymptotics  separate  high-frequency variation in $X$,   encoded by $e$, from    low-frequency variation in $X$,  encoded by $d$. In our application to volatility, Theorem~\ref{thm:acf} therefore allows us to conduct inference about the smoothness parameter of intraday volatility independently of the well established long memory property of volatility over daily or even longer time horizons (see e.g., \cite{ABDL03} and the references therein).
+
+In many parametric parametric fractional models, however, a single parameter controls the behavior of the spectral density at zero and infinity. As \cite{MW08} point out, in such a case, even efficient statistical procedures may rely on both high- and low-frequency information, raising robustness concerns if the parametric model is misspecified. 
+ \cite{shi2023volatility} and \cite{LPSY25} confirm this point by finding that roughness and long memory are only weakly identified in ARFIMA models. 
+ 
+The example of a fractional Ornstein--Uhlenbeck process driven by a fractional Brownian motion with Hurst parameter $H\in(0,1)$ illustrates this point. Its spectral density satisfies $f(\lambda) \asymp \lvert\lambda\rvert^{1-2H}$ as $\lambda\to0$ and $f(\lambda) \asymp \lvert\lambda\rvert^{-1-2H}$ as $\lambda\to\infty$ (see e.g., \cite{SYZ24}). Hence, $e=d=H-\frac12$ and $X$ is either smooth and has long memory (if $H>\frac12$),  rough and antipersistent (if $H<\frac12$), or has the same smoothness as Brownian motion and short memory (if $H=\frac12$). Importantly, a single parameter, $H$, controls both the smoothness and memory properties of the process. This need not be the case in general. For example,  if $X$ is the superposition of two independent fractional Ornstein--Uhlenbeck processes with Hurst parameters $H_1$ and $H_2$, respectively, where $H_1<H_2$, then the spectral density of $X$ satisfies $f(\lambda) \asymp \lvert\lambda\rvert^{1-2H_2}$ as $\lambda\to0$ and $f(\lambda) \asymp \lvert\lambda\rvert^{-1-2H_1}$ as $\lambda\to\infty$. Hence, if $H_1<\frac12<H_2$, the process $X$ will be rough (with $e=H_1-\frac12$)  \emph{and} have long memory (with $d=H_2-\frac12$).
+ 
+ %Taking infill asymptotics partially resolves this issue:  the parameter $e$ in Theorem~\ref{thm:acf} only describes the degree of smoothness of $X$ in a small neighborhood after time $t$. It is  unrelated to the memory behavior of $X$, which concerns  the correlation between $X_t$ and $X_{t+k}$ for large $k$.\footnote{For example, if $X$ is the superposition of two independent fractional Ornstein--Uhlenbeck processes with Hurst parameters $H_1$ and $H_2$, respectively, where $H_1<H_2$, then the spectral density of $X$ satisfies $f(\lambda) \asymp \lvert\lambda\rvert^{1-2H_2}$ as $\lambda\to0$ and $f(\lambda) \asymp \lvert\lambda\rvert^{-1-2H_1}$ as $\lambda\to\infty$. Hence, if $H_1<\frac12<H_2$, $X$ is rough \emph{and} has long memory.}  %This is also why we refer to $e$ as the \emph{persistence parameter} of $X$, as it is  unrelated to the memory parameter of $X$, which is usually denoted by $d$ in the literature.\footnote{Consider for example the case where $X= B^e_t + B^d_t$, where $B^e$ and $B^d$ are two independent fractional Brownian motions, with fractional parameters $e<0$ and $d>0$, respectively. Then $X$ is antipersistent  and, at the same time, its increments have long memory. Inference about $e$ requires infill asymptotics, which is what we focus on in this paper, while inference about $d$ requires long-span asymptotics.} 
+
+
+
+ 
+
+%For decades, the modeling of volatility in financial markets has largely relied on frameworks driven by Brownian motion and/or Lévy jumps. These models typically assume that volatility exhibits a degree of smoothness, often quantified through finite quadratic variation. However, a growing body of empirical research has challenged this perspective, suggesting that volatility may be significantly rougher than previously assumed. Notably, studies such as \cite{gatheral2018volatility} have demonstrated that volatility resembles a fractional Brownian motion with a Hurst parameter $H < 0.5$, indicating an intricate structure characterized by pronounced irregularity over small time scales. This finding was later corroborated by other empirical studies based on both return data \cite{bennedsen2022decoupling, FTW21, gatheral2020quadratic} and options data \cite{bayer2016pricing,fukasawa2021volatility,livieri2018rough}. From an econometric perspective, understanding the roughness of volatility is crucial because it directly influences the optimal rate of convergence of nonparametric spot estimators of volatility. The rougher the volatility, the less precise these estimates become. Many classical tools developed to study volatility rely on the semimartingale structure \cite{JP}. There are a priori no guarantee that they remain effective when applied to rough volatility models. From a more applied perspecive, rough volatility models have since their introduction been adapted for various applications, including option pricing, hedging, and volatility forecasting. Understanding the roughness is then crucial to validate empirically these models.\\
+
+%Estimating the Hurst parameter from financial data is a notoriously difficult task. While methods for estimating $H$ have been extensively studied in the context of classical time series, these approaches often do not translate directly to financial data. Estimating $H$ typically involves analyzing the quadratic variation at different time scales, or equivalently the autocovariance structure of the process \cite{istas1997quadratic, coeurjolly2001estimating, BN11}. In the context of rough volatility, volatility increments are negatively correlated, contrasting with the independence of increments often assumed in semimartingale models. If volatility were directly observable, it would be relatively straightforward to estimate its roughness using scaling properties of the quadratic variation or autocovariance functions.\\
+
+%In practice, however, volatility is not directly observable, and spot volatility must be estimated from price data. This introduces substantial challenges, as spot volatility estimates inherently contain nontrivial estimation errors \cite{FTW21, wang2023modeling}. These errors can lead to the appearance of roughness in volatility even if the true underlying process is not rough. Consequently, distinguishing the roughness of the unobserved spot volatility from the roughness introduced by estimation methods, such as realized variance, is a critical issue. Another significant challenge in estimating volatility is the influence of jumps in the price process \cite{ait2014high, ait2012testing} and microstructure noise in price observations \cite{black1986noise, jacod2017statistical, da2021moving, li2022remedi}. The optimal nonparametric rate for estimating volatility from high-frequency data in the presence of jumps depends on the degree of jump activity. As jump activity increases, the rate of convergence deteriorates significantly, potentially approaching zero. Similarly, market microstructure noise further complicates the estimation of volatility at small time scales. For instance, the optimal rate of convergence for estimating integrated volatility from $n$ noisy observations is $n^{1/4}$, compared to $n^{1/2}$ in a noise-free setting \cite{jacod2014remark, hansen2006realized}. Finally, not only the price, but also the volatility process can exhibit jumps \cite{ait2014high, ait2012testing}.  These jumps do not alter the volatility estimation but affect the scaling of the volatility increments. In fact, rough volatility usually creates higher volatility increments at short time scales. This effect can also be obtained using jumps in the volatility process, see for instance \cite{jacod2010price, todorov2011volatility, bandi2016price}. It is crucial to disentangle the effects of rough volatility from those of jumps in the volatility process \cite{bibinger2023testing}.  \\
+
+%Recently, numerous attempts have been made to estimate the Hurst parameter in rough volatility settings \cite{bennedsen2022decoupling, FTW21, bolko2023gmm, szymanski2024optimal, wang2023modeling}. However, most of these approaches do not adequately account for critical market features such as microstructure noise and jumps. Additionally, \cite{chong2024nonparametric} proposed a test for rough volatility using price data that incorporates microstructure noise and jumps. In this work, we aim to develop an estimator for the Hurst parameter that explicitly accounts for these market complexities. The proposed methodology builds on the semi-parametric framework introduced by \cite{chong2022CLT}, which constructs an estimator for the Hurst parameter from price data under idealized conditions, namely, the absence of microstructure noise and jumps. Their estimator follows a systematic procedure. First, realized variance estimates are computed using squared increments of observed prices. This step relies on standard high-frequency data techniques to approximate integrated volatility. Then the realized autocovariance function of the realized variance estimates is constructed and a CLT is derived for the realized autocovariance function, forming the statistical foundation for estimating the Hurst parameter. \\
+
+%Using this framework, we demonstrate that similar techniques can be extended to settings with microstructure noise and jumps. First, although the estimation of the volatility is affected by the presence of microstructure noise, we show that the estimator of the Hurst parameter is naturally robust to the presence of micro-structure noise. Secondly, to mitigate the effects of jumps in both prices and volatility, we introduce price and volatility truncation methods, similar to that of \cite{mancini2009non, JP}. These truncation techniques effectively eliminate jumps without altering the asymptotic properties of the CLT, ensuring that estimation remains feasible. Furthermore, we employ the Generalized Method of Moments to construct the Hurst parameter estimator from the derived CLT. This method provides flexibility in incorporating moment conditions and allows for efficient parameter estimation. Additionally, we derive an estimator for the asymptotic variance of the Hurst parameter, enabling a comprehensive assessment of the estimator’s precision.\\
+
+
+
+
+
+
+%
+%
+%\section{Introduction}
+%
+
+%
+%\subsection{Setting and main results}
+%
+%In this paper, we address the problem of estimating the Hurst parameter in rough volatility models from high-frequency observations of asset prices, typically using $5$-second price increments. We aim to develop an estimator that is robust to both price and volatility jumps. Specifically, we denote $x$ the log-price process, which is given by
+%\begin{equation*}
+%    x_{t} = 
+%	x_0 + \int_0^t b_{s} \, ds +\int_0^t\sigma_{s}\, dW_{s}
+%+ 
+%j_t
+%\end{equation*}
+%where $b$ is a bounded process and $j$ is a jump process with bounded variation. Additionally, we assume that the variance process $\sigma^2$ is essentially given by
+%\begin{equation*}
+%    \sigma_t^2 = \sigma_0^2 +\int_0^t a_s \, ds+   \int_0^t \wh g(t-s) \theta_s \, ds + \int_0^t g(t-s) \bfeta_s \, d\bfW_s + j^\sigma_t.
+%\end{equation*}
+%Here, $a$, $\theta$, and $\bfeta$ are bounded process, $g(t) = t_+^{H-1/2} + g_0(t)$ for some continuous function $g_0$ and where $j^\sigma$ is a jump process with bounded variation. We assume that the price is observed with a sampling frequency $\Delta_n > 0$ of order $n^{-1}$, and is blurred by a microstructure noise. More precisely, we observe
+%\begin{equation}
+%    y_i^n = x_{i\Delta_n} + \varepsilon^n_i
+%\end{equation}
+%for $i = 0, \dots, n$, with $(\varepsilon^n_i)_i$ representing the microstructure noise.\\
+%
+%In this setup, we construct a consistent estimator of $H$ that satisfies a feasible Central Limit Theorem (CLT) with a convergence rate of $n^{-1/4}$ (up to some logarithmic terms). This estimator is implemented and validated using simulated data and subsequently applied to high-frequency data from SPY.
+%
+%
+%
+%\subsection{Motivation}
+%
+%Introduced for financial engineering purposes by \cite{gatheral2018volatility}, rough volatility models exploit the self-similarity of the fractional Brownian to construct stochastic volatility models that are scale invariant. In their work, \cite{gatheral2018volatility} proposed rough fractional stochastic volatility model is considered, where the log-price of an asset $(S_t)_t$ is given by 
+%\begin{equation}
+% S_t  = S_0+\int_0^t\sigma_s \,dB_s
+% \quad\text{ with }\quad
+%\sigma_t^2  = \sigma_0^2 \exp (\eta W_t^H), \label{roughvol1}
+%\end{equation}
+%where $(B_t)$ is a Brownian motion, independent of the fractional Brownian motion $(W^H_t)$, with Hurst parameter $H\in(0,1)$. Using a data-driven approach, \cite{gatheral2018volatility} found that setting $H \approx 0.1$ aligns with the empirical observation that volatility paths are significantly rougher than semimartingales. This finding was later corroborated by other empirical studies based on both return data \cite{bennedsen2022decoupling, FTW21, gatheral2020quadratic} and options data \cite{bayer2016pricing,fukasawa2021volatility,livieri2018rough}. Since their introduction, rough volatility models have been adapted for various applications, including option pricing, hedging, and volatility forecasting. To achieve these purposes, more sophisticated models have replaced \eqref{roughvol1}, such as the rough Bergomi model \cite{bayer2016pricing} and rough Heston model \cite{eleuch2019roughening}.
+%\\
+%
+%The main idea driving the estimation procedure of \cite{gatheral2018volatility} is the self-similarity of the fractional Brownian motion: for all $a > 0$, $(a^{-H}W^H_{at})_t$ is still a fractional Brownian motion. Using price observations $x_{i\delta}$ at a sampling frequency $\delta$, we can estimate the spot volatility at a frequency $\Delta = k\delta$ by
+%\begin{equation*}
+%    \wh \sigma_{j, \Delta} = \frac{1}{k\delta } \sum_{i=jk}^{j(k+1) } (x_{i\delta}-x_{(i-1)\delta})^2.
+%\end{equation*}
+%We then define the realized power variations of $\log(\wh \sigma)$ by
+%\begin{equation*}
+%    m(q, \Delta) = \frac{1}{\lfloor T / \Delta \rfloor} \sum_{j=1}^{\lfloor T / \Delta \rfloor} |\log( \wh \sigma_{j, \Delta}) - \log( \wh \sigma_{j-1, \Delta})|^q.
+%\end{equation*}
+%In model \eqref{roughvol1}, assuming that $\wh \sigma_{j, \Delta}$ is close to $\sigma_{j \Delta}$ and assuming that $T$ is large enough, we see using the self-similarity of the fractional Brownian motion that
+%\begin{equation*}
+%    m(q, \Delta) \approx \Delta^{Hq}.
+%\end{equation*}
+%Using various values of $q$ and $\Delta$, \cite{gatheral2018volatility} obtains $H \approx 0.1$ by linear regressions of $\log(m(q,\Delta))$ on $q \log(\Delta)$. However, this procedure relies on several assumptions. First, as pointed out by \cite{bennedsen2022decoupling, FTW21}, $\wh \sigma_{j, \Delta}$ does not really estimate the spot volatility, but instead the realised variance on the interval $[j\Delta, (j+1)\Delta]$, that is
+%\begin{equation*}
+%    \wh \sigma_{j, \Delta} \approx RV_{j,\Delta} = \frac{1}{k\Delta} \int_{j\Delta}^{(j+1)\Delta} \sigma_s^2 \, ds.
+%\end{equation*}
+%When $\sigma$ is driven by a fractional process with $H < 1/2$, this estimate can significantly differ from the spot volatility. Moreover, the estimation error also impacts the computation of the realized power variation of the volatility, as discussed in \cite{FTW21}. These challenges have attracted considerable interest in recent years \cite{bennedsen2022decoupling, FTW21, bolko2023gmm, szymanski2024optimal, wang2023modeling} and a robust statistical theory has recently been established \cite{chong2022minimax, chong2022CLT}, confirming that the estimates found in \cite{gatheral2018volatility} are not biased. In their work, \cite{chong2022minimax, chong2022CLT} consider different choices for $k$. The optimal choice is given by $k \sim n^{2H/(2H+1)}$ where $n = T / \delta$. This yields a convergence rate $n^{-1/(4H+2)}$ for the estimator of $H$, which is optimal \cite{chong2022minimax}. Although this choice of $k$ depends on $H$, an adaptive procedure is provided, achieving the same convergence rate $n^{-1/(4H+2)}$. However, this adaptive procedure is not practical to implement and relies on an iterative method that can be unstable. Instead, a more practical and stable choice is $k\sim n^{1/2}$, which yields a convergence rate of $n^{-1/4}$. This choice is more stable in practice and easier to implement.\\
+%
+%However, several theoretical points still need to be addressed. First, the estimates of $H$ based on return data estimate the daily realized volatility from intraday price returns and use these volatility estimates to build an estimator of $H$. This procedure does not estimate spot volatility but rather estimates the daily realized variance, thereby ignoring the intraday volatility dynamics. It is shown in \cite{chong2022minimax, chong2022CLT} that realized variance does not alter the estimation procedure, but there are still some concerns.
+%% the theory is asymptotic and requires that the sampling frequency $\delta$ satisfies $\delta \to 0$. In particular, 
+%Specifically, the theory is asymptotic and requires that the sampling frequency $\Delta_n$ satisfies $\Delta_n \to 0$
+%In particular, it seems unclear how to disentangle rough volatility from semimartingale processes $\lambda$, \textit{i.e.} with $\lambda \ll \Delta_n$ (where $\Delta_n = k \Delta_n$). For this reason, it is important to consider the estimate \cite{chong2022minimax, chong2022CLT} in the case of intraday data estimating intraday volatility and computing the Hurst parameter from the intraday volatility increments.
+%
+%However, in \cite{chong2022minimax, chong2022CLT}, the price increments are observed exactly in. In practice, this assumption holds when $\Delta_n$ is large enough, say $\Delta_n \geq 5$ minutes, but not when $\Delta_n$ is of the order of $1$ second. This discrepancy arises due to several factors. First, prices can only take discrete values, and the increment between two prices on the market grid is called the tick value \cite{delattre1997central, robert2011model, li2015rounding}. Additionally, there is no clear price quotation at the high-frequency scale. A common choice is the last traded price, which implies that the price does not change if no trade occurs within a given time interval. Consequently, when $\Delta_n$ is small, a significant proportion of price increments are $0$, see Table \ref{tab:price_increment}, and the non-zero price increments are biased due to the rounding effect. \\
+%
+%Furthermore, the rounding effect can be incorporated into a broader class of noise that pollutes high-frequency price observations, known as microstructure noise. This noise can result from various factors, including asymmetric information among traders, execution strategies, and other market frictions \cite{black1986noise, jacod2017statistical, da2021moving, li2022remedi}. Specifically, at each time $t$, we do not observe the exact price $x_t$ but instead, we observe a version of $x_t$ blurred by an additive noise. This noise also affects price increments. When $\Delta_n$ is large enough, it is reasonable to assume that the micro-structure noise is small compared to typical price increments, and can therefore be ignored, see Table \ref{tab:price_increment}. \\
+%
+%\begin{table}[h!]
+%\centering
+%\begin{tabular}{lcc}
+%\toprule
+%\textbf{Time Interval} & \textbf{Average Price Increment} & \textbf{Proportion of Zero Price Increments} \\
+%\midrule
+%$1$ second      & $1.96$ cents & $49.59 \,\%$  \\
+%$5$ seconds     & $4.79$ cents & $18.12 \,\%$  \\
+%$5$ minutes     & $38.01$ cents & $1.87 \,\%$  \\
+%\bottomrule
+%\end{tabular}
+%\caption{Average Price Increment of the S\&P 500 from 2019 to 2022}
+%\label{tab:price_increment}
+%\end{table}
+%
+%In addition to microstructure noise, jumps should also be incorporated into the framework. It is well known that both the price and the volatility exhibit jumps and that these two processes sometimes jump simultaneously \cite{ait2014high, ait2012testing}. From a statistical perspective, price jumps and volatility jumps affect the estimation of $H$ differently. Ignoring price jumps results in a higher estimate of spot volatility, introducing a bias of the same order of magnitude as the volatility itself. On the other hand, volatility jumps do not alter the volatility estimation but affect the scaling of the volatility increments, see \cite{bibinger2023testing} for a test procedure to identify jumps in the volatility process.\\
+%
+%
+%
+%In this work, we develop a statistical theory to estimate the Hurst parameter of intraday volatility, complementing previous research that focuses on the roughness of daily volatility. Using a methodology similar to that of \cite{chong2022minimax, chong2022CLT}, we estimate the realized variance over windows of $5$-minute using $5$-second price increments, and then we estimate the roughness parameter of these realised variances. For that intent, we incorporate jumps and microstructure noise into our analysis and we show that the realized autocovariances of the spot variance estimators satisfy an unbiased CLT converging at rate $n^{1/4}$ (up to some corrective log-term), where $n$ is the number of price observations. From a statistical perspective, the setup is similar to \cite{chong2023fine}, where a test statistic is built within this framework. The differences are twofold: first, we build an estimate of $H$ while \cite{chong2023fine} is building a test rejecting the null hypothesis H0: "$\sigma^2$ is a semimartingale process". Secondly, in \cite{chong2023fine}, the test statistic does not satisfy a bias-free CLT in the rough case. \\
+%
+%The main technical issue found in this paper is to understand the interplay between rough volatility and the presence of jumps and microstructure noise. The topic of volatility estimation in presence of jumps has been widely studied. The main methods to get rid of jumps include truncation \cite{mancini2009non, JP}, the use of bipower variations \cite{podolskij2009estimation, barndorff2004power} or characteristic functions \cite{jacod2014efficient, jacod2016efficient, jacod2018limit}. Here, we are not directly interested in the realised variance. Instead, we estimate $H$ through autocovariances of the spot variance estimators. 
+%From a theoretical perspective, we use a truncation to remove price jumps before estimating the realised variance. This truncation level is chosen empirically by computing a bipower variation estimate of the volatility. Moreover, volatility jumps naturally disappear from the realized autocovariances of the spot variance estimators when considering a strictly positive lag. For the application, we also consider truncation for the volatility jumps.\\
+%
+%The estimation of the volatility estimation in presence of microstructure noise has also been studied and various methods have been employed to remove this noise, including
+%two-scale / multi-scale realised volatility method \cite{zhang2005tale, zhang2006efficient, ait2005often}, pre-averaging \cite{jacod2009microstructure, christensen2010pre}, kernel methods \cite{barndorff2008designing, barndorff2011multivariate}, Quasi-maximum likelihood estimation \cite{xiu2010quasi, ait2010high}, etc. Nowadays, the two benchmarks are the works of \cite{da2021moving} which maximizes the likelihood of a misspecified moving-average model and \cite{li2022remedi} which combines preaveraging with an estimation of the moments of the microstructure noise, both allowing for a general class of noise. Although these methods could be used here to remove the noise, this is not necessary in the context of estimating the Hurst parameter of the volatility. The reason is that the microstructure noise is often modelled as
+%\begin{equation*}
+%    \varepsilon_i^n = \gamma_{i\Delta_n} \chi_i^n
+%\end{equation*}
+%where $\gamma$ is a stochastic process adapted with respect to the same filtration as $\sigma$; while $(\chi^n_i)_i$ is a family of random variables independent from $\gamma$ and $\sigma$. Therefore, when the micro-structure noise is ignored, the usual estimation method for estimating the realised variance estimates the same quantity with $\sigma^2$ replaced by $\sigma^2 + \gamma^2$. Under general assumptions on $\gamma$, including the semi-martingale case and the rough case where $\gamma^2$ has a structure similar to $\sigma^2$, we see that the procedure estimating $H$ is indeed consistent and still satisfies a CLT with the same rate. 
+%
+%
+%
+%\subsection{Organisation of the paper}
+%
+%
+%The rest of this paper is structured as follows. Section \ref{sec:setting} establishes the statistical framework for the paper and specifies the main assumptions for our results. Section \ref{sec:CLT} presents the main Central Limit Theorem for realized autocovariances of spot variance estimators. In Section \ref{sec:estimation} we focus on the construction of several estimators for $H$, detailing the methodology and theoretical underpinnings for each one. In Section \ref{sec:numerical} is dedicated to Monte Carlo simulations and a numerical analysis of the estimator developed in Section \ref{sec:estimation}, demonstrating its performance and robustness to different setups. Implementation on real data is detailed in 
+%Section \ref{sec:data}. Eventually, the outline of the proof of the main result of Section \ref{sec:CLT} is found in Section \ref{sec:outline_proof}, with further details of the proof and additional numerical analyses relegated to the appendix.
+%
+%
+%
+%
+%
+
+
+
+
+
+
+
+
+
+
+
+\section{Inference about the Autocorrelation of Volatility Increments}
+\label{sec:CLT}
+
+We consider an asset whose log-price $x$ follows standard It\^o semimartingale dynamics on a filtered probability space $(\Omega,\calF,\mathbb{F}=(\mathcal{F}_t)_{t\geq 0},\mathbb{P})$:
+\begin{equation}
+\label{eqn.s}
+x_{t} = 
+	x_0 + \int_0^t b_{s} \, ds +\int_0^t\sigma_{s}\, dW_{s}
++ 
+\int_0^t \int_E \jump(s,z) \, \pi(ds, \, dz),\quad t\geq0.
+\end{equation}
+In this expression, $x_0$ is an $\mathcal{F}_0$-measurable random variable, $W$ is a standard $\mathbb{F}$-Brownian motion, $\pi$ is an $\mathbb{F}$-Poisson random measure on $[0,\infty) \times E$ with compensator $dt \, \lambda(dx)$ and $\lambda$ is a
+$\sigma$-finite measure on an auxiliary space $E$. 
+%We denote the associated compensated Poisson random measure by   $\wt \pi(ds, \, dz) = \pi(ds, \, dz) - ds \, \lambda(dz)$. 
+We   specify further assumptions on the drift $b$, the volatility $\sigma$ and the jump function $\jump$ later on. 
+
+ %Section~\ref{sec:LLN} lays out the main ideas behind constructing a consistent estimator of the smoothness parameter $e$ of volatility, which determines the limiting autocorrelation of volatility increments at high frequency via \eqref{eq:acf}. Section~\ref{sec:noise} examines the robustness properties of this estimator in the presence of microstructure noise. Section~\ref{sec:CLT-2} develops a central limit theorem and the associated feasible inference about $e$.
+
+
+
+\subsection{Realized Autocovariances of  Volatility Increments}\label{sec:LLN}
+
+Our goal is to construct a feasible estimator of the smoothness parameter $e$ of volatility, which in turn determines the limiting autocorrelation of volatility increments at high frequency via \eqref{eq:acf}. The estimator is based on high-frequency observations of asset returns on  $[0,T]$, with step size $\Delta_n$,  where $T>0$ is fixed and $\Delta_n\to0$. Our inference procedure starts from jump-robust estimates of \emph{spot variance} constructed from truncated sums of squared returns over local blocks of high-frequency data (\cite{ait2014high}):
+\begin{equation}\label{eq:c-hat}
+	\widehat{c}_{i}^{n} =  \frac{1}{k_n \Delta_n} \sum_{j = i+1}^{i+k_n} (\Delta^n_j x)^2 \1_{|\Delta^n_j x| \leq v_n},\quad i=0,\dots,\lfloor T/\Delta_n\rfloor - k_n.
+\end{equation}
+Here, $\Delta^n_i x = x_{i\Den}-x_{(i-1)\Den}$ is a high-frequency return on the asset, $(k_n)_{n\in\mathbb{N}}$ is a positive integer sequence increasing to infinity and $(v_n)_{n\in\mathbb{N}}$ is a sequence of positive truncation levels shrinking to zero. Next, we compute truncated increments of these spot variance estimators and subsequently the \emph{realized autocovariances} thereof. That is, we consider\footnote{\cite{BNS04}, \cite{barndorff2008designing}, \cite{LRS24}  and \cite{LY26} investigate realized (auto-)covariances for asset prices. Our statistics differ from these works in that we consider realized autocovariances of spot variance estimates.} 
+\begin{equation}\label{eq:delta-c} 
+	\Delta_{p_n} \wh c^{n}_i = \wh c^{n}_{i+p_n}-\wh c^{n}_{i},\quad	\Delta^\tr_{p_n} \wh c^{n}_i = \Delta_{p_n} \wh c^{n}_i\1_{\lvert\Delta_{p_n} \wh c^{n}_i\rvert\leq w_n}
+\end{equation}
+and, for $\ell\geq0$, 
+\begin{equation}\label{eq:V}
+	\wh {V}^{n,\ell}_t 
+	=
+	 \frac{1}{p_n} 
+	\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell+1) p_n - k_n}
+	\Delta^\tr_{p_n} \wh c^{n}_{i+\ell p_n} 	\Delta^\tr_{p_n} \wh c^{n}_i.
+\end{equation}
+In \eqref{eq:delta-c} and \eqref{eq:V}, $(p_n)_{n\in\mathbb{N}}$ is a sequence increasing to infinity such that $p_n\geq k_n$. Choosing $p_n > k_n$ introduces gaps between $\Delta^\tr_{p_n} \wh c^{n}_i$ and $\Delta^\tr_{p_n} \wh c^{n}_{i+ p_n}$, which helps mitigate the impact of potential microstructure noise on \eqref{eq:V} in the case where $\ell=1$. The sequence $(w_n)_{n\in\mathbb{N}}$, positive and convergent to zero, serves as truncation levels to remove volatility jumps from $\Delta_{p_n} \wh c^{n}_i$. %, which is mainly needed in \eqref{eq:V} for $\ell=0$. 
+In our empirical application below, we have $k_n\Delta_n = 4\,\mathrm{min}$ and $p_n\Delta_n = 5\,\mathrm{min}$, for example. %While $\wh {V}^{n,\ell, k_n, p_n}_t$ is a feasible statistic, 
+%\[ 		V^{n,\ell,k_n,p_n}_t=(k_n\Delta_n)^{1-2H}\wh {V}^{n,\ell, k_n, p_n}_t . \]
+
+
+
+
+
+
+ 
+\subsection{Volatility Dynamics}
+
+We impose the following structural assumption on $c=\si^2$:
+\begin{equation} 
+	\label{eq:si2} 
+	\begin{split}
+			c_t &=  c_0+\int_0^t a_s \, ds+\int_0^t  h(t-s) \theta_s \, ds + \int_0^t g(t-s) (\eta_s \,dW_s +   \ov\eta_s \,d\ov W_s)
+			\\
+		&\quad + \int_0^t \int_E \jump^{l}(s,z)\,\pi(ds, dz)+ \int_0^t \int_E \jump^{s}(s,z) \, (\pi(ds, dz)-ds\la(dz)).
+	\end{split}
+\end{equation}
+Here, $a$ is the drift of volatility, $\jump^l$ and $\jump^s$ are the large and small jump part of $\si^2$, respectively, $\ov W$ is a standard Brownian motion independent of $W$ and $\eta$ and $\ov\eta$ are volatility-of-volatility processes. The process $t\mapsto\int_0^t   h(t-s) \theta_s \, ds$ is a nondifferentiable drift component in volatility, which is present, for example, in the rough Heston model (\cite{ER19}). The kernels $g$ and $h$ are assumed to be of the form
+\begin{equation}\label{eq:g} 
+	g(t) = K_e^{-1}t^e_+ + g_0(t),\quad h(t) = 	K_{e'}^{-1}t^{e'}_+ + h_0(t),
+\end{equation}
+where $K_e = \Ga(1+e)/\sqrt{\cos(\pi e)\Ga(2+2e)}$, $t^e_+ = t^e\bone_{t>0}$, $g_0$ and $h_0$ are  continuously differentiable functions vanishing at zero and $e,  e'\in(-\frac12,\frac12)$. 
+
+The continuous part of $c_t$, which we denote by $c_t^{c}$, is a continuous-time moving average process driven by Brownian motion. Fractional processes   have such a form, and so do It\^o semimartingales (take $g\equiv 1$). By the Wold representation theorem (see e.g., Theorem 2' in Section 4 of \cite{H70}), stationary processes also have them as their main building block. In our case, however, $c^c$ may not be stationary because of $\eta$ and $\ov \eta$.
+
+Because $g(t) \asymp t^e$ as $t\downarrow 0$, the smoothness parameter of the continuous part of $c$ is $e$. The constant $K_e$ is a normalizing factor chosen such that $\E[(c_{t+\Delta_n}^{c}-c_t^{c})^2] \sim \Den^{2e+1}$ if $\eta\equiv \ov\eta\equiv1$. The behavior of $g$ as $t\to\infty$ depends on $g_0$ and is not further specified. In particular, if $c^{c}$ is stationary, the smoothness parameter $e$ has no implications for the memory properties of $c^{c}$ as these depend on the decay of the autocovariance function at infinity, which in turn is governed by the behavior of $g$ at infinity. Thus, the setting in \eqref{eq:si2} and \eqref{eq:g} allows for inference on the smoothness parameter $e$ without making any assumptions on or drawing any conclusions about the memory parameter $d$.
+
+ 
+
+
+
+\subsection{Central Limit Theorem for Realized Autocovariances}
+
+
+
+The main result of this section is a CLT that determines the joint asymptotic distribution of $\wh {V}^{n,\ell}_t$, $\ell=2,\dots, L$ for some $L\geq2$, together with $\wh {V}^{n,0}_t+2\wh {V}^{n,1}_t$. We consider this particular linear combination of realized autocovariance at lags 0 and 1  because sampling errors in $\wh c^{n}_i$ lead to bias terms that dominate both $\wh {V}^{n,0}_t$ and $\wh {V}^{n,1}_t$ but cancel out up to an asymptotically negligible contribution when linearly combined in the above fashion. This in turn is because the  sampling errors in $\wh c^{n}_i$ and   $\wh c^{n}_{i+p_n}$ are  uncorrelated in the limit, which implies that errors in \eqref{eq:delta-c} are of   MA(1) type. %the essence of why $\wh {V}^{n,0, k_n, p_n}_t+2\wh {V}^{n,1, k_n, p_n}_t$ has no asymptotic bias is the observation that $\E[(\eps_i - \eps_{i-1})^2 - 2(\eps_i-\eps_{i-1})(\eps_{i-1}-\eps_{i-2})] = 0$ for IID variables with zero mean and finite variance.
+
+The probability limits of \eqref{eq:V} under suitable normalization are given by 
+\begin{equation}\label{eq:V-limit} 
+		V^{\ell}_t=\Phi_{\kappa,e}(\ell)\int_0^t (\eta_s^2+\ov\eta_s^2)\, ds,
+\end{equation}
+if $p_n/k_n = \kappa\in[1,\infty)$. The constants $\Phi_{\kappa,e}(\ell)$ are given in \eqref{eq:def:phi} in the Appendix. In the following result, $\stackrel{\calL-s}{\Longrightarrow}$ denotes functional stable convergence in law with respect to the local uniform topology and $(
+\wb\Omega, \wb\calF,(\wb{\mathcal{F}}_t)_{t\geq0},\wb\PX
+)$  is a very good filtered extension of the original probability space (see e.g., Chapter 2 of \cite{JP}).
+
+\begin{theorem}
+	\label{thm:CLTV-0}
+	Suppose that $k_n \sim \theta \Delta_n^{-1/2} \log(\Delta_n^{-1})$ and $p_n/k_n= \kappa$ for some $\theta>0$ and   $\kappa \in[1,\infty)$. For some fixed $m\geq1$ and  $\ell=1,\dots,m$, let $V^{n,\ell}_t = (p_n\Den)^{-2e} \wh V^{n,\ell}_t$ and 
+	\begin{equation*}
+		\calZ^{n,\ell}_t =  
+		\begin{cases}
+			(p_n\Delta_n)^{-1/2}(  V^{n,\ell}_t - V^{\ell}_t)
+			&
+			\text{if } \ell \geq 2,
+			\\
+			(p_n\Delta_n)^{-1/2}(  V^{n,0}_t + 2	 V^{n,1}_t - V^{0}_t - 2 V^{1}_t)
+			&
+			\text{if } \ell= 1.
+		\end{cases}
+	\end{equation*}
+	Under Assumption~\ref{ass:CLT}, %and \ref{ass:chi} hold and 
+	  the process $\calZ^n_t=(\calZ^{n,1}_t,\dots,\calZ^{n,m}_t)^T$ satisfies the joint CLT
+	\begin{equation}\label{eq:CLT} 
+		\calZ^n \stackrel{\calL-s}{\Longrightarrow} \calZ,
+	\end{equation}
+	where $\calZ=((\calZ^1_t,\dots, \calZ^m_t)^T)_{t\geq0}$ is an $m$-dimensional process defined on $(
+	\wb\Omega, \wb\calF,(\wb{\mathcal{F}}_t)_{t\geq0},\wb\PX
+	)$  which is   $\calF$-conditionally Gaussian with independent increments, mean zero and  covariance function
+	\begin{equation}\label{eq:cov} 
+		\calC_t^{\ell\ell'}
+		=	\wb\E[\calZ^{\ell}_t\calZ^{\ell'}_t\mid \calF] = \calR_{\kappa,e}(\ell,\ell')\int_0^t (\eta_s^2+\ov \eta^2_s)^2 ds.
+	\end{equation}
+	The constants $\calR_{\kappa,e}(\ell,\ell')$ are defined in \eqref{eq:R} of the Appendix.
+\end{theorem}
+
+
+%\begin{rem}
+%	This CLT is very similar to the CLT obtained in Theorem 2.2 in \cite{chong2022CLT}. The main novelty is that we allow for the presence of price jumps, volatility jumps and we also include micro-structure noise. The main difference between Theorem 2.2 in \cite{chong2022CLT} and Theorem \ref{thm:CLTV} here lies in the choice of the window $k_n$. Here, we restrict ourself to the choice $k_n \sim \theta \Delta_n^{-1/2} \log(\Delta_n^{-1})$ while in \cite{chong2022CLT}, the more general case $k_n \sim \theta \Delta_n^{-\kappa}$ is considered, with $2H/(2H+1) \leq \kappa \leq 1/2$. Indeed, allowing for $\kappa < 1/2$ helps obtaining a better rate of convergence for estimating $H$. However, these better rates are not really achievable in practice and require an iterative procedure which is not stable. Moreover, the arguments here become much more intricate when $\kappa < 1/2$ because of the presence of jumps in the price and the volatility processes. Fixing $\kappa = 1/2$ reduces the complexity of the proof and removes some of the contributing terms within the limiting variance. Similarly, the logarithm term is added to remove some of the remaining variance contributions. Note however, that this does not impact the realisation of the confidence intervals in Section \ref{sec:estimation} because the asymptotic variance is estimated using a classical procedure robust to model misspecification.
+%\end{rem}
+
+
+%\begin{rem}
+%	The asymptotic variance obtained in Equation \eqref{eq:def:gammaasymptoticvar} differs slightly from Equation 2.17 in \cite{chong2022CLT} which contains an additional factor $(\theta_i\theta_j)^{1/2}$. This is due to the fact that the vector $\calZ$ is defined using the scaling $(k_n^{(j)}\Delta_n)^{-1/2}$ while \cite{chong2022CLT} uses the scaling $\Delta_n^{-1/4}$. Our choice is motivated only by the presence of the additional log-term in the definition of $k^{(j)}$.
+%\end{rem}
+
+
+%\begin{rem}
+%	Theorem \ref{thm:CLTV} is also linked to Theorem 1 \cite{li2022volatility} where a volatility of volatility estimator is studied in the semimartingale case in the presence of jumps and microstructure noise and a CLT is obtained. This leads to a test statistic to test the null hypothesis H0: "The volatility of volatility is null". This test statistic is also studied in the rough case in Theorem 4 in \cite{li2022volatility}, although no CLT is obtained in that case. Here, we adopt in essence the same setup, although we do prove a CLT in the rough case as well.
+%\end{rem}
+ 
+
+
+\subsection{Robustness to Microstructure Noise}\label{sec:noise}
+
+When prices are sampled at high frequency, we may not be able to observe the efficient returns $\Delta^n_i x$ directly and instead only observe
+\begin{equation}\label{eq:y} 
+	\Delta^n_i y=\Delta^n_i x+\varepsilon^n_i,\quad i=1,\ldots,\lfloor T/\Delta_n\rfloor,
+\end{equation}
+where $\varepsilon^n_i$ are error variables due to market microstructure noise. It has long been recognized that
+observation errors in high-frequency asset prices can lead to  biases in the spot variance estimates  \eqref{eq:c-hat}, which has prompted a large literature  on noise-robust estimation of volatility.\footnote{See e.g., \cite{BR06}, \cite{barndorff2008designing}, \cite{jacod2009microstructure}, \cite{zhang2005tale}, \cite{jacod2017statistical}, \cite{da2021moving} and \cite{li2022remedi}.} As \cite{BR08} illustrate, there is an implicit bias--variance trade-off in any inferential procedure aimed at recovering volatility from noisy price observations. For example, in order to restore consistency under standard conditions, the most efficient estimators of integrated volatility in the presence of microstructure noise attain a rate of convergence of $\Den^{-1/4}$, compared to $\Den^{-1/2}$ in the noise-free case. For coefficients or parameters of volatility (e.g., volatility of volatility, the leverage effect or, as in our case, the smoothness parameter of volatility), the efficient rate drops from $\Den^{-1/4}$ to  $\Den^{-1/8}$ if one use classical noise-robust estimators.
+
+
+In this section, we identify conditions under which the realized autocovariance statistics \eqref{eq:V} are \emph{naturally} robust to microstructure noise and Theorem~\ref{thm:CLTV-0} continues to hold without any preprocessing (such as pre-averaging) of the noisy returns. This will allow us to construct a feasible estimator of the smoothness parameter of volatility with a rate of convergence of $\Den^{-1/4}/\log \Den^{-1}$ in Section~\ref{sec:estimation}.
+
+We assume that
+\begin{equation}
+	\label{eq:noise}
+	\varepsilon_i^n = \Big( \int_{(i-1)\Delta_n}^{i\Delta_n} \rho_{s}^2 \, ds\Big)^{1/2}  \chi_i,
+\end{equation}
+where $(\chi_i)_i$ a discrete stationary time series  and $\rho$ is an $\F$-adapted noise intensity process with the same smoothness parameter as volatility. This  specification implies that the noise variables and the efficient returns have the same magnitude and both contribute to the asymptotic limit of \eqref{eq:V}. This is a simplifying assumption and can be relaxed to allow for difference asymptotic signal-to-noise ratios   (see  Remark~\ref{rem:noise-1} below).
+
+As   volatility and noise intensity have the same smoothness, there is no need to separate   the two, given that we are only interested in estimating their (common) smoothness parameter. Therefore, while forming \eqref{eq:c-hat} without any denoising procedure   leads to biases in the spot variance estimators in \eqref{eq:c-hat},  the estimators of the smoothness parameter we propose below remain asymptotically unbiased. This is because in the presence of noise, the estimators in \eqref{eq:c-hat} estimate the sum of spot price variance and spot noise variance. If both have the same degree of smoothness, 
+%\footnote{\cite{AX19} and \cite{LY26} provide empirical evidence that the intensity of microstructure noise has substantially decreased in recent years. Furthermore, noise volatility will have the same smoothness as price volatility if the former is a function of the latter. This assumption is supported by empirical evidence documenting a significant relationship between noise volatility and trading volume on the one hand (\cite{AY09})  and trading volume and price volatility on the other hand (\cite{BLX18}).} 
+these biases will \emph{not} affect our estimates of the smoothness parameter $e$. As we explain in Remark~\ref{rem:noise-2} below, this continues to hold if the noise intensity is smoother than volatility or if the noise is weak.
+
+How realistic is the assumption that volatility and noise intensity have the same smoothness parameter? It is satisfied if, for example, the noise intensity is a function of volatility. This, in turn, is supported by empirical evidence of a strong relationship between noise intensity and volatility (\cite{AY09}). We also refer to \cite{BLX18}, who document a strong relationship between volatility and trading volume, and to \cite{LXZ16}, who show that a large part of microstructure noise is accounted for by trading information such as volume.
+
+\begin{theorem}
+	\label{thm:CLTV} If the spot variance estimators in \eqref{eq:c-hat} are constructed using $\Delta^n_j y$ instead of $\Delta^n_j x$, then
+	Theorem~\ref{thm:CLTV-0} continues to hold
+	under Assumption  \ref{ass:chi}.
+\end{theorem}
+
+%\subsection{A Central Limit Theorem and Feasible Inference}\label{sec:CLT-2}
+
+\begin{rem}\label{rem:noise-1}
+	The previous theorem extends to the case where
+	\begin{equation}
+		\label{eq:noise-2}
+		\varepsilon_i^n = \Den^{\al-1/2}\Big( \int_{(i-1)\Delta_n}^{i\Delta_n} \rho_{s}^2 \, ds\Big)^{1/2}  \chi_i
+	\end{equation}
+for some $\al\geq0$. If $\al\in[0,\frac12)$ ($\al\in(\frac12,\infty)$), we have \eqref{eq:V-limit} and \eqref{eq:cov} where $\eta$ and $\ov \eta$ are the coefficients in \eqref{eq:si2} of $c=\rho^2$ ($c=\si^2$). In the case $\al=\frac12$ we consider here, both $\rho^2$ and $\si^2$ contribute to the limit as $c=\si^2+\rho^2$ in this case.
+\end{rem}
+
+\begin{rem}\label{rem:noise-2}
+	Theorem~\ref{thm:CLTV} also extends to the case where the noise intensity has smoothness parameter $e'\in(-\frac12,0)$ with $e'\neq e$, where $e$ is the smoothness parameter of volatility in \eqref{eq:si2}. If the noise takes the form \eqref{eq:noise-2}, then Theorem~\ref{thm:CLTV} continues to hold with $\eta$ and $\ov\eta$ being the coefficients of $c=\si^2$ ($c=\rho^2$) if $\al>\frac12+\frac{e-e'}{4}$ ($\al<\frac12+\frac{e-e'}{4}$). At the boundary $\al=\frac12+\frac{e-e'}{4}$, both components contribute to the limit. In particular, in the baseline case $\al=\frac12$, the LLN in \eqref{eq:V-limit} still holds for $e\neq e'$, but the normalization rate in Theorem~\ref{thm:CLTV-0} is driven by $(p_n\Delta_n)^{-2(e\wedge e')}$, that is, by the rougher component. Therefore, microstructure noise does not affect estimation of $e$ unless the noise is both sufficiently strong and rougher than volatility. Given the aforementioned relationship between noise intensity and volatility and empirical evidence that the magnitude of microstructure noise has decreased substantially in recent years (see e.g., \cite{AX19} and \cite{LY26}), this is not a major concern in practice.
+\end{rem}
+
+
+\subsection{Robustness to Infinite-Variation Jumps}
+
+
+\section{Inference About the Smoothness Parameter of Volatility}
+\label{sec:estimation}
+
+In this Section, we use a GMM approach to build an estimator of $\Theta^0_t = (e, R_t)^T$ where $R_t = \int_0^t (\eta_s^2+\ov \eta_s^2)\,ds$. The idea is to choose $m$   lags $\ell=1, \dots, m$
+%, each satisfying 
+%$
+%k_n^{(i)} \sim \theta_i \Delta_n^{-1/2} \log(\Delta_n^{-1})
+%$
+%for some $\theta_i>0$. For conciseness, we introduce $\kappa_n = \lceil \Delta_n^{-1/2} \log(\Delta_n^{-1}) \rceil$ so that $k_n^{(i)} \sim \theta_i\kappa_n$ for each $ 1 \leq i \leq m$. 
+%We then define
+%\begin{equation*}
+%    \wh {V}^{n,\ell, k_n}_t 
+%    = (k_n\Delta_n)^{2H-1} V^{n,\ell, k_n}_t
+%    =
+%    \frac{1}{k_n}
+%	\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell + 2) k_n}
+%	\nu_i^{n,\ell,k_n}
+%\end{equation*}
+%where $\nu_i^{n,\ell,k_n}$ is defined in \eqref{eq:def:nu}. Note that unlike $V^{n,\ell, k_n}_t$, the variable $\wh {V}^{n,\ell, k_n}_t$ is a statistic in the sense that it can be computed from observed data. From its definition in Theorem \ref{thm:CLTV}, $\calZ^{n,j}_t$ can be rewritten as
+%\begin{equation}
+%\label{eq:new_expr:calZ}
+%	\calZ^{n,j}_t =  
+%	\begin{cases}
+%	 (k_n^{(j)}\Delta_n)^{1/2-2H}( \wh V^{n,\ell_j, k_n^{(j)}}_t - (k_n^{(j)}\Delta_n)^{2H-1} V^{\ell_j}_t)
+%	 &\text{if } \ell_j \geq 2,
+%	 \\
+%	 (k_n^{(j)}\Delta_n)^{1/2-2H}( \wh V^{n,0 , k_n^{(j)}}_t + 2 \wh V^{n,1, k_n^{(j)}}_t - (k_n^{(j)}\Delta_n)^{2H-1} (V^{0}_t + 2 V^{1}_t))
+%	 &\text{if } \ell_j = 1.
+%	\end{cases}
+%\end{equation}
+and a symmetric positive definite (possibly random) weight matrix $\calW_n \in \bbR^{m\times m}$ in order to obtain an estimator of $\Theta^0_t$ by minimizing the weighted distance between the realized autocovariances of volatility increments and their large-sample limit from Theorem~\ref{thm:CLTV-0} under a generic parameter vector $\Theta = (E,R)^T$:
+\begin{equation*}
+    \wh\Theta^n_t=(\wh e_n, \wh R_n)^T
+    =
+    \argmin_{(E, R)}
+   F^n_t(E,R) \quad \text{where}\quad  F^n_t(E,R) 
+    = \|
+    \calW^{1/2}_n (
+    \wt V^{n}_t 
+    - 
+    \wt\Phi^n_{\kappa, E} R
+    )
+    \|^2,
+\end{equation*}
+ $\wt V^{n}_t = (\wh V^{n, 0}_t
++
+2
+\wh V^{n, 1}_t, \wh V^{n, 2}_t,\dots, \wh V^{n, m}_t)^T$ and $\wt\Phi^n_{\kappa, E} =(p_n\Delta_n)^{2E}  (\Phi_{\kappa,E}(0)+2\Phi_{\kappa,E}(1),\linebreak \Phi_{\kappa, E}(2),\ldots, \Phi_{\kappa, E}(m))^T$.
+%with
+%\begin{equation*}
+%\wt V^{n, \ell}_t = 
+%\begin{cases}
+%\wh V^{n, \ell}_t, 
+%\\
+%\wh V^{n, 0}_t
+%+
+%2
+%\wh V^{n, 1}_t,
+%\end{cases}\quad \Psi^n_j(E) = 
+%\begin{cases}
+%(p_n\Delta_n)^{2E-1} \Phi_{\ell}(E)
+%&\quad\text{if } \ell \geq 2,
+%\\
+%(p_n\Delta_n)^{2E-1} 
+%(\Phi_{0}(E)
+%+
+%2 \Phi_{1}(E)
+%)
+%&\quad\text{if } \ell = 1.
+%\end{cases}
+%\end{equation*}
+In practice,  we obtain $\wh\Theta^n_t$ by solving the first-order condition 
+\begin{equation} 
+	    \nabla F^n_t(E,R) = 0.
+\end{equation}
+%where 
+%\begin{align*}
+%    F^n_t(E,R) 
+%    = \|
+%    \calW^{1/2}_n (
+%        \wt V^{n,\ell}_t 
+%        - 
+%        \wt\Phi^n(E) R
+%    )
+%    \|^2
+%    =
+%    (
+%        \wt V^{n}_t 
+%        - 
+%        \wt\Phi^n(E) R
+%    )^{T}
+%    \calW_n (
+%        \wt V^{n}_t 
+%        - 
+%        \wt\Phi^n(E) R
+%    ).
+%\end{align*}
+%Using the theory of estimating equations, see \cite{mies2023estimation}, we can derive the asymptotic properties of this estimator.
+
+\begin{theorem}
+    \label{thm:base_estimator} Let $t\in(0,T]$ and suppose that $\calW_n\limp \calW$, where $\calW\in\R^{m\times m}$ is a deterministic symmetric   positive definite matrix.
+%    Let $\wt \calZ = \theta^{2e+1/2}(  \calZ^1,\dots,  \calZ^m)^T$ 
+%    where
+%%$
+%%    	\wt \calZ^j = \theta_j^{2e+1/2} \calZ^j
+%%$
+%     $\calZ$ is defined in Theorem \ref{thm:CLTV-0}. 
+Under the assumptions of Theorem \ref{thm:CLTV}, there exists a sequence $\wh\Theta_t^n = (\wh e_n, \wh R^n_t)$ of estimators of $\Theta_t = (e, R_t)$ such that 
+    \begin{equation}
+    \label{eq:base_estimator:definition}
+        \PX \big(\nabla F^n_t(\wh e_n, \wh R^n_t) = 0 \big) \to 1
+    \end{equation}
+and
+    \begin{equation}
+    \label{eq:convfinalest}
+         D_n^{-1}(\wh\Theta_t^n - \Theta^0_t) \stackrel{\calL-s}{\longrightarrow} \big( G_t^T \calW G_t \big)^{-1} G_t^T \calW  \calZ_t,
+    \end{equation}
+where $\calZ$ is defined in Theorem \ref{thm:CLTV-0}, $G_t = ( \ov \Phi'_{\kappa,e} R_t, \ov\Phi_{\kappa,e}) \in \R^{m\times 2}$ with $
+\wb \Phi_{\kappa, e}(j) = 
+\Phi_{\kappa, e}(j)$ if $j \geq 2$, $\wb \Phi_{\kappa, e}(1)=\Phi_{\kappa, e}(0) + 2\Phi_{\kappa, e}(1)
+$ and $\ov \Phi'_{\kappa, e} = \partial_e \ov \Phi_{\kappa,e}$,
+and % the rate matrix $D_n$ is given by
+    \begin{equation}\label{eq:Dn}
+  D_n =
+(p_n\Delta_n)^{1/2}
+\begin{pmatrix}
+1 & \quad0
+\\
+-2\log(p_n\Delta_n)R_t &\quad 1
+\end{pmatrix}. 
+\end{equation} 
+\end{theorem}
+
+
+\begin{rem}
+Theorem~\ref{thm:base_estimator} implies that the rate of convergence of $\wh e_n$ is $(p_n\Delta_n)^{-1/2}$ while that of $\wh R^n_t$ is only $(\kappa_n\Delta_n)^{-1/2}/ \log(\kappa_n\Delta_n)^{-1}$. %This is consistent with previous studies, see \cite{gloter2007estimation, rosenbaum2008estimation, brouste2018lan, chong2022minimax, szymanski2024optimal}.
+\end{rem}
+
+To make the CLT  in Theorem \ref{thm:base_estimator} feasible, we construct a consistent estimator  of the asymptotic covariance matrix (cf.\   \cite{li2016generalized}). We fix $t\in(0,T]$ throughout this section and begin by defining  centered products of volatility increments,
+\begin{align*}
+	\psi^{n,\ell}_i = 
+	\begin{cases}
+		(\Delta^\tr_{p_n} \wh c^{n}_i)^2+ 2 \Delta^\tr_{p_n} \wh c^{n}_{i+ p_n} 	\Delta^\tr_{p_n} \wh c^{n}_i - m^{n,0}_i - 2 m^{n,1}_i & \text{ if } \ell = 1,
+		\\
+		 \Delta^\tr_{p_n} \wh c^{n}_{i+\ell p_n} 	\Delta^\tr_{p_n} \wh c^{n}_i- m_{i}^{n,\ell} & \text{ if } \ell \geq 2,
+	\end{cases}    
+\end{align*}
+where for a bandwidth parameter $K_n \geq 1$,
+\begin{align*}
+    m_{i}^{n,\ell}
+    =
+    \frac{1}{K_n}
+    \sum_{j=i}^{i+K_n-1}
+   \Delta^\tr_{p_n} \wh c^{n}_{j+\ell p_n} 	\Delta^\tr_{p_n} \wh c^{n}_j.
+\end{align*}
+%In Theorem \ref{thm:CLTV}, rather than considering $V^{n,\ell,k_n}_t$ directly for $\ell = 0, 1$, we analyze the sum $V^{n,0,k_n}_t + 2 V^{n,1,k_n}_t$. To account for this in the estimation of the asymptotic variance, we also consider $\nu_{i}^{n,0,k_n} + 2 \nu_{i}^{n,1,k_n}$. Accordingly, we define 
+We estimate their  cross-covariances at lag $L$ by $\wh\Sigma^{n,L}_t =  (\wh \Sigma^{n,L}_{\ell,\ell',t}  )_{1\leq \ell,\ell'\leq m}$, where
+\begin{equation}
+\label{eq:def:Sigma}
+\wh\Sigma^{n,L}_{\ell,\ell',t}  
+    =
+\Den
+	\sum
+	_{i=0}^{N^{n,L}_{\ell,\ell'}(t)}
+	\psi^{n,\ell}_i
+	\psi^{n,\ell'}_{i+L},
+\end{equation}
+and  $N^{n,L}_{\ell,\ell'}(t)=\lfloor t/\Delta_n \rfloor-K_n- [(\ell + 2) k_n \vee( (\ell' + 2) k_n + L)] - 1$. %and $\wh e_n$ is the GMM estimator from Theorem~\ref{thm:base_estimator}.
+%where the summation is over $i$ such that 
+%\begin{equation}
+%\label{eq:def:Sigma:bounds}
+%0 \leq i \leq \lfloor t/\Delta_n \rfloor - \max\big((\ell + 2) k_n + K_n, (\ell' + 2) k_n' + K_n' + L\big) - 1.
+%\end{equation}
+Finally, we define
+\begin{equation}
+\wh \Sigma^{n}_t =  
+\wh  \Sigma^{n,0}_t +  \sum_{L=1}^{L_n} W(L,L_n) (\wh  \Sigma^{n,L}_t + (\wh\Sigma^{n,L}_t)^{T}),
+\end{equation}
+where $W(\cdot,\cdot)$ is a deterministic weight function and $L_n \geq 1$ is the number of lags used in the asymptotic covariance estimation. 
+
+
+
+\begin{theorem}
+\label{thm:asymptotic_variance}
+Grant the assumptions of Theorem \ref{thm:base_estimator} 
+suppose in addition that $
+\varpi > \frac12(e+1)$, 
+$\wt \varpi > 
+e + \frac13$, $
+K_n \sim \vartheta \Delta_n^{-u'}$ and $L_n \sim  \vartheta' \Delta_n^{-u}$ for some $\vartheta,\vartheta'>0$ and $u,u'>\frac12$ satisfying
+ $\frac12 < u < \frac12(1-e)\wedge\frac32(\wt \varpi-e) \wedge (\frac14+\frac12u')\wedge (\frac12+(\frac 38\wedge(1-u'))(e^\eta\wedge e^{\ov\eta}+\frac12))%\frac{1}{8} (5+2 (e^\eta\wedge e^{\ov\eta}))
+$. 
+Further assume that
+ $W$ is uniformly bounded and satisfies $W(L,L_n) \to 1$ for every $L \geq 0$. Then $(p_n\Den)^{-2-4e}p_n^{-1}\wh\Sigma^{n}_t\limp\calC_t$.
+\end{theorem}
+The proof is presented in Appendix \ref{sec:gmm}. We obtain interval estimates for $e$ and $R_t$ as an immediate consequence.
+%Note that in practice, $\Sigma^{n}_t$ is not an estimator, because it depends on $H$. Nevertheless, we can define 
+%\begin{equation*}
+%    \wh \Sigma^{n,L, \ell, \ell', k_n, k_n', K_n, K_n'}_t
+%    =
+%    (k_nk_n'\Delta_n^2)^{2H-1/2}
+%    \Sigma^{n,L, \ell, \ell', k_n, k_n', K_n, K_n'}_t
+%\end{equation*}
+%which is an estimator, and then
+%\begin{equation*}
+%\wh \Sigma^{n}_t = 
+%\wh \Sigma^{n,0}_t + \sum_{L=1}^{L_n} W(L,L_n) ( \wh \Sigma^{n,L}_t + (\wh \Sigma^{n,L}_t)^{T})
+%\end{equation*}
+%with
+%\begin{equation*}
+%\wh \Sigma^{n,L}_t = \Big(\wh \Sigma^{n,L, \ell_i, \ell_j, k_n^{(i)}, k_n^{(j)}, K_n^{(i)}, K_n^{(j)}}_t \Big)_{1\leq i,j \leq r}.
+%\end{equation*}
+%A direct application of Theorem \ref{thm:asymptotic_variance} ensure that under the same assumptions, we have
+%\begin{equation*}
+%(\Delta_n \log(\Delta_n)^2 )^{1/2 - 2H}
+%\wh \Sigma^{n}_t \to \wt \calC_t
+%\end{equation*}
+%where $\wt \calC_t$ is the covariance matrix of the random vector $\wt Z_t$ defined in Theorem \ref{thm:base_estimator}, that is,
+%\begin{equation*}
+%\wt \calC_t^{jj'}
+% =	\wb\E[\wt \calZ^{j}_t\wt \calZ^{j'}_t\mid \calF]
+% =
+% \theta_j^{2H-1/2}
+% \theta_{j'}^{2H-1/2}
+% \calC_t^{jj'}.
+%\end{equation*}
+%Therefore, we can use this estimator to build an estimator of the asymptotic variance of $\wh \Theta^n_t$. To that extent, we introduce $\wh D_n$ defined by
+%\begin{equation*}
+%    \wh D_n =
+%        (\kappa_n\Delta_n)^{1/2}
+%        \begin{pmatrix}
+%            1 & 0
+%            \\
+%            -2\log(\kappa_n\Delta_n)\wh R_t^n & 1
+%        \end{pmatrix}
+%\end{equation*}
+%and $\wh \bfu_t^n = (\wh \alpha^n \wh R_t, \wh \beta^n)$ with $\wh \alpha^n = (\wh \alpha_j^n)_j$ and $\wh \beta^n = (\wh \beta_j^n)_j$ given by
+%\begin{equation*}
+%\wh \alpha_j^n =
+%\begin{cases}
+%\theta_j^{-1+2\wh H^n}
+%\big(
+%\Phi_{\ell_j}'(\wh H^n) + 2 \log(\theta_j) \Phi_{\ell_j}(\wh H^n)\big),
+%& \text{if } \ell_j \geq 2,
+%\\
+%\theta_j^{-1+2\wh H^n}
+%\big(
+%\Phi_{0}'(\wh H^n) + 2 \log(\theta_j) \Phi_{0}(\wh H^n)
+%+ 2 \Phi_{1}'(\wh H^n) + 4 \log(\theta_j) \Phi_{1}(\wh H^n)
+%\big)
+%&  \text{if } \ell_j = 1
+%\end{cases}
+%\end{equation*}
+%and
+%\begin{equation*}
+%\wh \beta_j^n =
+%\begin{cases}
+%\theta_j^{2\wh H^n-1}
+%\Phi_{\ell_j}(\wh H^n)
+%& \text{if } \ell_j \geq 2,
+%\\
+%\theta_j^{2\wh H^n-1}
+%(\Phi_{0}(\wh H^n) + 2 \Phi_{1}(\wh H^n))
+%&  \text{if } \ell_j = 1.
+%\end{cases}
+%\end{equation*}
+
+\begin{cor}
+Assume that the conditions of Theorem \ref{thm:asymptotic_variance} hold. Let $\wh D_n$ and $\wh G_t$ be the matrices obtained by replacing $R_t$ and $e_t$ in the definition of $D_n$ and $G_t$ in Theorem~\ref{thm:base_estimator}   by $\wh R^n_t$ and $\wh e_n$, respectively.  If $\mathbb{V}^e_n$ and $\mathbb{V}^R_n$ denote the diagonal entries of
+\begin{equation}
+\label{eq:asymptotic_matrix_estimate}
+(p_n\Den)^{-2-4\wh e_n}p_n^{-1}
+\wh D_n 
+(\wh G_t^T \calW_n \wh G_t)^{-1} 
+\wh G_t^T 
+\calW_n 
+\wh \Sigma^n_t
+\calW_n
+\wh G_t
+(\wh G_t^T \calW_n \wh G_t)^{-1} 
+\wh D_n^{T} \in\R^{2\times 2}, 
+\end{equation}
+then asymptotic $\gamma$-confidence intervals  for $e$ and $R_t$, where $0 < \gamma < 1$ , are given by
+\begin{equation*}
+[\wh e_n \pm \Phi^{-1}((1+\gamma)/2) (\mathbb{V}^e_n)^{1/2}]
+\qandq
+[\wh R^n_t \pm \Phi^{-1}((1+\gamma)/2) (\mathbb{V}^R_n)^{1/2}],
+\end{equation*}
+respectively, where $\Phi^{-1}$ is the quantile function of the standard normal distribution.
+\end{cor}
+
+
+%\begin{rem}[Optimal GMM]
+%If we choose $\calW_n = \wh \Sigma_n^{-1}$, then \eqref{eq:asymptotic_matrix_estimate} simplifies to 
+%\begin{equation*}
+%(\Delta_n \log(n)^2 )^{1/2-2\wh H^n} 
+%\wh D_n 
+%(\bfu_t^T \wh \Sigma_n^{-1}
+% \bfu_t)^{-1} 
+%\wh D_n^{T}
+%\end{equation*}
+%and we can check that in that case
+%\begin{equation*}
+%\mathbb{V}^H_n 
+%= 
+%k_n\Delta_n
+%(\Delta_n \log(n)^2 )^{1/2-2\wh H^n} 
+%\frac{\beta^T \calW \beta}{\big((\alpha^T \calW \alpha)(\beta^T \calW \beta)
+%-
+%(\alpha^T \calW \beta)^2\big) R_t^2}
+%\end{equation*}
+%\end{rem}
+%
+%
+%
+%
+
+
+
+\section{Monte Carlo Study}
+\label{sec:numerical}
+
+
+
+This section studies the finite-sample behavior of the GMM estimator from Section~\ref{sec:estimation}. For each Monte Carlo replication, we estimate $\Theta_t^0=(e,R_t)^T$ and report the implied Hurst index $\wh H=\wh e+\frac12$. The latent price process is generated on a fine Euler grid with step $\delta_E=0.5$ seconds and then sampled every $5$ seconds, yielding $4{,}680$ returns per trading day. Because rough volatility dynamics are non-Markovian, each day is simulated independently and we initialize variance at its unconditional level.
+
+\textbf{Volatility model. } The variance process is Heston when $H=\frac12$ (\cite{heston1993closed})
+\begin{equation*}
+    \sigma_t^2 = \sigma^2_0 + \int_0^t \kappa(\theta-\sigma^2_s) \, ds + \int_0^t \nu \sigma_s \, d\wh B_s, \quad t\geq 0,
+\end{equation*}
+or a rough Heston dynamic when $H < 1/2$ (\cite{ER19}), that is
+\begin{equation*}
+    \sigma_t^2 = \sigma^2_0 + \frac{1}{\Gamma(H+1/2)}\Big( \int_0^t (t-s)^{H-1/2} \kappa(\theta-\sigma^2_s) \, ds + \int_0^t  (t-s)^{H-1/2} \nu \sigma_s \, d\wh B_s\Big), \quad t\geq 0.
+\end{equation*}
+The Brownian motion $\wh B$ is correlated with the price Brownian motion $W$ in \eqref{eqn.s} with correlation $\rho$. We consider $H\in\{0.1,0.2,0.3,0.4,0.5\}$, i.e., $e=H-\frac12\in\{-0.4,-0.3,-0.2,-0.1,0\}$. The calibration in Table~\ref{tab:heston} keeps the unconditional variance level fixed across designs.
+
+    \begin{table}[htbp]
+        \begin{tabular}{cccccc}
+        \hline 
+        $\sigma_0^2$ & $H$ & $\theta$ & $\kappa$ & $\nu$ & $\rho$\\
+        \hline 
+        $0.02$ & $0.1$ & $0.02$ & $8$ & $0.14$ & $-0.7$ \\
+        $0.02$ & $0.2$ & $0.02$ & $8$ & $0.23$ & $-0.7$ \\
+        $0.02$ & $0.3$ & $0.02$ & $8$ & $0.31$ & $-0.7$ \\
+        $0.02$ & $0.4$ & $0.02$ & $8$ & $0.39$ & $-0.7$ \\
+        $0.02$ & $0.5$ & $0.02$ & $8$ & $0.45$ & $-0.7$ \\
+        \hline
+        \end{tabular}
+        \caption{Parameter choice for the Heston and rough Heston models.}
+        \label{tab:heston}
+    \end{table}%
+
+
+
+\textbf{Price model.} We simulate \eqref{eqn.s} with $b=0$ and $x_0=100$. To incorporate infinite-variation price jumps, we add
+\begin{equation*}
+    x^{j}_t = \int_0^t z \, \wt \pi^{\alpha}(ds, dz),\qquad \wt \pi^\alpha(ds,dz)=\pi^\alpha(ds,dz)-ds\,\nu_s^\alpha(dz),
+\end{equation*}
+with compensator
+\begin{equation*}
+    \nu^{\alpha}_s(dz) = c_\alpha \sigma_s^2 \frac{e^{-\lambda_\alpha|z|}}{|z|^{\alpha+1}} \, dz.
+\end{equation*}
+We fix $\alpha=0.5$ and use the remaining jump parameters reported in Table~\ref{tab:jumps}.
+
+\begin{table}[htbp]
+        \begin{tabular}{ccc}
+        \hline
+        $\alpha$ & $\lambda$ & $c$\\
+        \hline 
+        $0.5$ & $500$ & $1262$ \\
+%        $1.5$ & $500$ & $1.26$ \\
+        \hline
+        \end{tabular}
+        \caption{Parameter choice for the price jump processes.}
+        \label{tab:jumps}
+\end{table}
+
+
+
+
+\textbf{Microstructure noise. } In line with \eqref{eq:y}--\eqref{eq:noise}, observed returns include additive noise:
+\begin{equation*}
+    \varepsilon_i^n = \sigma_{noise} \Big(\int_{i\Delta_n}^{(i+1)\Delta_n}\sigma_{i\Delta_n}^2 \, ds\Big)^{1/2} \zeta_i,
+\end{equation*}
+where $(\zeta_i)_i$ is i.i.d.\ standard Gaussian. We set $\sigma_{\text{noise}}^2 = (1.0548 - 1)^{1/2}$. The value $1.0548$ matches the median empirical ratio of daily realized volatility computed from five-second versus five-minute returns in our SPY sample. \\
+
+\textbf{Monte Carlo implementation. } We run $125$ replications. Each replication uses $1004$ simulated trading days (about four years), and we compute one GMM estimate from the full panel of days. To isolate sampling variability from tuning effects, we use the same implementation choices as in Section~\ref{sec:data}: $k_n=96$, $p_n=120$, lags $\ell=1,\ldots,6$, $\calW_n=I$, and for feasible variance estimation $K_n=720$, $L_n=180$, with Parzen weights $W(L,L_n)$ (\cite{li2016generalized}). Price-jump truncation in \eqref{eq:c-hat} is set to three times daily volatility estimated from ten-minute returns, and volatility-jump truncation in \eqref{eq:delta-c} is set to three empirical standard deviations of daily volatility increments.
+
+Table~\ref{tab:mc} reports the empirical distribution of $\wh H$ across replications. For $H\in\{0.1,0.2,0.3\}$, the estimator is nearly unbiased with moderate dispersion. At $H=0.4$, dispersion increases but the center remains close to the true value. At the boundary case $H=0.5$ ($e=0$), dispersion rises substantially and the estimator becomes downward biased, which is consistent with our theory being developed for $e<0$. Overall, the simulation confirms good finite-sample behavior of the procedure in the rough-volatility region.
+
+
+\begin{table}[htbp]
+\begin{tabular}{cccccccccc}
+\toprule
+\textbf{H Value} & \textbf{Mean} & \textbf{Median} & \textbf{Std Dev} & \textbf{Min} & \textbf{5th Pctl} & \textbf{Q1} & \textbf{Q3} & \textbf{95th Pctl} & \textbf{Max} \\
+\midrule
+0.1000 & 0.0956 & 0.0960 & 0.0210 & 0.0271 & 0.0597 & 0.0855 & 0.1110 & 0.1266 & 0.1416 \\
+0.2000 & 0.1948 & 0.1958 & 0.0190 & 0.1568 & 0.1655 & 0.1798 & 0.2069 & 0.2273 & 0.2549 \\
+0.3000 & 0.2954 & 0.2949 & 0.0187 & 0.2406 & 0.2679 & 0.2827 & 0.3079 & 0.3274 & 0.3397 \\
+0.4000 & 0.3912 & 0.3947 & 0.0372 & 0.2649  & 0.3307 & 0.3714 & 0.4139 & 0.4527 & 0.4795 \\
+0.5000 & 0.4603 & 0.4713 & 0.0865 & 0.1435 & 0.3201 & 0.4027 & 0.5185 & 0.5807 & 0.6512 \\
+\bottomrule
+\end{tabular}
+        \caption{Monte Carlo Results}
+        \label{tab:mc}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Empirical Application}
+\label{sec:data}
+
+
+In this section, we implement the GMM estimator of Section~\ref{sec:estimation} on SPY transaction data from January~2013 to December~2022. We start from one-second transaction prices and construct five-second returns. This frequency is high enough to capture intraday volatility dynamics while keeping the finite-sample impact of market microstructure manageable.
+
+To avoid contamination from atypical market closures and scheduled macro announcements, we remove trading days with halts longer than five minutes, half-trading days, and FOMC announcement days. The resulting sample is used for all estimates reported below.
+
+Our empirical implementation follows the model and inference framework of Sections~\ref{sec:CLT} and \ref{sec:estimation} (\cite{ait2014high,JP,chong2022CLT}):
+\begin{enumerate}
+\item We compute truncated spot variance estimates $\wh c_i^n$ as in \eqref{eq:c-hat} from five-second returns, with a price-jump truncation threshold equal to three times daily volatility estimated from ten-minute returns.
+\item We remove intraday seasonality by first normalizing each daily volatility path by the corresponding daily realized variance, estimating the common diurnal pattern by cross-day averaging, and then dividing each day by this estimated pattern.
+\item We build volatility increments and realized autocovariances using \eqref{eq:delta-c} and \eqref{eq:V} with
+\[
+k_n=96,\qquad p_n=120,
+\]
+that is, eight-minute local windows and ten-minute increment spacing.
+\item We estimate $(e,R_t)$ by GMM with lags $\ell=1,\dots,6$ and identity weight matrix $\calW_n=I$.
+\item For the feasible asymptotic covariance matrix in \eqref{eq:asymptotic_matrix_estimate}, we set $K_n=720$, $L_n=180$, and use Parzen weights $W(L,L_n)$ (\cite{li2016generalized}). Volatility-jump truncation in \eqref{eq:delta-c} uses a threshold equal to three empirical standard deviations of daily volatility increments.
+\end{enumerate}
+
+On the full 2013--2022 sample, the estimated Hurst index is
+\[
+\wh H = 0.2958 \pm 0.0207
+\]
+(95\% asymptotic confidence interval). Equivalently, using $H=e+\frac12$, we obtain $\wh e=-0.2042 \pm 0.0207$. By \eqref{eq:acf} with $\alpha=2H$, the implied lag-one limiting autocorrelation of volatility increments is $\rho(1)=2^{2H-1}-1$, yielding
+\[
+\wh\rho(1)=-0.2465
+\]
+with 95\% interval $[-0.2679,-0.2246]$. Hence, intraday volatility increments are significantly negatively correlated, in line with rough volatility dynamics.
+
+Table~\ref{tab:hurst_exponent} reports yearly estimates. The point estimates remain below $0.5$ in every year, with noticeable variation across market regimes (for example, lower values in 2015 and 2020, and higher values in 2017 and 2022). Table~\ref{tab:hurst_rolling} reports rolling three-year estimates. These are smoother, lying between $0.2429$ and $0.3283$, and all confidence intervals remain strictly below $0.5$. Overall, the evidence points to persistent roughness of intraday volatility over the full sample.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\textbf{Year} & \textbf{Hurst Exponent ($\wh H$)} & \textbf{95\% CI Half-Width} \\
+\midrule
+2013 & 0.2510 & 0.0984 \\
+2014 & 0.3021 & 0.0703 \\
+2015 & 0.1596 & 0.0875 \\
+2016 & 0.3223 & 0.0716 \\
+2017 & 0.3560 & 0.0694 \\
+2018 & 0.3181 & 0.0547 \\
+2019 & 0.3131 & 0.0605 \\
+2020 & 0.2115 & 0.0651 \\
+2021 & 0.2848 & 0.0594 \\
+2022 & 0.3757 & 0.0519 \\
+\bottomrule
+\end{tabular}
+\caption{Yearly Hurst exponent estimates with asymptotic 95\% confidence half-widths (2013--2022).}
+\label{tab:hurst_exponent}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\textbf{Span} & \textbf{Hurst Exponent ($\wh H$)} & \textbf{95\% CI Half-Width} \\
+\midrule
+2013--2015 & 0.2429 & 0.0481 \\
+2014--2016 & 0.2711 & 0.0429 \\
+2015--2017 & 0.3010 & 0.0418 \\
+2016--2018 & 0.3283 & 0.0372 \\
+2017--2019 & 0.3247 & 0.0352 \\
+2018--2020 & 0.2834 & 0.0343 \\
+2019--2021 & 0.2738 & 0.0349 \\
+2020--2022 & 0.2849 & 0.0343 \\
+\bottomrule
+\end{tabular}
+\caption{Rolling three-year Hurst exponent estimates with asymptotic 95\% confidence half-widths.}
+\label{tab:hurst_rolling}
+\end{table}
+
+
+
+
+
+\section{Prediction of Realized Volatility}
+\label{sec:prediction}
+
+
+
+We now study out-of-sample prediction of short-horizon realized volatility. In contrast to the inference problem in Sections~\ref{sec:CLT} and \ref{sec:estimation}, the objective here is predictive accuracy rather than identification of the smoothness parameter. We nevertheless keep exactly the same volatility measurement framework as above. In particular, we use the spot-variance estimator $\wh c_i^n$ in \eqref{eq:c-hat} with the same price-jump truncation and volatility-jump truncation rules as in Section~\ref{sec:data}. 
+
+We set $p_n=k_n$ in \eqref{eq:delta-c} and \eqref{eq:V}. Thus, the increment horizon and the forecast horizon both equal $k_n\Delta_n$. The prediction target and the predictors are truncated increments
+\[
+X_i=\Delta_{k_n}^{\tr}\wh c_i^n.
+\]
+Using truncated regressors stabilizes estimation in the presence of occasional volatility jumps, whereas predicting the untruncated target keeps the evaluation metric tied to the original realized-volatility dynamics.
+
+For each lag order $L\geq1$, we estimate the linear predictor
+\[
+X_i=\beta_0+\sum_{\ell=1}^{L}\beta_{\ell}X_{i-\ell}+u_i,
+\]
+so the number of slope parameters is exactly $L$. This specification is a short-horizon analogue of autoregressive forecasting of realized volatility (\cite{ABDL03,Corsi09}), adapted to volatility increments.
+
+Our implementation is as follows. We use the same SPY sample as in Section~\ref{sec:data}, fix $k_n=180$ (15-minute windows with 5-second returns), estimate the model on a rolling window of one year (252 trading days), and produce one-day-ahead forecasts on the next day. We repeat this procedure over the full sample and aggregate forecasting losses across all out-of-sample predictions.
+
+Table~\ref{tab:prediction_lags} reports in-sample information criteria (AIC, AICc, BIC) and out-of-sample performance (MSE, MAE, $R^2$) for $L=1,\ldots,10$. Forecast performance improves monotonically with $L$, but gains become small after about six lags: MSE decreases from $8.29\times 10^{-2}$ at $L=1$ to $7.95\times 10^{-2}$ at $L=10$, while $R^2$ rises from $5.25\%$ to $9.10\%$. This pattern is consistent with persistent dependence in volatility increments under rough-volatility dynamics (\cite{gatheral2018volatility}).
+
+\begin{table}[htbp]
+\centering
+
+\begin{tabular}{rrrrrrr}
+\toprule
+lag & mse & mae & r2 & aic & aicc & bic \\
+\midrule
+1  & $6.9970 \times 10^{-2}$ & $2.0078 \times 10^{-1}$ & $7.19\%$  & $-1.6283 \times 10^{6}$ & $-1.6283 \times 10^{6}$ & $-1.6283 \times 10^{6}$ \\
+2  & $6.8649 \times 10^{-2}$ & $1.9873 \times 10^{-1}$ & $9.06\%$  & $-1.6409 \times 10^{6}$ & $-1.6409 \times 10^{6}$ & $-1.6409 \times 10^{6}$ \\
+3  & $6.8057 \times 10^{-2}$ & $1.9787 \times 10^{-1}$ & $9.93\%$  & $-1.6469 \times 10^{6}$ & $-1.6469 \times 10^{6}$ & $-1.6468 \times 10^{6}$ \\
+4  & $6.7747 \times 10^{-2}$ & $1.9746 \times 10^{-1}$ & $10.34\%$ & $-1.6502 \times 10^{6}$ & $-1.6502 \times 10^{6}$ & $-1.6502 \times 10^{6}$ \\
+5  & $6.7505 \times 10^{-2}$ & $1.9720 \times 10^{-1}$ & $10.61\%$ & $-1.6528 \times 10^{6}$ & $-1.6528 \times 10^{6}$ & $-1.6528 \times 10^{6}$ \\
+6  & $6.7309 \times 10^{-2}$ & $1.9706 \times 10^{-1}$ & $10.82\%$ & $-1.6551 \times 10^{6}$ & $-1.6551 \times 10^{6}$ & $-1.6550 \times 10^{6}$ \\
+7  & $6.7210 \times 10^{-2}$ & $1.9693 \times 10^{-1}$ & $10.95\%$ & $-1.6564 \times 10^{6}$ & $-1.6564 \times 10^{6}$ & $-1.6563 \times 10^{6}$ \\
+8  & $6.7131 \times 10^{-2}$ & $1.9684 \times 10^{-1}$ & $11.03\%$ & $-1.6574 \times 10^{6}$ & $-1.6574 \times 10^{6}$ & $-1.6573 \times 10^{6}$ \\
+9  & $6.7094 \times 10^{-2}$ & $1.9682 \times 10^{-1}$ & $11.07\%$ & $-1.6582 \times 10^{6}$ & $-1.6582 \times 10^{6}$ & $-1.6581 \times 10^{6}$ \\
+10 & $6.7061 \times 10^{-2}$ & $1.9677 \times 10^{-1}$ & $11.10\%$ & $-1.6588 \times 10^{6}$ & $-1.6588 \times 10^{6}$ & $-1.6587 \times 10^{6}$ \\
+\bottomrule
+\end{tabular}
+
+\caption{Prediction of 15-minute realized-volatility increments with an AR($L$) model. AIC, AICc and BIC are computed in-sample; MSE, MAE and $R^2$ are computed out-of-sample using one-day-ahead rolling forecasts.}
+\label{tab:prediction_lags}
+\end{table}
+
+
+\section{Conclusion}
+\label{sec:conclude}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{appendix}
+
+\section{Assumptions and Limiting Constants}
+
+
+%We are now ready to specify the set of assumptions needed for the estimation of the Hurst parameter. We start by specifying the assumptions on the $\calF$-measurable variables.
+
+
+\settheoremtag{CLT}
+\begin{Assumption}
+	\label{ass:CLT}
+	Suppose that the log-price of the asset, $x$, is given by \eqref{eqn.s}, with  spot diffusive variance  $c=\si^2_t$ satisfying \eqref{eq:si2}.
+	\begin{enumerate}
+		
+		% Assumption -- Definition of $\bfW$
+	%	\item The process $\bfW = (W^{(1)}, W^{(2)}, W^{(3)},  W^{(4)})$ is a $4$-dimensional standard $\calF$-Brownian motion and $W = W^{(1)}$.
+		
+		% Assumption -- Structure of the price process 
+		%\item The process $c=\sigma^2+\gamma^2$ satisfies \eqref{eq:si} with $\bfeta = (\eta^{(1)}, \eta^{(2)}, \eta^{(3)}, \eta^{(4)})$ given by \eqref{eq:def:etai}. Moreover, the processes $a$, $b$, $\sigma$, $\gamma$, $a^{(i)}$ and $\theta^{(i)}$ for each $1 \leq i \leq 4$ are adapted and locally bounded real-valued processes. Similarly, $\bfeta$ and $\bfeta^{(i)}$ are adapted and locally bounded real-valued processes for each $i$.
+		\item[(i)] The volatility-of-volatility processes have the following representations:
+		\begin{equation}			\label{eq:def:etai}
+			\begin{split}
+			\eta_t^2 &= \eta_0^2 + \int_0^t a^{\eta}_s \, ds + \int_0^t h^{\eta}(t-s) \theta_s^{\eta} \, ds \\
+			&\quad +   \int_0^t \int_E \jump^{l,\eta}(s,z)\,\pi(ds, dz)+ \int_0^t \int_E \jump^{s,\eta}(s,z) \, (\pi(ds, dz)-ds\la(dz))\\
+			&\quad+ \int_0^t g^{\eta}(t-s) (\eta^{\eta}_s \, dW_s+ \ov\eta^{\eta}_s \,d\ov W_s + \wt \eta^{\eta}_s\, d\wt W_s),\\
+			\ov\eta_t^{2} &= \ov\eta_0^{2} + \int_0^t a^{\ov\eta}_s \, ds + \int_0^t   h^{\ov\eta}(t-s) \theta_s^{\ov\eta} \, ds\\
+			&\quad + \int_0^t \int_E \jump^{l,\ov \eta}(s,z)\,\pi(ds, dz)+ \int_0^t \int_E \jump^{s,\ov \eta}(s,z) \, (\pi(ds, dz)-ds\la(dz))\\
+			&\quad+ \int_0^t g^{\ov\eta}(t-s) (\eta^{\ov \eta}_s \, dW_s+ \ov\eta^{\ov\eta}_s \,d\ov W_s + \wt \eta^{\ov \eta}_s \,d\wt W_s+\wh\eta^{\ov\eta}_s \,d\wh W_s),
+			\end{split}
+		\end{equation}
+		\item[(ii)] The processes $a$, $b$, $a^\eta$, $a^{\ov \eta}$, $\theta$, $\theta^\eta$, $\theta^{\ov \eta}$, $\eta^\eta$, $\ov\eta^\eta$, $\wt\eta^\eta$, $\eta^{\ov \eta}$, $\ov\eta^{\ov \eta}$, $\wt\eta^{\ov \eta}$ and $\wh\eta^{\ov \eta}$ are adapted and locally bounded. The variables $x_0$, $c_0$, $\eta_0$ and $\ov \eta_0$ are $\calF_0$-measurable. Both $c$ and $\eta$ are locally bounded away from zero. 
+		
+		% Assumptions kernel vol
+		\item[(iii)] We have \eqref{eq:g} with $e,e'\in (-\frac12,0)$. Moreover,  there exist $e^\eta,e^{\prime \eta}, e^{\ov \eta}, e^{\prime \ov \eta} \in(-\frac12,0)$ and continuously differentiable functions $g^\eta_0$, $h^\eta_0$, $g^{\ov\eta}_0$ and $h^{\ov \eta}_0$ vanishing at the origin such that $g^\eta = K_{e^\eta}^{-1} t_+^{e^\eta}+ g^\eta_0$, $h^\eta = K_{e^{\prime\eta}}^{-1} t_+^{e^{\prime\eta}}+ h^\eta_0$, $g^{\ov\eta} = K_{e^{\ov\eta}}^{-1} t_+^{e^{\ov\eta}}+ g^{\ov\eta}_0$ and $h^{\ov\eta} = K_{e^{\prime\ov\eta}}^{-1} t_+^{e^{\prime \ov\eta}}+ h^{\ov\eta}_0$.
+		Moreover, we have $e^\eta \geq \frac{e}{2}-\frac14$.
+		
+		
+		% Regularity of the first-order processes 
+		\item[(iv)]  There exists $\beta > e - e'$ such that ${\E[ |\theta_t - \theta_s|^p ]}/{(t-s)^{p\beta}}$ is uniformly bounded in $0\leq s< t\leq T$ for any fixed $T>0$ and $p\geq1$.
+		\item[(v)] 	%$\pi$ is a Poisson measure on $\mathbb{R}_+ \times E$ with $(E,\calE)$ an auxiliary Polish space, and with compensator $ dt \, \lambda(dz)$ for some measure $\lambda$ on $E$. We write $\wt \pi = \pi - dt \, \lambda(dz)$.
+		The jump functions $\jump,\jump^{s}, \jump^{l}, \jump^{s,\eta}, \jump^{l,\eta}, \jump^{s,\ov\eta}, \jump^{l,\ov\eta}:\Omega \times \mathbb{R}_+ \times E\to \R$ are predictable  and there exist $0<r_s<			  \frac1{e+1}$, a sequence of stopping times $(\tau_n)_{n\geq1}$ increasing to infinity almost surely and a sequence of deterministic measurable functions $\jump^*_n : E \to \mathbb{R}$ such that $\int_E \jump^*_n(z) \, \lambda(dz) < \infty$ and $
+			(|\jump(t,z)| + |\jump^{s}(t,z)|^{r_s} + |\jump^{l}(t,z)| + |\jump^{s,\eta}(t,z)|^2 + |\jump^{l,\eta}(t,z)|  + |\jump^{s,\ov\eta}(t,z)|^2 + |\jump^{l,\ov\eta}(t,z)| ) \wedge 1 \leq \jump^*_n(z)$ for all $n\geq1$, $t \leq \tau_n$ and $z\in E$.
+		\item[(vi)] We have	$v_n \sim v \Delta_n^\varpi$, 	$w_n \sim w   (p_n\Delta_n)^{\wt \varpi}$ for some $v,w>0$ and $\varpi$ and $\wt\varpi$ satisfying $  \frac12+\frac{e}{3} <\varpi<\frac12$ and $ \max(\frac12+\frac 43 e, \frac{4e+1}{4-2r_s}, 2e+\frac32-\frac1{r_s})< \wt \varpi<\frac12+e$.
+		%Confirmed \wt \varpi < \frac12 +e
+	\end{enumerate}
+\end{Assumption}
+
+	One can easily check that there always exist some truncation parameters $\varpi$ and $\wt \varpi$ satisfying the assumptions of Theorem \ref{thm:CLTV}. This is due to the fact that $0 < H < 1/2$ and the assumption $1 < r_s < 2 / (2H+1)$ appearing in Assumption \ref{ass:jumps}.
+
+%\begin{rem}
+%	The first five points formalise the definition of the model. The last assumption regarding $H^{(1)}$ in Point (5) is needed in the proof of Proposition \ref{prop:CLT:dominated} and ensures that the regularity of the Volatility of Volatility does not impact the estimation procedure via a correlation between price increments and volatility increments (leverage effect). Point (6) can already be found in \cite{chong2022CLT} (Assumption CLT, points (2) and (3); and Equation (5.6) within Assumption CLT') and is used to remove the influence of the drift in the proofs. 
+%\end{rem}
+
+
+%\begin{rem}
+%    There is a long-standing debate in the literature about whether volatility has a long memory or not \cite{Andersen-Bollerslev-Diebold-Labys-2001, comte1998long, Corsi09, Diebold01}. At first glance, rough volatility goes against this fact, because fractional Brownian motion has a long memory behaviour only when $H > 1/2$. However, the roughness parameter is not related to long-range dependence in our setup. Instead, volatility persistance is non-parametrically determined by $h$, allowing the volatility to be rough and have long memory at the same time \cite{bennedsen2022decoupling, SLY21, shi2023volatility}.
+%\end{rem}
+
+%
+%\settheoremtag{Jumps}
+%\begin{Assumption}
+%	\label{ass:jumps}
+%\end{Assumption}
+
+
+\settheoremtag{$\boldsymbol{\chi}$}
+\begin{Assumption}
+	\label{ass:chi}
+	We have \eqref{eq:y} and   \eqref{eq:noise} with the following specifications:
+	\begin{enumerate}
+		\item[(i)] $(\chi_i)_i$ is a stationary   sequence, independent of $\calF_\infty =  \bigvee_{t \geq 0} \, \calF_t$, with finite moments of all orders, mean $0$ and   variance $1$.
+		\item[(ii)] $(\chi_i)_{i}$ is  exponentially $\rho$-mixing: if $\calG_i = \sigma(\chi_j, \, j \leq i)$, $\calG^i = \sigma(\chi_j, \, j \geq i)$  and 
+$
+			\rho_k(\chi) =   \sup \{ |\E[UV]|: \text{$U$ is $ \calG_0$-measurable, $V$ is $ \calG^k$-measurable}, \;
+			\E[U] = \E[V] = 0, \; \E[U^2] = \E[V^2] = 1 \}$, then there exists $K > 0$ and $v > 0$ such that $|\rho_k(\chi)| \leq K \exp(-vk)$ for all $k \geq 0$.
+		\item[(iii)] Assumption~\ref{ass:CLT} holds with $c=\si^2 +\rho^2$.
+	\end{enumerate}
+\end{Assumption}
+
+%\begin{rem}
+%	In view of these assumptions, \eqref{eq:noise} is a convenient way to synthesise the two main conditions needed in the proofs, which are first that conditionally on $\calF$, the variables $(\Delta \varepsilon_i^n)_i$ form a mixing sequence, and secondly, that
+%	\begin{equation*}
+%		\E\Big[ 
+%		(\Delta \varepsilon_i^n)^2 \, | \calF_{(i+1)\Delta_n}
+%		\Big]
+%		= 
+%		\int_{i\Delta_n}^{(i+1)\Delta_n} \gamma_{s}^2 \, ds.
+%	\end{equation*}
+%	Note in addition that this structure relates to Assumption (NO-2) in \cite{jacod2017statistical}.
+%\end{rem}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%We are now ready to build an estimator for $H$. We follow the same lines as in \cite{chong2022CLT}, the only difference being that we incorporate a truncation when price increments are too big. Specifically, we consider consider a sequence of truncation levels $v_n$ satisfying
+ %
+%for some $\alpha > 0$ and some $0 < \varpi < \frac{1}{2}$ satisfying some conditions specified later on. Then, for each $s < t$, we introduce $\widehat{c}_{s, t}$ defined by
+%\begin{equation*}
+%	\widehat{c}_{s, t} = \frac{1}{t-s} \sum_{j: s < j\Delta_n \leq t} (\Delta y^n_{j-1})^2 \1_{|\Delta y^n_{j-1}| \leq v_n}
+%\end{equation*}
+%which estimates the spot volatility using increments between $s$ and $t$. In the following, we consider intervals of length $t-s = k_n \Delta_n$ for some sequence $k_n$. For conciseness, we write
+%\begin{equation*}
+%	\widehat{c}_{i}^{n} = \widehat{c}_{i\Delta_n, (i+k_n)\Delta_n}  = \frac{1}{k_n \Delta_n} \sum_{j = i}^{i+k_n-1} (\Delta y^n_{j})^2 \1_{|\Delta y^n_{j}| \leq v_n}.
+%\end{equation*}
+%
+%We also need a truncation sequence for volatility increments and we introduce $\wt v_n^{(k_n)}$ by
+%\begin{equation*}
+%	\wt v_n^{(k_n)} = \wt \alpha (k_n\Delta_n)^{\wt \varpi}
+%\end{equation*}
+%for some $\wt \alpha > 0$ and some $0 < \wt \varpi < H$. Then we form the realized autocovariances of these spot variance estimators by defining
+%\begin{equation*}
+%	V^{n,\ell,k_n}_t
+%	=
+%	\frac{(k_n\Delta_n)^{1-2H}}{k_n}
+%	\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell + 2) k_n}
+%	\nu_i^{n,\ell,k_n}
+%\end{equation*}
+%where
+%\begin{equation}
+%	\label{eq:def:nu}
+%	\begin{split}
+%		\nu_i^{n,\ell,k_n}
+%		&=
+%		\Delta_{k_n} \widehat{c}^{n}_{i}
+%		\Delta_{k_n} \widehat{c}^{n}_{i+ \ell k_n}
+%		\1_{
+%			\big |
+%			\Delta_{k_n}
+%			\widehat{c}^{n}_{i}
+%			\big |
+%			\leq \wt v_n^{(k_n)}}
+%		\1_{
+%			\big |
+%			\Delta_{k_n}
+%			\widehat{c}^{n}_{i+ \ell k_n}
+%			\big |
+%			\leq \wt v_n^{(k_n)}}
+%		\\
+%		&=
+%		\big (
+%		\widehat{c}^{n}_{i+k_n}
+%		-
+%		\widehat{c}^{n}_{i}
+%		\big )
+%		\1_{
+%			\big |
+%			\widehat{c}^{n}_{i+k_n}
+%			-
+%			\widehat{c}^{n}_{i}
+%			\big |
+%			\leq \wt v_n^{(k_n)}}
+%		\times 
+%		\big (
+%		\widehat{c}^{n}_{i+(\ell+1)k_n}
+%		-
+%		\widehat{c}^{n}_{i+ \ell k_n}
+%		\big )
+%		\1_{
+%			\big |
+%			\widehat{c}^{n}_{i+(\ell+1)k_n}
+%			-
+%			\widehat{c}^{n}_{i+ \ell k_n}
+%			\big |
+%			\leq \wt v_n^{(k_n)}}
+%	\end{split}
+%\end{equation}
+%for all $\ell \geq 0$. Note that the normalisation is chosen in such a way that $V^{n,\ell, k_n}_t$ converges in probability. More precisely, $V^{n,\ell, k_n}_t$ satisfies the following CLT.
+
+Next, we specify the limiting constants   in \eqref{eq:V-limit} and \eqref{eq:cov}. Aiming for a compact description, we define the central difference operator $\delta^n_h \vp(x) = \sum_{k=0}^n (-1)^k \binom{n}{k}\vp(x+(\frac n2-k)h)$ where $n\geq1$, $\vp$ is  a real-valued function and $x,h\in\R$. We further define $\delta^n_{h_1,h_2}\vp(x) = \delta^{n/2}_{h_1}[\delta^{n/2}_{h_2}\vp](x)$ if $n$ is even. Using the function  $H_\al(x)= \lvert x\rvert^\al$, we can represent the constants appearing in   \eqref{eq:V-limit} and \eqref{eq:cov} as
+	\begin{equation}\label{eq:def:phi}
+%\nonumber
+			\Phi_{\kappa,e}(\ell) =\frac{\kappa^2}{8 (e+1)(e+\tfrac32)}\delta^4_{1,1/\kappa}H_{2e+3}(\ell)
+	%		&=\kappa^2\big[(\ell+1/\kappa+1)^{2e+3} -2(\ell+1/\kappa)^{2e+3}-2(\ell+1)^{2e+3}+(\ell-1/\kappa+1)^{2e+3}\\
+	%		&\quad+4\ell^{2e+3}+\lvert \ell+1/\kappa-1\rvert^{2e+3}-2\lvert\ell-1/\kappa\rvert^{2e+3}-2\lvert \ell-1\rvert^{2e+3}		\label{eq:def:phi} \\
+	%		&\quad+\lvert\ell-1/\kappa-1\rvert^{2e+3}\big] / \big[8 (e+1)(e+\tfrac32)\big].
+%\nonumber
+	\end{equation}
+and
+\begin{equation}\label{eq:R}
+\calR_{\kappa,e}(\ell,\ell')
+	= 
+	\begin{cases}
+ R_{\kappa,e}(\ell,\ell')
+		&
+		\text{if } \ell, \ell'\geq 2,
+		\\
+	 R_{\kappa,e}(0,\ell')+2 R_{\kappa,e}(1,\ell')
+		&
+		\text{if } \ell = 1 \text{ and } \ell' \geq 2,
+		\\
+ R_{\kappa,e}(\ell,0)+2 R_{\kappa,e}(\ell,1)
+		&
+		\text{if } \ell \geq 2 \text{ and } \ell' = 1,
+		\\
+ R_{\kappa,e}(0,0)+4 R_{\kappa,e}(0,1)+4 R_{\kappa,e}(1,1)
+		&
+		\text{if } \ell  = \ell'= 1
+	\end{cases}
+\end{equation}
+where\footnote{The expression in \eqref{eq:def:gammaasymptoticvar} is formally defined only for $e\neq -\frac14$. However, it admits a continuous extension at $e=-\frac14$. Using L'H\^opital's rule, one can find that $R_{\kappa,-1/4}(\ell,\ell')= \frac1{5760}\kappa^4  ( \delta^{8}_{1,1/\kappa} \H_6(\ell+\ell')+ \delta^{8}_{1,1/\kappa} \H_6(\ell-\ell'))$ where $\H_\al(x) = \lvert x\rvert^\al\log \lvert x\rvert$ for $x\neq0$ and $\H_\al(0) = 0$.}  
+\begin{equation}
+	\label{eq:def:gammaasymptoticvar}
+	R_{\kappa,e}(\ell,\ell') = \frac{\kappa^4\Ga(2e+2)^2(1+1/\cos(2\pi e))}{4\Ga(4e+8)}(\delta^8_{1,1/\kappa}H_{4e+7}(\ell+\ell')+\delta^8_{1,1/\kappa}H_{4e+7}(\ell-\ell')).
+%	\begin{cases}
+%		\frac{\Gamma(1+2H)^2(1-\cos(2\pi H)^{-1})}{4\Gamma(6+4H)(\theta\theta^\prime)^{2H+5/2}} \delta^4_\theta\delta^{4}_{\theta^\prime} \big[ 
+%		|\ell \theta - \ell^\prime \theta^\prime|^{4H+5}
+%		+
+%		|\ell \theta + \ell^\prime \theta^\prime|^{4H+5}
+%		\big]
+%		& \text{if } H \neq 1/4,
+%		\\
+%		\frac{1}{5760 (\theta\theta^\prime)^{2H+5/2}} \delta^4_\theta\delta^{4}_{\theta^\prime} \big[ 
+%		|\ell \theta - \ell^\prime \theta^\prime|^{6}
+%		+
+%		|\ell \theta + \ell^\prime \theta^\prime|^{6}
+%		\big]
+%		& \text{if } H = 1/4.
+%	\end{cases}
+\end{equation}
+
+\section{Proof of Theorems~\ref{thm:acf} and \ref{thm:sd}}
+\label{sec:outline_proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:acf}]
+	There is no loss of generality to assume that $\gamma_t (\Delta)>0$. 
+	Then, by \eqref{eq:conv},
+	\begin{equation}\label{eq:help}\begin{split}
+			\frac{\gamma_t (\ell\Delta)}{\gamma_t (\Delta)}	&= \Var\Biggl(\sum_{j=0}^{\ell-1} (X_{t+(j+1)\Delta}-X_{t+j\Delta})\Biggr)\Bigg/\gamma_t (\Delta) \\
+			&=\sum_{j_1,j_2=0}^{\ell-1} \frac{\gamma_{t+(j_1\wedge j_2)\Delta}(\lvert j_1-j_2\rvert;\Delta)}{\gamma_t (\Delta)} \to %\sum_{j_1,j_2=0}^{\lambda-1} \rho_t(\lvert j_1-j_2\rvert)=
+			\ell\biggl(1+2\sum_{j=1}^{\ell-1} (1-\tfrac j\ell) \rho_t(j)\biggr)
+	\end{split}\end{equation}
+	for all integers $\ell\geq1$. Because \eqref{eq:help} holds for $\ell=2$ and $\ell=3$ and   $\log_2 3$ is an irrational number, we conclude from Theorem~1.4.3 in \cite{BGT}, and the subsequent remarks, that $\gamma_t$ is regularly varying at zero. As a consequence, the limit in \eqref{eq:help} is equal to $\ell^\alpha$ for some $\alpha\in\mathbb{R}$. Solving for $\rho_t(1), \rho_t(2),\ldots$ successively, we obtain \eqref{eq:acf}. Because $\rho_t$ is an autocorrelation function, we must have $\alpha\in[0,2]$.
+	%Denoting the limit in \eqref{eq:help} by $R_t^{(L)}$, we claim that  $R_t^{(L)}\neq 0$ for infinitely many integers $L\geq1$. To prove this assertion, assume to the contrary that $R_t^{(L)}= 0$ for all but finitely many  integers $L$. Then, for any $L_0\geq2$, we either have $R_t^{(L_0)}= 0$ or we have $R_t^{(L_0)}\neq 0$ and thus, by \eqref{eq:help},
+	%\begin{align*}
+	%	\frac{\gamma_t^{(0)}(L_0^2\Delta)}{\gamma_t^{(0)}(L_0\Delta)}=	\frac{\gamma_t^{(0)}(L_0\Delta')}{\gamma_t^{(0)}(\Delta')}\longrightarrow R_t^{(L_0)},\quad	\frac{\gamma_t^{(0)}(L_0^2\Delta)}{\gamma_t^{(0)}(L_0\Delta)}		= 	\frac{\gamma_t^{(0)}(L_0^2\Delta)/\gamma_t^{(0)}(\Delta)}{\gamma_t^{(0)}(L_0\Delta)/\gamma_t^{(0)}(\Delta)}\longrightarrow \frac{R_t^{(L_0^2)}}{R_t^{(L_0)}},
+	%\end{align*}
+	%where $\Delta'=L_0\Delta$. In the second case, this leads to   $R_t^{(L_0^2)}=(R_t^{(L_0)})^2$ and, upon iteration, $R_t^{(L_0^k)}=(R_t^{(L_0)})^k$ for all $k\geq1$. Because  $R_t^{(L)}= 0$ for all but finitely many  integers $L$ and $L_0\geq2$, we have   $R_t^{(L_0^k)}=0$ for sufficiently large $k$. By the previous relation, we  obtain $R_t^{(L_0)}=0$, which shows that the second case is impossible and we must have $R_t^{(L)}= 0$  for all $L\geq2$. Now we can use simple arithmetic based on the identity $R_t^{(L+1)}=R_t^{(L)}=0$ for $L\geq 2$ to obtain $\rho_t(1)=-1$ and $\rho_t(k)=0$ for all $k\geq2$. But this $\rho_t$ is not positive semidefinite and hence, not a valid autocorrelation function, a contradiction.
+	%
+	%As a consequence,  $R_t^{(L)}\neq 0$ for infinitely many integers $L\geq1$.  So, if $\lambda=p/q\in\mathbb{Q}$, where $p,q\geq1$ are integers and $q$ is     such that $R_t^{(q)}\neq0$, we obtain with the notation $\Delta'=\Delta/q$ and \eqref{eq:help}  that
+	%\[
+	%\frac{\gamma_t^{(0)}(\lambda\Delta)}{\gamma_t^{(0)}(\Delta)}	= \frac{\gamma_t^{(0)}(p\Delta')}{\gamma_t^{(0)}(q\Delta')}= \frac{\gamma_t^{(0)}(p\Delta')/\gamma_t^{(0)}(\Delta')}{\gamma_t^{(0)}(q\Delta')/\gamma_t^{(0)}(\Delta')}\longrightarrow R_t^{(p)}/R_t^{(q)},\]
+	%which is a finite limit.
+	%
+	%Finally, for $\lambda>1$, we have
+	%\[ \frac{\gamma_t^{(0)}(\lambda\Delta)}{\gamma_t^{(0)}(\Delta)}	=1+\frac{\E[(X_{t+\lambda\Delta}-X_{t+\Delta})(X_{t+\Delta}-X_t)]}{\gamma_t^{(0)}(\Delta)}.	 \]
+	%The Cauchy--Schwarz inequality shows that
+	%\[ \frac{\lvert\E[(X_{t+\lambda\Delta}-X_{t+\Delta})(X_{t+\Delta}-X_t)]\rvert}{\gamma_t^{(0)}(\Delta)} \leq \sqrt{\frac{}{\gamma_t^{(0)}(\Delta)}}\]
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:sd}]
+	Because $X$ is covariance-stationary, the function $\ga\equiv\ga_t$ defined in \eqref{eq:ga-k} does not depend on $t$ and we have $\ga(r)=2(C(0)-C(r))$. By Theorem~\ref{thm:acf}, $X$ has smoothness parameter $e\in(-\frac12,\frac12)$ if and only if $\ga$, or $1-C(r)/C(0)$, is regularly varying at zero with index $2e+1$. By Theorem 8.1.10 of \cite{BGT}, this in turn is equivalent to $1-F$ being regularly varying at infinity with index $-1-2e$. In the special case where $C$ is integrable, the spectral density is the first derivative of $F$. Therefore, the second assertion of the theorem follows from Theorems 1.5.11 and 1.7.2b of \cite{BGT}.
+\end{proof}
+
+\section{Proof of Theorems~\ref{thm:CLTV-0} and \ref{thm:CLTV}}\label{sec:proof-CLT}
+ Theorem~\ref{thm:CLTV-0} is a special case of Theorem~\ref{thm:CLTV}, so it suffices to prove the latter. 
+ 
+ \subsection{Notation and Localization Procedure}\label{sec:not}
+We write $A \lesssim B$ if $A \leq C B$ for some constant $C$ that does not depend on any important and $\wt\E=\E[\,\cdot\,|\calF_\infty]$ for brevity. Given a (deterministic or random) function $f(t)$ (or of the form $f_t$) and $h,h'>0$, we define $\Delta_h f(t) = f(t+h)-f(t)$ and $\Delta^2_{h,h'} = \Delta_h f(t+h')-\Delta_h f(t) = f(t+h+h')-f(t+h')-f(t+h)+f(t)$. Also, if $h=1$ ($h=h'$), we simply write $\Delta f(t)$ ($\Delta^2_h f(t)$).  If $f = (f_i)_i$ is a sequence, we write $\Delta_h f_i = f_{i+h} - f_i$. 
+
+We let
+%Moreover, we assume that $W = W^{(1)}$ is part of a $4$-dimensional $(\mathcal{F}_t)_{t\geq 0}$-Brownian motion $\bfW = (W^{(1)}, W^{(2)}, W^{(3)}, W^{(4)})$. In the following, we write for simplicity $x^{c}$ for the continuous part of $x$ and $x^{j}$ for the jump part, i.e.
+$
+		x^{c}_t
+		=
+		x_0 + \int_0^t b_{s} \, ds +\int_0^t\sigma_{s}\, dW_{s}$
+and $
+		x^{j}_t 
+		=
+		\int_0^t \int_E \jump(s,z) \, \pi(ds, \, dz).
+$
+be the continuous and jump part of $x$, respectively. Similarly, $c = \sigma^2 + \rho^2$ from \eqref{eq:si2} decomposes into
+\begin{equation} 
+	\label{eq:si} 
+	c_t = c^c_t + c^l_t + c^s_t
+\end{equation}
+where
+$
+		c^c_t = c_0 +\int_0^t a_s \, ds+   \int_0^t h(t-s) \theta_s \, ds + \int_0^t g(t-s)(\eta_s\,dW_s+\ov \eta_s\, d\ov W_s)$, 
+$
+		c^l_t = \int_0^t \int_E \jump^{l}(s,z)\,\pi(ds, dz)$, $
+		c^s_t =  \int_0^t \int_E \jump^{s}(s,z) \,\wt \pi(ds, dz)$ and
+$\wt \pi (dt, \, dz)= \pi(dt,\,dz) - dt \, \lambda(dz)$.
+
+The nondifferentiable drift and fractional components in $c$ can be simplified. Because $g_0$ and $h_0$ are differentiable, we have
+\begin{align*}
+	\int_0^t g_0(t-s)(\eta_s\,dW_s+\ov \eta_s\, d\ov W_s)&= \int_0^t\int_s^t g'_0(r-s)\,dr \, (\eta_s\,dW_s+\ov \eta_s\, d\ov W_s)\\
+	&= \int_0^t \int_0^r g'_0(r-s)(\eta_s\,dW_s+\ov \eta_s\, d\ov W_s)\,dr,
+	\\
+	\int_0^t   h_0(t-s)\theta_s \, ds&= \int_0^t \int_s^t  h'_0(r-s)dr \, \theta_s \,ds = \int_0^t\int_0^r\wh h'_0(r-s)\theta_s \,ds \,dr,
+\end{align*}
+which shows that both terms are differentiable drifts and can be absorbed into $\int_0^t a_s ds$. The same argument clearly applies to the representations in \eqref{eq:def:etai}. We may therefore assume without loss of generality that 
+\begin{equation}\label{eq:assump_1} 
+	g_0\equiv h_0 \equiv g^\eta_0\equiv h^\eta_0 \equiv g^{\ov \eta}_0\equiv h^{\ov \eta}_0\equiv 0.
+\end{equation}
+In the proofs we show that both the differentiable drift, $\int_0^t a_s\, ds$, and the nondifferentiable one, $\int_0^t h(t-s)\theta_s\, ds$ are negligible. Because the former is a special case of the latter obtained by setting $h\equiv 1$, we can also assume
+\begin{equation}\label{eq:assump_2} 
+	a\equiv0.
+\end{equation}
+In addition, as is usual when infill asymptotics are considered, Assumption~\ref{ass:CLT} can be localized (cf.\  Lemma~4.4.9 in \cite{JP}). Therefore, there is no loss of generality if we assume the following strengthened hypotheses.
+\settheoremtag{CLT'}
+\begin{Assumption}\label{ass:CLT'}
+	In addition to Assumption~\ref{ass:CLT}, we have \eqref{eq:assump_1} and \eqref{eq:assump_2} and there is a deterministic constant $K\in(0,\infty)$ such that the processes listed in Assumption~\ref{ass:CLT}~(ii) as well as $x$, $\si^2$, $\rho^2$, $c^{-1}$, $\eta^{-1}$ and 	$(|\jump(t,z)| + |\jump^{s}(t,z)|^{r_s} +  |\jump^{s,\eta}(t,z)|^2   + |\jump^{s,\ov\eta}(t,z)|^2  ) /\delta^\ast(z)$ are uniformly bounded by $K$, where $\delta^\ast(z)$ is a deterministic nonnegative measurable function  satisfying $\delta^\ast(z)\leq K$ for all $z\in E$ and $\int_E \delta^\ast(z) \,\la(dz)<\infty$. Moreover,   we have $\jump^{l}(t,z)\equiv \jump^{l,\eta}(t,z)\equiv\jump^{l,\ov\eta}(t,z)\equiv0$.
+%	\begin{equation*}
+%		\begin{split}
+%			&\sup_{t\in  [0,\infty)} \bigl\{ 
+%			\lvert b_t \rvert 
+%			+ 
+%			\lvert \sigma_t \rvert 
+%			+ 
+%			\lvert \gamma_t \rvert 
+%			+ 
+%			\lvert a_t \rvert 
+%			+ 
+%			\lvert \theta_t \rvert 
+%			+ 
+%			\lvert \bfeta_t \rvert 
+%			\bigr\}<K^*\quad \text{a.s.},
+%			\\
+%			&\sup_{t\in [0,\infty)} \bigl\{ 
+%			\lvert \bfeta_t^{(i)} \rvert 
+%			+ 
+%			\lvert a^{(i)}_t \rvert 
+%			+ 
+%			\lvert \theta^{(i)}_t \rvert 
+%			\bigr\}<K^*\quad \text{a.s.}.
+%			\\
+%			&\sup_{t\in[0,\infty)}\sup_{z\in E} 
+%			\ \bigl\{ \lvert \jump(t,z) \rvert + \lvert \jump^s(t,z)\rvert+ \lvert \jump^l(t,z)\rvert
+%			\bigr\}<K^*\quad \text{a.s.}.
+%		\end{split}
+%	\end{equation*}  
+%	Moreover, there exists a measurable function $\jump^*_n(z)$ satisfying
+%	\begin{equation*}
+%		\int_E \jump^*_n(z) \, \lambda(ds) < \infty \quad\text{and}\quad \sup_{z\in E} |\jump^*_n(z)| < K^*
+%	\end{equation*}
+%	and such that 
+%	\begin{equation*}
+%		\sup_{t\in[0,\infty)} \Big(|\jump(t,z)| + |\jump^{s}(t,z)|^{r_s} + |\jump^{l}(t,z)|\Big) \wedge 1 \leq \jump^*_n(z) \quad\text{a.s.}.
+%	\end{equation*}
+%	In particular, all processes appearing in \eqref{eqn.s}, \eqref{eq:noise}, \eqref{eq:si} and \eqref{eq:def:etai} have uniformly bounded moments of all orders. 
+\end{Assumption}
+
+ 
+
+%We also assume that satisfies 
+
+%In this expression, $\bfeta = (\eta^{(1)}, \eta^{(2)}, \eta^{(3)}, \eta^{(4)})$ is a $4$-dimensional stochastic process and we write $\bfeta_s \, d\bfW_s $ for $\sum_{q=1}^{4} \eta^{(q)}_s\,dW^{(q)}_s$. This process is the rough volatility analogue of the volatility of volatility process. In the following we assume that for each $1 \leq i \leq 4$, $(\eta^{(i)})^2$ satisfies a dynamic similar to $c^c$, of the form
+
+%Again, $\bfeta_t^{(i)} = (\eta_t^{(i, 1)}, \dots, \eta_t^{(i, q)})$ has $4$ coordinates. 
+
+%	\begin{equation*}
+%	\begin{aligned}
+%		&g(t)=g_H(t)+h(t),
+%		&\wh g(t)=g_{\wh H}(t)+\wh h(t),
+%	\end{aligned}
+%\end{equation*}
+%where for all $\alpha > 0$, we have
+%\begin{equation*}
+%	g_{\alpha}(t)=K_\alpha^{-1} t_+^{\alpha-1/2},\qquad K_\alpha=\frac{\Gamma(\alpha+\frac12)}{\sqrt{\sin(\pi \alpha)\Gamma(2\alpha+1)}}.
+%\end{equation*} 
+%
+%The first step of the proof consists in simplifying the drifts. By the stochastic and ordinary Fubini theorems, 
+%
+%so we can rewrite $c^c$ as 
+%\begin{equation*}
+%\begin{split}
+%	c_t^c&=c_0^c+A_t + \int_0^t g_H(t-s) \bfeta_sd\bfW_s
+%\end{split}
+%\end{equation*}
+%where
+%\begin{equation*}
+%\begin{split}
+%A_t
+%  &=
+%  \int_0^t \biggl(a_s+\int_0^s h'(s-r)\bfeta_r\, d\bfW_r+\int_0^s\wh h(s-r)\theta_r \,dr\biggr) \, ds + \int_0^t g_{\wh H}(t-s)\theta_s ds.
+%\end{split}
+%\end{equation*}
+%Proceeding similarly, we rewrite for all $1 \leq i \leq 4$,
+%\begin{equation*}
+%\begin{split}
+%    \eta^{(i)}_t &= \eta^{(i)}_0 + A^{(i)}_t + \int_0^t g_{H^{(i)}}(t-s) \bfeta_s^{(i)} \, d\bfW_s,
+%\end{split}
+%\end{equation*}
+%where
+%\begin{equation*}
+%\begin{split}
+%    &A^{(i)}_t 
+%    =
+%    \int_0^t \biggl(a_s^{(i)}+\int_0^s {h^{(i)\prime}}(s-r)\bfeta_r\, d\bfW_r+\int_0^s {h^{[i]\prime}}(s-r)\theta_r^{(i)} \,dr\biggr) \, ds 
+%    % \\ &\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
+%    + \int_0^t g_{H^{[i]}}(t-s)\theta_s^{(i)} ds.
+%\end{split}
+%\end{equation*}
+%In the definition of $A$ and $A^{(i)}$, the processes in parentheses are all locally bounded, and so are $\theta$ and $\theta^{(i)}$. Therefore, there is no loss of generality to assume
+%\begin{equation}
+%\label{eq:assump_1}
+%	h \equiv \wh h \equiv h^{[i]} \equiv h^{(i)}
+% \equiv 0
+%\quad \text{and} \quad
+%\wh H, H^{(i)}, H^{[i]} \in \Big(0,\frac12\Big].
+%\end{equation}
+
+
+%Recall that for all $i \geq 0$, we have
+%\begin{align*}
+%\widehat{c}_{i}^{n}
+%&=
+%\frac{1}{k_n \Delta_n} \sum_{j=i}^{i+k_n-1} (\Delta y_j^{n})^2 \1_{|\Delta y_j^{n}| \leq v_n}
+%\\
+%&=
+%\frac{1}{k_n \Delta_n} \sum_{j=i}^{i+k_n-1} (\Delta_{\Delta_n} x^c_{j\Delta_n} + \Delta_{\Delta_n} x^j_{j\Delta_n} + \Delta \varepsilon_j^{n})^2 \1_{|\Delta_{\Delta_n} x^c_{j\Delta_n} + \Delta_{\Delta_n} x^j_{j\Delta_n} + \Delta \varepsilon_j^{n}| \leq v_n}.
+%\end{align*}
+
+\subsection{Proof of Theorem~\ref{thm:CLTV}}
+\begin{proof}[Proof of Theorem~\ref{thm:CLTV}]
+	The theorem follows by combining \eqref{eq:step1}, \eqref{eq:step2} and \eqref{eq:goal:U} obtained in three steps in the remainder of this section.
+\end{proof}
+
+\subsubsection*{Step 1: Removal of Price Jumps}
+
+%We start by removing the price jumps and the price truncations from the definition of $\widehat{c}_{i}^{n}$. More precisely, we 
+\noindent We show that $V^{n,\ell}_t$ can be replaced by
+\begin{equation*}
+	 V^{n,1,\ell}_t
+	=
+	\frac{(p_n\Delta_n)^{-2e}}{p_n}
+	\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell + 1) p_n-k_n}
+\Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_{i+\ell p_n}\Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_i,
+\end{equation*}
+where $\wh c_{i}^{n,1}
+=
+(k_n \Delta_n)^{-1} \sum_{j=i+1}^{i+k_n} (\Delta^n_j x^c +   \varepsilon^n_{j})^2$, $ \Delta_{p_n} \wh c^{n,1}_i= \wh c^{n,1}_{i+p_n}- \wh c^{n,1}_i$ and $\Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_i = \Delta_{p_n} \wh c^{n,1}_i \bone_{\lvert \Delta_{p_n} \wh c^{n,1}_i \rvert\leq w_n}$.  This relies on   a proposition which is proved in Appendix \ref{sec:proof:remove_price_jumps}.
+\begin{prop}
+	\label{prop:diff:nu_wtnu}
+%	Suppose that $k_n \sim \theta \Delta_n^{-1/2} \log(\Delta_n^{-1})$. Then for all $i \geq 0$, we have
+Under the assumptions of Theorem~\ref{thm:CLTV} and Assumption~\ref{ass:CLT'}, %we have
+	\begin{equation}\label{eq:C1}
+		\E \big[\big| \Delta_{p_n}^{\mathrm{tr}} \wh c^{n}_{i+\ell p_n}\Delta_{p_n}^{\mathrm{tr}} \wh c^{n}_i-\Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_{i+\ell p_n}\Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_i\big| \big]
+		\lesssim 
+		(p_n\Delta_n)^{\wt\varpi}
+		\big(
+		\Delta_n^{\varpi} + (p_n\Delta_n)^{1-r_s\wt\varpi +\wt\varpi}
+		\big),
+	\end{equation}
+uniformly in $i$.
+\end{prop}
+%
+% $\widehat{c}_{i}^{n}$ can be replaced by %$\wt {c}_{i}^{n}$ where
+%\begin{equation*}
+%\end{equation*}
+%We then define 
+
+%for all $\ell \geq 0$, where
+%\begin{equation*}
+%\wt \nu_i^{n,\ell,k_n}
+%=
+%\Delta_{k_n}
+%\wt {c}^{n}_{i}
+%\Delta_{k_n}
+%\wt {c}^{n}_{i+ \ell k_n}
+% \1_{
+%\big |
+%\Delta_{k_n}
+%\wt {c}^{n}_{i}
+% \big |
+% \leq \wt v_n^{(k_n)}}
+% \1_{
+%\big |
+%\Delta_{k_n}
+%\wt {c}^{n}_{i+ \ell k_n}
+% \big |
+% \leq \wt v_n^{(k_n)}}.
+%\end{equation*}
+
+
+
+
+
+%The proof of Proposition \ref{prop:diff:nu_wtnu} can be found in Appendix \ref{sec:proof:remove_price_jumps}. 
+%It is based on fine moment bounds on the difference $\nu_i^{n,\ell,k_n} - \wt \nu_i^{n,\ell,k_n}$, which are obtained by first studying the term $\wt {c}^{n}_{i}$ and the difference $\wh c_i^{n}
+%-
+%\wt c_i^{n}$. Some of the bounds needed in this proof will be of further use at various other times and are gathered in Appendix \ref{sec:bounds:J}. In fact, for all $i \geq 0$, we have
+%\begin{equation*}
+%\wt c^{n}_i
+%=
+%J_{1,i}^{n}
+%+
+%J_{2,i}^{n}
+%+
+%J_{3,i}^{n}
+%+ 
+%J_{4,i}^{n}
+%+
+%J_{5,i}^{n}
+%\end{equation*} 
+%where
+%\begin{align*}
+%\begin{split}
+%&J_{1,i}^{n} = (k_n \Delta_n)^{-1} \int_{i\Delta_n}^{(i+k_n)\Delta_n} c^c_u \, du,
+%\\
+%&J_{2,i}^{n} =
+%(k_n \Delta_n)^{-1} \sum_{j=i}^{i+k_n-1} \Big\{ (\Delta_{\Delta_n} x^c_{j\Delta_n})^2 - \int_{j\Delta_n}^{(j+1)\Delta_n} \sigma_u^2\, du \Big\},
+%\\
+%&J_{3,i}^{n} =
+%(k_n \Delta_n)^{-1} \sum_{j=i}^{i+k_n-1} \Big\{ 
+%	(\Delta \varepsilon_j^{n})^2  - \int_{j\Delta_n}^{(j+1)\Delta_n} \gamma_u^2\, du 
+% \Big \},
+%\\
+%&J_{4,i}^{n} =
+%2(k_n \Delta_n)^{-1} \sum_{j=i}^{i+k_n-1} 
+%	\Delta_{\Delta_n} x^c_{j\Delta_n} \Delta \varepsilon_j^{n},
+%\\
+%&J_{5,i}^{n} = (k_n \Delta_n)^{-1} \int_{i\Delta_n}^{(i+k_n)\Delta_n} (c^{l}_u + c^{s}_u)\, du.
+%	\end{split}
+%\end{align*}
+%A precise analysis of each of these terms is conducted in Appendix \ref{sec:bounds:J}. Note that this decomposition is similar to (5.7) in \cite{chong2022CLT} where only the terms $J_{1,i}^{n}$ and $J_{2,i}^{n}$. The additional three terms found here relate to the presence of microstructure noise and volatility jumps. 
+%
+%The first step of the proof consists in proving that
+%\begin{equation*}
+%	(k_n\Delta_n)^{-1/2} (V^{n,\ell,k_n}_t - \wt V^{n,\ell,k_n}_t) \limL 0.
+%\end{equation*} 
+Using Proposition \ref{prop:diff:nu_wtnu}, we have
+\begin{equation*}
+(p_n\Delta_n)^{-1/2} \E\bigg[\sup_{t\in[0,T]}|V^{n,\ell}_t -   V^{n,1,\ell}_t|\bigg]
+\lesssim
+(p_n\Delta_n)^{-3/2-2e+\wt \varpi}
+\big(
+\Delta_n^{\varpi} + (p_n\Delta_n)^{1-r_s\wt\varpi+\wt\varpi}\big).
+%\\
+%&\lesssim
+%(p_n\Delta_n)^{-3/2-2e+\wt\varpi} 
+%\Delta_n^{\varpi} 
+%+ 
+%(p_n\Delta_n)^{-1/2-2e + (2-r_s)\wt\varpi}.
+\end{equation*}
+We  have
+$
+(p_n\Delta_n)^{-3/2-2e+\wt\varpi} 
+\Delta_n^{\varpi} 
+\lesssim
+\log(\Delta_n^{-1})^{-3/2-2e+\wt\varpi} 
+\Delta_n^{\varpi-3/4-e+ \wt\varpi/2} \to 0
+$
+because $p_n\asymp\Den^{-1/2}\log \Den^{-1}$, $\varpi > \frac12 + \frac e3$ and $\wt \varpi > \frac12 + \frac43 e$.
+Similarly,
+$
+(p_n\Delta_n)^{-1/2-2e + 2\wt\varpi-r_s\wt\varpi} \to 0
+$
+because   
+$\wt\varpi > (4e+1)/(4-2r_s)$ by assumption. We have established
+\begin{equation}\label{eq:step1} 
+	(p_n\Delta_n)^{-1/2} (V^{n,\ell}_t -   V^{n,1,\ell}_t) \limL 0,
+\end{equation}
+where $\limL$ denotes uniform convergence in $L^1$ on $[0,T]$ for any fixed $T>0$.
+\subsubsection*{Step 2: Removal of Volatility Jumps}
+
+
+	%\item \textbf{Step 1.} We show that we can remove the price jumps and the price truncations from the definition of $\widehat{c}_{i}^{n}$. 
+	
+
+	 
+%We remove volatility jumps from  $V^{n,\ell,1}_t$. With the   previous notation, we have 
+\noindent By definition, $
+\wh c^{n,1}_i
+= \sum_{k=1}^5
+J_{k,i}^{n}
+$,
+where
+\begin{align}\nonumber
+	J_{1,i}^{n} &= \frac{1}{k_n\Delta_n} \int_{i\Delta_n}^{(i+k_n)\Delta_n} c^c_u \, du,
+	\quad J_{2,i}^{n} =
+	\frac{1}{k_n\Delta_n}\sum_{j=i+1}^{i+k_n} \Big\{ (\Delta^n_j x^c )^2 - \int_{(j-1)\Delta_n}^{j\Delta_n} \sigma_u^2\, du \Big\},
+	\\
+	J_{3,i}^{n} &=
+	\frac{1}{k_n\Delta_n} \sum_{j=i+1}^{i+k_n} \Big\{ 
+	( \varepsilon_j^{n})^2  - \int_{(j-1)\Delta_n}^{j\Delta_n} \rho_u^2\, du 
+	\Big \},\quad J_{4,i}^{n} =
+	\frac{2}{k_n\Delta_n} \sum_{j=i+1}^{i+k_n} 
+	\Delta^n_j x^c    \varepsilon_j^{n}, \label{eq:J} \\
+	J_{5,i}^{n}  &= \frac{1}{k_n\Delta_n} \int_{i\Delta_n}^{(i+k_n)\Delta_n} c^{s}_u\, du.\nonumber
+\end{align}
+Our goal is to remove $J^n_{5,i}$ from $\wh c^{n,1}_i$. Define $
+	\wh c^{n,2}_i
+	=
+\sum_{k=1}^4
+	J_{k,i}^{n}
+$
+and
+%\begin{equation*}
+%	U^{n,\ell,k_n}_t
+%	=
+%	\frac{(k_n\Delta_n)^{1-2H}}{k_n}
+%	\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell + 2) k_n}
+%	u^{n}_{i}
+%	u^{n}_{i+ \ell k_n}.
+%\end{equation*}
+\begin{equation}\label{eq:V2}
+	V^{n,2,\ell}_t
+	=
+	\frac{(p_n\Delta_n)^{-2e}}{p_n}
+	\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell + 1) p_n-k_n}
+	\Delta_{p_n} \wh c^{n,2}_{i+\ell p_n}\Delta_{p_n}  \wh c^{n,2}_i.
+\end{equation}
+In Appendix~\ref{sec:proof:remove_price_jumps} we show the following result.
+
+
+\begin{prop}
+\label{prop:remove_vol_jumps}
+Suppose that  the assumptions of Theorem~\ref{thm:CLTV} and Assumption~\ref{ass:CLT'} are valid.  Then for all $\epsilon > 0$, we have the following bound uniformly in $i$:
+\begin{equation*}
+\E\big[\big| \Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_{i+\ell p_n}\Delta_{p_n}^{\mathrm{tr}} \wh c^{n,1}_i- 	\Delta_{p_n} \wh c^{n,2}_{i+\ell p_n}\Delta_{p_n}  \wh c^{n,2}_i
+\big|\big] 
+\lesssim
+(p_n\Delta_n)^{\wt\varpi+e+3/2-r_s\wt\varpi - \epsilon} 
++ 
+(p_n\Delta_n)^{\wt \varpi+1/r_s}.
+\end{equation*}
+\end{prop}
+
+We use this proposition to show that
+\begin{equation}\label{eq:step2} 
+	(p_n\Delta_n)^{-1/2} (V^{n,1,\ell}_t -   V^{n,2,\ell}_t) \limL 0
+\end{equation}
+for all $\ell \geq 0$. Indeed, the proposition implies that the left-hand side is bounded by
+$
+(p_n\Delta_n)^{-3/2-2e} 
+(
+	(p_n\Delta_n)^{\wt\varpi+e+3/2-r_s\wt\varpi - \epsilon}
+	+
+	(p_n\Delta_n)^{\wt \varpi+1/r_s}
+)
+ \lesssim
+(p_n\Delta_n)^{-e+\wt\varpi-r_s\wt\varpi - \epsilon} 
++ \linebreak
+(p_n\Delta_n)^{-3/2-2e+\wt \varpi+1/r_s}
+$
+for any $\epsilon > 0$. Since $r_s < 1/(e+1)$ and $\wt\varpi < \frac12+e$, we have $
+-e+\wt\varpi-r_s\wt\varpi
+> -e  ( 1 - \wt\varpi /({e+1})  )
+> -e  ( 1 - (e+\frac12)/(e+1)  ) > 0
+$. Together with the assumption $\wt \varpi > 2e+\frac32 -1/{r_s}$, we  obtain \eqref{eq:step2}.
+
+
+\subsubsection*{Step 3: CLT in the Absence of Price and Volatility Jumps}
+
+\noindent The last part of the proof consists in showing 
+\begin{equation}
+\label{eq:goal:U}
+(p_n \Delta_n)^{-1/2}\Big(V^{n,2,0}_t+2
+V^{n,2,1}_t - (V^0_t+2V^1_t),V^{n,2,2}_t-V^2_t,\dots,V^{n,2,m}_t-V^m_t
+\Big)^T
+\stackrel{\calL-s}{\Longrightarrow} \calZ,
+\end{equation} 
+where $\calZ$ is defined in the statement of Theorem \ref{thm:CLTV}.
+%By definition of $u^{n}_i$ in Equation \eqref{eq:def:u}, we see that developing the procuct $u^{n}_i u^{n}_{i+\ell k_n}$ gives $4 \times 4 = 16$ terms. More precisely, we can decompose $V^{n,\ell}_t$ as
+To this end, we decompose
+$
+V^{n,2,\ell}_t
+=
+\sum_{j_1, j_2 =1}^{4} Z^{n,\ell}_{j_1, j_2}(t)
+$
+where  
+\begin{equation*}
+Z^{n,\ell}_{j_1, j_2}(t)
+=
+\frac{(p_n\Delta_n)^{-2e}}{p_n}
+\sum_{i=0}^{\lfloor t/\Delta_n \rfloor - (\ell + 1) p_n-k_n}
+\Delta_{p_n} J^{n}_{j_1, i}
+\Delta_{p_n} J^{n}_{j_2, i + \ell p_n},\quad j_1, j_2 = 1, \dots, 4.
+\end{equation*}
+Among these terms, only $Z^{n,\ell, k_n}_{1, 1}(t)$  contributes to the limit \eqref{eq:goal:U}, as the following two propositions show. Their proofs can be found in Appendix \ref{sec:proof:remove_price_jumps}.
+\begin{prop}
+\label{prop:CLT:dominating}
+We have the following stable convergence in distribution:
+\begin{equation*}
+(p_n \Delta_n)^{-1/2}\Big(
+Z_{1,1}^{n,0}+2Z_{1,1}^{n,1}  - ( V^0+2V^1), Z_{1,1}^{n,2} - V^2,\ldots,Z_{1,1}^{n,m}- V^m
+\Big)^T
+\stackrel{\calL-s}{\Longrightarrow} \calZ.
+\end{equation*}
+\end{prop}
+
+\begin{prop}
+\label{prop:CLT:dominated}
+For any pair $(j_1, j_2) \neq (1,1)$, we have
+$
+(p_n\Delta_n)^{-1/2} (Z_{j_1, j_2}^{n,0}(t) + 2 Z_{j_1, j_2}^{n,1}(t))\limL0$ and $(p_n\Delta_n)^{-1/2} Z_{j_1, j_2}^{n,\ell}(t)\limL0$ for any $\ell \geq 2$.
+\end{prop}
+
+\end{appendix}
+
+
+
+
+
+
+
+
+
+
+
+\bibliographystyle{ecta-fullname}
+\bibliography{library_submitted}
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
+
+
+ 

@@ -44,7 +44,8 @@ start_year = None  # None or Integer
 end_year = None  # None or Integer
 N_consecutive_years = None # None or Integer
 
-delta_n = 5.0 / (252.0 * 23400.0)
+DEFAULT_DELTA_N = 5.0 / (252.0 * 23400.0)
+delta_n = DEFAULT_DELTA_N
 
 
 
@@ -358,10 +359,13 @@ def truncate_absolute(values, threshold):
     values[np.abs(values) > threshold] = 0
     return values
 
-def compute_volatility_squared(price, window_size, truncation_method=None, truncation_param=None):
+def compute_volatility_squared(price, window_size, delta_n, truncation_method=None, truncation_param=None):
     price = np.asarray(price, dtype=float)
     if np.any(price <= 0):
         raise ValueError("Price contains non-positive values; cannot take log.")
+    if not np.isfinite(delta_n) or float(delta_n) <= 0:
+        raise ValueError("delta_n must be a positive finite float.")
+    delta_n = float(delta_n)
 
     log_price = np.log(price)
     log_returns = log_price[1:] - log_price[:-1]
@@ -629,7 +633,11 @@ def parse_truncation_mode(mode: Optional[str]) -> Tuple[Optional[str], Optional[
     return method, param
 
 
-def create_Psi_function(window: int, N_lags: int, kappa: float):
+def create_Psi_function(window: int, N_lags: int, kappa: float, delta_n: float):
+    if not np.isfinite(delta_n) or float(delta_n) <= 0:
+        raise ValueError("delta_n must be a positive finite float.")
+    delta_n = float(delta_n)
+
     def Psi(H):
         """
         Precompute the Psi(H) function for the given parameter configurations.
@@ -715,12 +723,11 @@ def _run_pipeline_from_array(
         raise ValueError(
             "Config error: increment_volatility_size must be greater than or equal to volatility_window_size."
         )
-    if compute_confidence_interval:
-        if delta_n is None or not np.isfinite(delta_n) or float(delta_n) <= 0:
-            raise ValueError(
-                "Config error: delta_n must be a positive finite float when compute_confidence_interval=True."
-            )
-        delta_n = float(delta_n)
+    if delta_n is None:
+        delta_n = DEFAULT_DELTA_N
+    if not np.isfinite(delta_n) or float(delta_n) <= 0:
+        raise ValueError("Config error: delta_n must be a positive finite float.")
+    delta_n = float(delta_n)
 
     kappa = increment_window / window
 
@@ -748,6 +755,7 @@ def _run_pipeline_from_array(
             vsq, n, N = compute_volatility_squared(
                 prices,
                 window_size=window,
+                delta_n=delta_n,
                 truncation_method=price_trunc_method,
                 truncation_param=price_trunc_param,
             )
@@ -865,7 +873,7 @@ def _run_pipeline_from_array(
         
 
     ########## PART 7 -- Proceeds to GMM Estimation
-    Psi = create_Psi_function(increment_window, n_lags, kappa)
+    Psi = create_Psi_function(increment_window, n_lags, kappa, delta_n)
 
     weight_matrix = np.identity(n_lags - 1)
     if GMM_weight == "optimal":
@@ -1023,6 +1031,11 @@ def run_pipeline(
 ]:
     if input_data_folder is None:
         raise ValueError("Config error: input_data_folder is None.")
+    if delta_n is None:
+        delta_n = DEFAULT_DELTA_N
+    if not np.isfinite(delta_n) or float(delta_n) <= 0:
+        raise ValueError("Config error: delta_n must be a positive finite float.")
+    delta_n = float(delta_n)
 
     if volatility_window_size is None or int(volatility_window_size) <= 0:
         raise ValueError("Config error: volatility_window_size must be a positive integer.")
