@@ -10,7 +10,7 @@ from scipy.stats import norm
 import numpy as np
 
 input_data_folder = "clean_data/"
-input_data_folder = "short_data/"
+# input_data_folder = "short_data/"
 
 N_years_backtest = 1
 

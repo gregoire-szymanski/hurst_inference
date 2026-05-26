@@ -42,7 +42,7 @@ plot_covariance_matrix = False  # True or False, default is False
 
 start_year = None  # None or Integer
 end_year = None  # None or Integer
-N_consecutive_years = 3 # None or Integer
+N_consecutive_years = None # None or Integer
 
 delta_n = 5.0 / (252.0 * 23400.0)
 
