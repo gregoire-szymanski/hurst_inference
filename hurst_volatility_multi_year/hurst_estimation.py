@@ -441,9 +441,9 @@ def compute_autocorrelation(
     autocorr[1] = autocorr[0] + 2 * autocorr[1]
 
     if return_counts:
-        return autocorr[1:], n_increments, truncated
+        return autocorr[1:] / float(window), n_increments, truncated
     
-    return autocorr[1:] / float(window) * 17
+    return autocorr[1:] / float(window)
 
 def correct_DRV(DRV, Kn):
     DRV = np.asarray(DRV)
@@ -559,10 +559,10 @@ def compute_covariance(W_fun,
 
     sigma = sigma + sigma.transpose()
 
-    # for idx_i in range(N_lags-1):
-    #     for idx_j in range(N_lags-1):
-    #         w = W_fun(Ln,0)
-    #         sigma[idx_i, idx_j] += compute_term(psi[idx_i], psi[idx_j], window, window, 0)
+    for idx_i in range(N_lags-1):
+        for idx_j in range(N_lags-1):
+            w = W_fun(Ln,0)
+            sigma[idx_i, idx_j] += compute_term(psi[idx_i], psi[idx_j], window, window, 0)
 
     return sigma
 
@@ -585,9 +585,6 @@ def compute_beta(theta, lag, H, kappa):
         return uncorrected_beta(theta, 0, H, kappa) + 2 * uncorrected_beta(theta, 1, H, kappa)
     return uncorrected_beta(theta, lag, H, kappa)
 
-
-
-
 def get_confidence_size(N_lags, window, kappa, H_estimated, R_estimated, n_days, delta_n, Sigma_estimated, W_chosen):
     theta = 1
 
@@ -606,7 +603,7 @@ def get_confidence_size(N_lags, window, kappa, H_estimated, R_estimated, n_days,
     ])
 
     uWu_inv = np.linalg.inv(u_t.transpose() @ W_chosen @ u_t)
-    matrix_43 = (delta_n * window)**(1-4*H_estimated) * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
+    matrix_43 = (delta_n * window)**(2-4*H_estimated) * D @ uWu_inv @ u_t.transpose() @ W_chosen @ Sigma_estimated @ W_chosen @ u_t @ uWu_inv @ D.transpose()
 
     return matrix_43[0,0]**0.5, matrix_43[1,1]**0.5
     # return matrix_43[0,0]**0.5 / np.sqrt(n_days), matrix_43[1,1]**0.5 / np.sqrt(n_days)
